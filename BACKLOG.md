@@ -1,12 +1,42 @@
 # Vytl MVP Backlog
 
-## Import Enhancements - COMPLETE
-- [x] Smart field mapping with pattern-based auto-detection
-- [x] PDF document support (pdf-parse library)
-- [x] Word document support (mammoth library)
-- [x] Claude AI extraction for unstructured documents
-- [x] Enhanced validation preview (green/amber/red indicators)
-- [ ] Import history and rollback capability (future)
+## Sprint 5 - RECOMMENDED PRIORITY
+
+### AI Risk Analysis (High Value)
+- [ ] Claude API integration for individual risk analysis
+- [ ] Auto-generate risk summaries on detail page
+- [ ] Suggested controls recommendations
+- [ ] Score justification narratives
+- [ ] "Generate Analysis" button → AI tab populated
+
+### Dashboard Upgrades (User Experience)
+- [ ] Risk Pulse indicator (overall health score)
+- [ ] Top 5 highest-risk items widget
+- [ ] Recent activity feed (from audit logs)
+- [ ] Risk by category donut chart
+
+### Vytl Score (Differentiator)
+- [ ] Composite organisation risk score (0-100)
+- [ ] Letter grade assignment (A-F)
+- [ ] Score breakdown by category
+- [ ] Display on dashboard
+
+**Rationale**: AI Analysis adds immediate value to existing risks, Dashboard makes the app more useful daily, and Vytl Score is the unique selling point.
+
+---
+
+## Future Sprints
+
+### Sprint 6 - Settings & Users
+- [ ] Organisation profile editing
+- [ ] User management (invite, roles)
+- [ ] POPIA compliance settings
+- [ ] Data retention configuration
+
+### Sprint 7 - Advanced Features
+- [ ] Email forwarding for risk capture
+- [ ] KRI trend sparklines
+- [ ] Board report PDF export
 
 ## Vytl Score Calculation
 - [ ] Composite risk score (0-100 scale)
@@ -86,3 +116,8 @@
 - [x] Excel/CSV import with column mapping
 - [x] Audit logging for risk mutations
 - [x] Audit timeline in risk History tab
+- [x] Smart field mapping with pattern-based auto-detection
+- [x] PDF document support (pdf-parse)
+- [x] Word document support (mammoth)
+- [x] Claude AI extraction for unstructured documents
+- [x] Enhanced validation preview (green/amber/red rows)

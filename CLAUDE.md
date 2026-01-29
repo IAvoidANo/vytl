@@ -105,13 +105,16 @@ NEXTAUTH_URL=        # Base URL (http://localhost:3000)
 - [x] Excel/CSV import for bulk risk creation with column mapping
 - [x] Audit logging for risk create/update/delete operations
 - [x] Audit timeline UI in risk detail History tab
-
-### Import Features (Complete)
 - [x] Smart field mapping with pattern-based auto-detection
 - [x] PDF document support (pdf-parse)
 - [x] Word document support (mammoth)
 - [x] Claude AI extraction for unstructured documents
 - [x] Enhanced validation preview (green/amber/red rows)
+
+### Sprint 5 - PLANNED (Recommended)
+- [ ] AI Risk Analysis in detail page (Claude API)
+- [ ] Dashboard upgrades (Risk Pulse, top risks, activity feed)
+- [ ] Vytl Score calculation (0-100 with A-F grades)
 
 ### Pages
 | Route | Status | Description |
@@ -130,5 +133,43 @@ NEXTAUTH_URL=        # Base URL (http://localhost:3000)
 - `RiskScoreBadge` - Color-coded score display
 - `AppLayout` / `Sidebar` / `Header` - Layout system
 - `KriTable` - KRI list with status indicators and inline editing
-- `ExcelImportModal` - Multi-step Excel/CSV import wizard
+- `KriForm` - Create/edit KRI with threshold configuration
+- `ExcelImportModal` - Multi-format import (Excel/CSV/PDF/Word) with AI extraction
 - `AuditTimeline` - Change history display for entities
+
+### File Structure
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
+│   │   ├── trpc/[trpc]/route.ts          # tRPC endpoint
+│   │   └── parse-document/route.ts       # PDF/Word parsing
+│   ├── dashboard/page.tsx
+│   ├── login/page.tsx
+│   ├── risks/
+│   │   ├── page.tsx, risks-client.tsx
+│   │   └── [id]/page.tsx, risk-detail-client.tsx
+│   ├── kris/
+│   │   └── page.tsx, kris-client.tsx
+│   └── settings/page.tsx
+├── components/
+│   ├── app-layout.tsx, sidebar.tsx, header.tsx
+│   ├── risk-table.tsx, risk-form.tsx, risk-heatmap.tsx
+│   ├── kri-table.tsx, kri-form.tsx
+│   ├── excel-import-modal.tsx
+│   ├── audit-timeline.tsx
+│   └── risk-score-badge.tsx, providers.tsx
+├── lib/
+│   ├── auth.ts          # NextAuth config
+│   ├── db.ts            # Prisma client
+│   ├── trpc.ts          # tRPC server setup
+│   ├── trpc-client.ts   # tRPC React client
+│   └── audit.ts         # Audit logging utilities
+└── server/routers/
+    ├── index.ts         # Root router
+    ├── risk.ts          # Risk CRUD + bulkCreate
+    ├── kri.ts           # KRI CRUD + status calc
+    ├── audit.ts         # Audit log queries
+    └── import.ts        # AI document extraction
+```
