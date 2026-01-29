@@ -103,6 +103,47 @@ export const riskRouter = router({
       return risk
     }),
 
+  // Get risk statistics for dashboard
+  stats: protectedProcedure.query(async ({ ctx }) => {
+    const risks = await db.risk.findMany({
+      where: { register: { orgId: ctx.user.orgId } },
+      select: {
+        status: true,
+        category: true,
+        residualScore: true,
+      },
+    })
+
+    const total = risks.length
+
+    // Count by status
+    const byStatus = {
+      OPEN: 0,
+      IN_PROGRESS: 0,
+      MONITORING: 0,
+      CLOSED: 0,
+    }
+    for (const risk of risks) {
+      byStatus[risk.status]++
+    }
+
+    // Count by category
+    const byCategory: Record<string, number> = {}
+    for (const risk of risks) {
+      byCategory[risk.category] = (byCategory[risk.category] || 0) + 1
+    }
+
+    // Count high risks (residual score >= 15)
+    const highRisks = risks.filter((r) => r.residualScore >= 15).length
+
+    return {
+      total,
+      byStatus,
+      byCategory,
+      highRisks,
+    }
+  }),
+
   // Create a new risk
   create: protectedProcedure
     .input(createRiskSchema)
