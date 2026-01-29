@@ -2,10 +2,14 @@
 
 import { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
-import { X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
+import {
+  X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, ArrowRight, ArrowLeft,
+  FileText, Sparkles, AlertTriangle, Loader2, Wand2
+} from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 
-type ImportStep = 'upload' | 'mapping' | 'preview' | 'importing' | 'complete'
+type ImportStep = 'upload' | 'extracting' | 'mapping' | 'preview' | 'importing' | 'complete'
+type FileType = 'excel' | 'pdf' | 'docx'
 
 interface ExcelImportModalProps {
   onClose: () => void
@@ -38,22 +42,24 @@ interface RiskPreview {
   controls?: string
   status?: string
   errors: string[]
+  warnings: string[]
+  confidence?: number
 }
 
-const REQUIRED_FIELDS: { key: keyof ColumnMapping; label: string; required: boolean }[] = [
-  { key: 'title', label: 'Title', required: true },
-  { key: 'description', label: 'Description', required: true },
-  { key: 'category', label: 'Category', required: true },
-  { key: 'inherentLikelihood', label: 'Inherent Likelihood (1-5)', required: true },
-  { key: 'inherentImpact', label: 'Inherent Impact (1-5)', required: true },
-  { key: 'residualLikelihood', label: 'Residual Likelihood (1-5)', required: true },
-  { key: 'residualImpact', label: 'Residual Impact (1-5)', required: true },
+const REQUIRED_FIELDS: { key: keyof ColumnMapping; label: string }[] = [
+  { key: 'title', label: 'Title' },
+  { key: 'description', label: 'Description' },
+  { key: 'category', label: 'Category' },
+  { key: 'inherentLikelihood', label: 'Inherent Likelihood (1-5)' },
+  { key: 'inherentImpact', label: 'Inherent Impact (1-5)' },
+  { key: 'residualLikelihood', label: 'Residual Likelihood (1-5)' },
+  { key: 'residualImpact', label: 'Residual Impact (1-5)' },
 ]
 
-const OPTIONAL_FIELDS: { key: keyof ColumnMapping; label: string; required: boolean }[] = [
-  { key: 'response', label: 'Risk Response', required: false },
-  { key: 'controls', label: 'Controls', required: false },
-  { key: 'status', label: 'Status', required: false },
+const OPTIONAL_FIELDS: { key: keyof ColumnMapping; label: string }[] = [
+  { key: 'response', label: 'Risk Response' },
+  { key: 'controls', label: 'Controls' },
+  { key: 'status', label: 'Status' },
 ]
 
 const CATEGORIES = [
@@ -63,6 +69,63 @@ const CATEGORIES = [
 
 const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
 const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED']
+
+// Smart field mapping patterns
+const FIELD_PATTERNS: Record<keyof ColumnMapping, RegExp[]> = {
+  title: [/^title$/i, /^risk\s*name$/i, /^name$/i, /^risk$/i, /^risk\s*title$/i, /risk\s*description/i],
+  description: [/^description$/i, /^desc$/i, /^risk\s*description$/i, /^details$/i, /^summary$/i, /^risk\s*detail/i],
+  category: [/^category$/i, /^type$/i, /^risk\s*type$/i, /^risk\s*category$/i, /^class$/i, /^area$/i],
+  inherentLikelihood: [/^inherent\s*likelihood$/i, /likelihood/i, /probability/i, /^prob$/i, /^l$/i, /^inh?\s*l$/i, /^gross\s*l/i],
+  inherentImpact: [/^inherent\s*impact$/i, /impact/i, /consequence/i, /severity/i, /^i$/i, /^inh?\s*i$/i, /^gross\s*i/i],
+  residualLikelihood: [/^residual\s*likelihood$/i, /^res\s*likelihood$/i, /^res\s*l$/i, /^rl$/i, /^net\s*l/i],
+  residualImpact: [/^residual\s*impact$/i, /^res\s*impact$/i, /^res\s*i$/i, /^ri$/i, /^net\s*i/i],
+  response: [/^response$/i, /^treatment$/i, /^risk\s*response$/i, /^strategy$/i, /^action$/i],
+  controls: [/control/i, /mitigation/i, /measure/i, /safeguard/i],
+  status: [/^status$/i, /^state$/i, /^risk\s*status$/i, /^progress$/i],
+}
+
+function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: Record<string, number> } {
+  const mapping: ColumnMapping = {
+    title: '', description: '', category: '',
+    inherentLikelihood: '', inherentImpact: '',
+    residualLikelihood: '', residualImpact: '',
+    response: '', controls: '', status: '',
+  }
+  const confidence: Record<string, number> = {}
+  const usedHeaders = new Set<string>()
+
+  // First pass: exact matches (highest confidence)
+  for (const [field, patterns] of Object.entries(FIELD_PATTERNS)) {
+    for (const header of headers) {
+      if (usedHeaders.has(header)) continue
+      const normalizedHeader = header.trim()
+      for (const pattern of patterns) {
+        if (pattern.test(normalizedHeader)) {
+          const isExact = pattern.source.startsWith('^') && pattern.source.endsWith('$')
+          const conf = isExact ? 1.0 : 0.7
+          if (!mapping[field as keyof ColumnMapping] || conf > (confidence[field] || 0)) {
+            mapping[field as keyof ColumnMapping] = header
+            confidence[field] = conf
+            if (isExact) usedHeaders.add(header)
+          }
+          break
+        }
+      }
+    }
+  }
+
+  // Auto-copy inherent to residual if residual not found
+  if (!mapping.residualLikelihood && mapping.inherentLikelihood) {
+    mapping.residualLikelihood = mapping.inherentLikelihood
+    confidence.residualLikelihood = 0.5
+  }
+  if (!mapping.residualImpact && mapping.inherentImpact) {
+    mapping.residualImpact = mapping.inherentImpact
+    confidence.residualImpact = 0.5
+  }
+
+  return { mapping, confidence }
+}
 
 function parseCategory(value: string): string {
   const upper = value?.toString().toUpperCase().trim()
@@ -75,6 +138,10 @@ function parseResponse(value: string | undefined): string | undefined {
   if (!value) return undefined
   const upper = value.toString().toUpperCase().trim()
   if (RESPONSES.includes(upper)) return upper
+  if (upper.includes('AVOID')) return 'AVOID'
+  if (upper.includes('MITIG')) return 'MITIGATE'
+  if (upper.includes('TRANS')) return 'TRANSFER'
+  if (upper.includes('ACCEPT')) return 'ACCEPT'
   return undefined
 }
 
@@ -82,6 +149,10 @@ function parseStatus(value: string | undefined): string | undefined {
   if (!value) return undefined
   const upper = value.toString().toUpperCase().trim().replace(/\s+/g, '_')
   if (STATUSES.includes(upper)) return upper
+  if (upper.includes('OPEN') || upper.includes('NEW')) return 'OPEN'
+  if (upper.includes('PROGRESS') || upper.includes('ACTIVE')) return 'IN_PROGRESS'
+  if (upper.includes('MONITOR') || upper.includes('WATCH')) return 'MONITORING'
+  if (upper.includes('CLOSE') || upper.includes('DONE')) return 'CLOSED'
   return undefined
 }
 
@@ -93,29 +164,28 @@ function parseNumber(value: unknown, min: number, max: number, defaultVal: numbe
 
 export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) {
   const [step, setStep] = useState<ImportStep>('upload')
+  const [fileType, setFileType] = useState<FileType>('excel')
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [sheetData, setSheetData] = useState<string[][]>([])
   const [mapping, setMapping] = useState<ColumnMapping>({
-    title: '',
-    description: '',
-    category: '',
-    inherentLikelihood: '',
-    inherentImpact: '',
-    residualLikelihood: '',
-    residualImpact: '',
-    response: '',
-    controls: '',
-    status: '',
+    title: '', description: '', category: '',
+    inherentLikelihood: '', inherentImpact: '',
+    residualLikelihood: '', residualImpact: '',
+    response: '', controls: '', status: '',
   })
+  const [mappingConfidence, setMappingConfidence] = useState<Record<string, number>>({})
   const [previewData, setPreviewData] = useState<RiskPreview[]>([])
   const [importedCount, setImportedCount] = useState(0)
   const [error, setError] = useState('')
+  const [extractionProgress, setExtractionProgress] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const utils = trpc.useUtils()
   const { data: registers } = trpc.risk.registers.useQuery()
   const [selectedRegisterId, setSelectedRegisterId] = useState<string>('')
+
+  const extractMutation = trpc.import.extractFromDocument.useMutation()
 
   const bulkCreateMutation = trpc.risk.bulkCreate.useMutation({
     onSuccess: (data) => {
@@ -136,6 +206,91 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     setFile(selectedFile)
     setError('')
 
+    const fileName = selectedFile.name.toLowerCase()
+    const isPdf = fileName.endsWith('.pdf')
+    const isDocx = fileName.endsWith('.docx')
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')
+
+    if (!isPdf && !isDocx && !isExcel) {
+      setError('Unsupported file type. Please upload Excel, CSV, PDF, or Word documents.')
+      return
+    }
+
+    // Set default register
+    if (registers?.length && !selectedRegisterId) {
+      setSelectedRegisterId(registers[0].id)
+    }
+
+    if (isPdf || isDocx) {
+      setFileType(isPdf ? 'pdf' : 'docx')
+      await handleDocumentExtraction(selectedFile)
+    } else {
+      setFileType('excel')
+      await handleExcelParse(selectedFile)
+    }
+  }
+
+  const handleDocumentExtraction = async (selectedFile: File) => {
+    setStep('extracting')
+    setExtractionProgress('Parsing document...')
+
+    try {
+      // First, parse the document
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
+      const parseResponse = await fetch('/api/parse-document', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!parseResponse.ok) {
+        throw new Error('Failed to parse document')
+      }
+
+      const parseResult = await parseResponse.json()
+      setExtractionProgress('Extracting risks with AI...')
+
+      // Then extract risks using AI
+      const result = await extractMutation.mutateAsync({
+        content: parseResult.content,
+        fileType: parseResult.fileType,
+        fileName: parseResult.fileName,
+      })
+
+      if (result.risks.length === 0) {
+        setError('No risks could be extracted from the document. Try a different file or use Excel import.')
+        setStep('upload')
+        return
+      }
+
+      // Convert extracted risks to preview format
+      const previews: RiskPreview[] = result.risks.map((risk, idx) => ({
+        rowNum: idx + 1,
+        title: risk.title,
+        description: risk.description,
+        category: risk.category,
+        inherentLikelihood: risk.inherentLikelihood,
+        inherentImpact: risk.inherentImpact,
+        residualLikelihood: risk.residualLikelihood,
+        residualImpact: risk.residualImpact,
+        response: risk.response,
+        controls: risk.controls,
+        confidence: risk.confidence,
+        errors: [],
+        warnings: risk.confidence < 0.7 ? ['Low AI confidence'] : [],
+      }))
+
+      setPreviewData(previews)
+      setStep('preview')
+    } catch (err) {
+      console.error('Extraction error:', err)
+      setError('Failed to extract risks. Please try again or use Excel import.')
+      setStep('upload')
+    }
+  }
+
+  const handleExcelParse = async (selectedFile: File) => {
     try {
       const data = await selectedFile.arrayBuffer()
       const workbook = XLSX.read(data, { type: 'array' })
@@ -152,42 +307,10 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       setHeaders(headerRow)
       setSheetData(jsonData.slice(1).filter(row => row.some(cell => cell !== undefined && cell !== '')))
 
-      // Auto-map columns based on header names
-      const autoMapping: ColumnMapping = { ...mapping }
-      headerRow.forEach((header) => {
-        const lower = header.toLowerCase()
-        if (lower.includes('title') || lower === 'name' || lower === 'risk') {
-          autoMapping.title = header
-        } else if (lower.includes('description') || lower.includes('desc')) {
-          autoMapping.description = header
-        } else if (lower.includes('category') || lower.includes('type')) {
-          autoMapping.category = header
-        } else if (lower.includes('inherent') && lower.includes('likelihood')) {
-          autoMapping.inherentLikelihood = header
-        } else if (lower.includes('inherent') && lower.includes('impact')) {
-          autoMapping.inherentImpact = header
-        } else if (lower.includes('residual') && lower.includes('likelihood')) {
-          autoMapping.residualLikelihood = header
-        } else if (lower.includes('residual') && lower.includes('impact')) {
-          autoMapping.residualImpact = header
-        } else if (lower.includes('likelihood') && !autoMapping.inherentLikelihood) {
-          autoMapping.inherentLikelihood = header
-        } else if (lower.includes('impact') && !autoMapping.inherentImpact) {
-          autoMapping.inherentImpact = header
-        } else if (lower.includes('response') || lower.includes('treatment')) {
-          autoMapping.response = header
-        } else if (lower.includes('control') || lower.includes('mitigation')) {
-          autoMapping.controls = header
-        } else if (lower.includes('status')) {
-          autoMapping.status = header
-        }
-      })
+      // Smart auto-mapping
+      const { mapping: autoMapping, confidence } = smartAutoMap(headerRow)
       setMapping(autoMapping)
-
-      // Set default register
-      if (registers?.length && !selectedRegisterId) {
-        setSelectedRegisterId(registers[0].id)
-      }
+      setMappingConfidence(confidence)
 
       setStep('mapping')
     } catch (err) {
@@ -216,6 +339,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
     const risks: RiskPreview[] = sheetData.map((row, idx) => {
       const errors: string[] = []
+      const warnings: string[] = []
       const getValue = (col: string) => {
         const i = headerIndex(col)
         return i >= 0 ? row[i] : undefined
@@ -227,11 +351,16 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
       if (!title) errors.push('Missing title')
       if (!description) errors.push('Missing description')
+      if (title.length > 200) warnings.push('Title very long')
+      if (description.length < 10) warnings.push('Description too short')
 
       const inherentLikelihood = parseNumber(getValue(mapping.inherentLikelihood), 1, 5, 3)
       const inherentImpact = parseNumber(getValue(mapping.inherentImpact), 1, 5, 3)
       const residualLikelihood = parseNumber(getValue(mapping.residualLikelihood), 1, 5, inherentLikelihood)
       const residualImpact = parseNumber(getValue(mapping.residualImpact), 1, 5, inherentImpact)
+
+      if (residualLikelihood > inherentLikelihood) warnings.push('Residual L > Inherent L')
+      if (residualImpact > inherentImpact) warnings.push('Residual I > Inherent I')
 
       return {
         rowNum: idx + 2,
@@ -246,6 +375,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
         controls: getValue(mapping.controls) as string,
         status: parseStatus(getValue(mapping.status) as string),
         errors,
+        warnings,
       }
     })
 
@@ -281,7 +411,16 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
   }
 
   const validCount = previewData.filter(r => r.errors.length === 0 && r.title && r.description).length
-  const errorCount = previewData.length - validCount
+  const warningCount = previewData.filter(r => r.errors.length === 0 && r.warnings.length > 0).length
+  const errorCount = previewData.filter(r => r.errors.length > 0).length
+
+  const getMappingIndicator = (field: keyof ColumnMapping) => {
+    if (!mapping[field]) return null
+    const conf = mappingConfidence[field] || 0
+    if (conf >= 0.9) return <CheckCircle className="w-4 h-4 text-green-400" />
+    if (conf >= 0.6) return <Wand2 className="w-4 h-4 text-teal-400" />
+    return <AlertTriangle className="w-4 h-4 text-yellow-400" />
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -289,13 +428,18 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <FileSpreadsheet className="w-6 h-6 text-teal-400" />
+            {fileType === 'excel' ? (
+              <FileSpreadsheet className="w-6 h-6 text-teal-400" />
+            ) : (
+              <FileText className="w-6 h-6 text-teal-400" />
+            )}
             <div>
-              <h2 className="text-lg font-semibold text-white">Import Risks from Excel</h2>
+              <h2 className="text-lg font-semibold text-white">Import Risks</h2>
               <p className="text-sm text-slate-400">
-                {step === 'upload' && 'Upload an Excel or CSV file'}
-                {step === 'mapping' && 'Map columns to risk fields'}
-                {step === 'preview' && 'Review and import'}
+                {step === 'upload' && 'Upload Excel, CSV, PDF, or Word document'}
+                {step === 'extracting' && extractionProgress}
+                {step === 'mapping' && 'Review auto-detected column mappings'}
+                {step === 'preview' && 'Review risks before importing'}
                 {step === 'importing' && 'Importing...'}
                 {step === 'complete' && 'Import complete'}
               </p>
@@ -317,11 +461,11 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
           {/* Upload Step */}
           {step === 'upload' && (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xlsx,.xls,.csv"
+                accept=".xlsx,.xls,.csv,.pdf,.docx"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -331,21 +475,44 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
               >
                 <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                 <p className="text-white mb-2">Click to upload or drag and drop</p>
-                <p className="text-sm text-slate-400">Excel (.xlsx, .xls) or CSV files</p>
+                <p className="text-sm text-slate-400">Excel, CSV, PDF, or Word documents</p>
               </div>
-              <div className="mt-6 text-left bg-slate-900 rounded-lg p-4">
-                <h4 className="font-medium text-white mb-2">Expected columns:</h4>
-                <ul className="text-sm text-slate-400 space-y-1">
-                  <li>• <span className="text-teal-400">Title</span> (required) - Risk name</li>
-                  <li>• <span className="text-teal-400">Description</span> (required) - Risk details</li>
-                  <li>• <span className="text-teal-400">Category</span> (required) - Strategic, Operational, Financial, etc.</li>
-                  <li>• <span className="text-teal-400">Inherent Likelihood</span> (required) - 1-5 scale</li>
-                  <li>• <span className="text-teal-400">Inherent Impact</span> (required) - 1-5 scale</li>
-                  <li>• <span className="text-teal-400">Residual Likelihood</span> (required) - 1-5 scale</li>
-                  <li>• <span className="text-teal-400">Residual Impact</span> (required) - 1-5 scale</li>
-                  <li>• Response, Controls, Status (optional)</li>
-                </ul>
+
+              <div className="mt-6 grid grid-cols-2 gap-4 text-left">
+                <div className="bg-slate-900 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileSpreadsheet className="w-5 h-5 text-green-400" />
+                    <h4 className="font-medium text-white">Excel / CSV</h4>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-2">Structured data with columns:</p>
+                  <ul className="text-xs text-slate-500 space-y-1">
+                    <li>• Title, Description, Category</li>
+                    <li>• Likelihood, Impact (1-5)</li>
+                    <li>• Auto-detects column headers</li>
+                  </ul>
+                </div>
+                <div className="bg-slate-900 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <h4 className="font-medium text-white">PDF / Word</h4>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-2">AI extracts risks from text:</p>
+                  <ul className="text-xs text-slate-500 space-y-1">
+                    <li>• Risk registers, audit reports</li>
+                    <li>• Meeting minutes, policies</li>
+                    <li>• Uses Claude AI for extraction</li>
+                  </ul>
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Extracting Step */}
+          {step === 'extracting' && (
+            <div className="text-center py-16">
+              <Loader2 className="w-12 h-12 text-teal-400 mx-auto mb-4 animate-spin" />
+              <p className="text-white mb-2">{extractionProgress}</p>
+              <p className="text-sm text-slate-400">This may take a moment...</p>
             </div>
           )}
 
@@ -353,9 +520,16 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
           {step === 'mapping' && (
             <div className="space-y-6">
               <div className="bg-slate-900 rounded-lg p-4">
-                <p className="text-sm text-slate-400 mb-2">
-                  File: <span className="text-white">{file?.name}</span> • {sheetData.length} rows found
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-slate-400">
+                    File: <span className="text-white">{file?.name}</span> • {sheetData.length} rows
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <CheckCircle className="w-3 h-3 text-green-400" /> Exact match
+                    <Wand2 className="w-3 h-3 text-teal-400" /> Auto-detected
+                    <AlertTriangle className="w-3 h-3 text-yellow-400" /> Low confidence
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">
                     Import to Register *
@@ -378,13 +552,21 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 <div className="grid grid-cols-2 gap-4">
                   {REQUIRED_FIELDS.map((field) => (
                     <div key={field.key}>
-                      <label className="block text-sm font-medium text-slate-400 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-1">
                         {field.label} <span className="text-red-400">*</span>
+                        {getMappingIndicator(field.key)}
                       </label>
                       <select
                         value={mapping[field.key]}
-                        onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white"
+                        onChange={(e) => {
+                          setMapping({ ...mapping, [field.key]: e.target.value })
+                          setMappingConfidence({ ...mappingConfidence, [field.key]: 1.0 })
+                        }}
+                        className={`w-full px-3 py-2 bg-slate-700 border rounded-lg text-white ${
+                          mapping[field.key]
+                            ? 'border-green-500/50'
+                            : 'border-slate-600'
+                        }`}
                       >
                         <option value="">Select column...</option>
                         {headers.map((h) => (
@@ -401,8 +583,9 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 <div className="grid grid-cols-2 gap-4">
                   {OPTIONAL_FIELDS.map((field) => (
                     <div key={field.key}>
-                      <label className="block text-sm font-medium text-slate-400 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-1">
                         {field.label}
+                        {getMappingIndicator(field.key)}
                       </label>
                       <select
                         value={mapping[field.key]}
@@ -424,53 +607,87 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
           {/* Preview Step */}
           {step === 'preview' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-slate-400">
-                    <span className="text-green-400 font-medium">{validCount}</span> valid rows
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
+                  {validCount} ready to import
+                </span>
+                {warningCount > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-sm">
+                    {warningCount} with warnings
                   </span>
-                  {errorCount > 0 && (
-                    <span className="text-sm text-slate-400">
-                      <span className="text-red-400 font-medium">{errorCount}</span> with errors (will be skipped)
-                    </span>
-                  )}
-                </div>
+                )}
+                {errorCount > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm">
+                    {errorCount} will be skipped
+                  </span>
+                )}
+                {fileType !== 'excel' && (
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 text-sm flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> AI Extracted
+                  </span>
+                )}
               </div>
 
               <div className="bg-slate-900 rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-700">
-                      <th className="px-3 py-2 text-left text-slate-400 w-12">Row</th>
+                      <th className="px-3 py-2 text-left text-slate-400 w-16">Status</th>
                       <th className="px-3 py-2 text-left text-slate-400">Title</th>
-                      <th className="px-3 py-2 text-left text-slate-400">Category</th>
-                      <th className="px-3 py-2 text-left text-slate-400">Scores</th>
-                      <th className="px-3 py-2 text-left text-slate-400 w-24">Status</th>
+                      <th className="px-3 py-2 text-left text-slate-400 w-28">Category</th>
+                      <th className="px-3 py-2 text-left text-slate-400 w-32">Scores</th>
+                      <th className="px-3 py-2 text-left text-slate-400 w-40">Issues</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {previewData.slice(0, 10).map((risk) => (
-                      <tr key={risk.rowNum} className="border-b border-slate-700/50">
-                        <td className="px-3 py-2 text-slate-500">{risk.rowNum}</td>
-                        <td className="px-3 py-2 text-white truncate max-w-[200px]">{risk.title || '—'}</td>
-                        <td className="px-3 py-2 text-slate-400">{risk.category}</td>
-                        <td className="px-3 py-2 text-slate-400">
-                          I: {risk.inherentLikelihood}×{risk.inherentImpact} / R: {risk.residualLikelihood}×{risk.residualImpact}
-                        </td>
-                        <td className="px-3 py-2">
-                          {risk.errors.length > 0 ? (
-                            <span className="text-red-400 text-xs">{risk.errors[0]}</span>
-                          ) : (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {previewData.slice(0, 15).map((risk) => {
+                      const hasError = risk.errors.length > 0
+                      const hasWarning = !hasError && risk.warnings.length > 0
+                      const isValid = !hasError && !hasWarning
+
+                      return (
+                        <tr
+                          key={risk.rowNum}
+                          className={`border-b border-slate-700/50 ${
+                            hasError ? 'bg-red-500/5' : hasWarning ? 'bg-yellow-500/5' : ''
+                          }`}
+                        >
+                          <td className="px-3 py-2">
+                            {hasError && <AlertCircle className="w-4 h-4 text-red-400" />}
+                            {hasWarning && <AlertTriangle className="w-4 h-4 text-yellow-400" />}
+                            {isValid && <CheckCircle className="w-4 h-4 text-green-400" />}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`truncate block max-w-[250px] ${hasError ? 'text-red-300' : 'text-white'}`}>
+                              {risk.title || '—'}
+                            </span>
+                            {risk.confidence && (
+                              <span className="text-xs text-purple-400">
+                                {Math.round(risk.confidence * 100)}% confidence
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-slate-400 text-xs">{risk.category}</td>
+                          <td className="px-3 py-2 text-slate-400 text-xs">
+                            I: {risk.inherentLikelihood}×{risk.inherentImpact}<br />
+                            R: {risk.residualLikelihood}×{risk.residualImpact}
+                          </td>
+                          <td className="px-3 py-2">
+                            {risk.errors.map((e, i) => (
+                              <span key={i} className="text-red-400 text-xs block">{e}</span>
+                            ))}
+                            {risk.warnings.map((w, i) => (
+                              <span key={i} className="text-yellow-400 text-xs block">{w}</span>
+                            ))}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
-                {previewData.length > 10 && (
+                {previewData.length > 15 && (
                   <div className="px-3 py-2 text-sm text-slate-500 text-center border-t border-slate-700">
-                    And {previewData.length - 10} more rows...
+                    And {previewData.length - 15} more rows...
                   </div>
                 )}
               </div>
@@ -480,7 +697,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
           {/* Importing Step */}
           {step === 'importing' && (
             <div className="text-center py-12">
-              <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
+              <Loader2 className="w-12 h-12 text-teal-400 mx-auto mb-4 animate-spin" />
               <p className="text-white">Importing {validCount} risks...</p>
             </div>
           )}
@@ -507,18 +724,27 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 Back
               </button>
             )}
-            {step === 'preview' && (
+            {step === 'preview' && fileType === 'excel' && (
               <button
                 onClick={() => setStep('mapping')}
                 className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                Adjust Mapping
+              </button>
+            )}
+            {step === 'preview' && fileType !== 'excel' && (
+              <button
+                onClick={() => setStep('upload')}
+                className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Upload Different File
               </button>
             )}
           </div>
           <div className="flex items-center gap-3">
-            {step !== 'complete' && step !== 'importing' && (
+            {step !== 'complete' && step !== 'importing' && step !== 'extracting' && (
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-slate-400 hover:text-white transition-colors"

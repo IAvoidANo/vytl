@@ -106,12 +106,12 @@ NEXTAUTH_URL=        # Base URL (http://localhost:3000)
 - [x] Audit logging for risk create/update/delete operations
 - [x] Audit timeline UI in risk detail History tab
 
-### Planned Import Enhancements
-- [ ] Smart field mapping with AI auto-detection
-- [ ] PDF document support (pdf-parse)
-- [ ] Word document support (mammoth)
-- [ ] Claude AI extraction for unstructured documents
-- [ ] Enhanced validation preview before import
+### Import Features (Complete)
+- [x] Smart field mapping with pattern-based auto-detection
+- [x] PDF document support (pdf-parse)
+- [x] Word document support (mammoth)
+- [x] Claude AI extraction for unstructured documents
+- [x] Enhanced validation preview (green/amber/red rows)
 
 ### Pages
 | Route | Status | Description |

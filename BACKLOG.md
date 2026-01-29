@@ -1,12 +1,12 @@
 # Vytl MVP Backlog
 
-## Import Enhancements (Next Priority)
-- [ ] Smart field mapping with AI auto-detection
-- [ ] PDF document support (pdf-parse library)
-- [ ] Word document support (mammoth library)
-- [ ] Claude AI extraction for unstructured documents
-- [ ] Enhanced validation preview before import
-- [ ] Import history and rollback capability
+## Import Enhancements - COMPLETE
+- [x] Smart field mapping with pattern-based auto-detection
+- [x] PDF document support (pdf-parse library)
+- [x] Word document support (mammoth library)
+- [x] Claude AI extraction for unstructured documents
+- [x] Enhanced validation preview (green/amber/red indicators)
+- [ ] Import history and rollback capability (future)
 
 ## Vytl Score Calculation
 - [ ] Composite risk score (0-100 scale)
