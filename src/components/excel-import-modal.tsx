@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import {
   X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, ArrowRight, ArrowLeft,
-  FileText, Sparkles, AlertTriangle, Loader2, Wand2
+  FileText, Sparkles, AlertTriangle, Loader2, Wand2, Download
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 
@@ -70,21 +70,143 @@ const CATEGORIES = [
 const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
 const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED']
 
-// Smart field mapping patterns
-const FIELD_PATTERNS: Record<keyof ColumnMapping, RegExp[]> = {
-  title: [/^title$/i, /^risk\s*name$/i, /^name$/i, /^risk$/i, /^risk\s*title$/i, /risk\s*description/i],
-  description: [/^description$/i, /^desc$/i, /^risk\s*description$/i, /^details$/i, /^summary$/i, /^risk\s*detail/i],
-  category: [/^category$/i, /^type$/i, /^risk\s*type$/i, /^risk\s*category$/i, /^class$/i, /^area$/i],
-  inherentLikelihood: [/^inherent\s*likelihood$/i, /likelihood/i, /probability/i, /^prob$/i, /^l$/i, /^inh?\s*l$/i, /^gross\s*l/i],
-  inherentImpact: [/^inherent\s*impact$/i, /impact/i, /consequence/i, /severity/i, /^i$/i, /^inh?\s*i$/i, /^gross\s*i/i],
-  residualLikelihood: [/^residual\s*likelihood$/i, /^res\s*likelihood$/i, /^res\s*l$/i, /^rl$/i, /^net\s*l/i],
-  residualImpact: [/^residual\s*impact$/i, /^res\s*impact$/i, /^res\s*i$/i, /^ri$/i, /^net\s*i/i],
-  response: [/^response$/i, /^treatment$/i, /^risk\s*response$/i, /^strategy$/i, /^action$/i],
-  controls: [/control/i, /mitigation/i, /measure/i, /safeguard/i],
-  status: [/^status$/i, /^state$/i, /^risk\s*status$/i, /^progress$/i],
+// Smart field mapping patterns - ordered by priority (first match wins)
+// More specific patterns should come before generic ones
+const FIELD_PATTERNS: Record<keyof ColumnMapping, { pattern: RegExp; confidence: number }[]> = {
+  title: [
+    { pattern: /^risk\s*title$/i, confidence: 1.0 },
+    { pattern: /^risk\s*name$/i, confidence: 1.0 },
+    { pattern: /^risk\s*id$/i, confidence: 0.6 }, // Sometimes ID is the title in simple registers
+    { pattern: /^title$/i, confidence: 0.95 },
+    { pattern: /^name$/i, confidence: 0.85 },
+    { pattern: /^risk$/i, confidence: 0.75 },
+    { pattern: /risk.*title/i, confidence: 0.7 },
+    { pattern: /risk.*name/i, confidence: 0.7 },
+    { pattern: /^issue$/i, confidence: 0.5 },
+    { pattern: /^event$/i, confidence: 0.5 },
+  ],
+  description: [
+    { pattern: /^risk\s*description$/i, confidence: 1.0 },
+    { pattern: /^description$/i, confidence: 0.95 },
+    { pattern: /^desc\.?$/i, confidence: 0.9 },
+    { pattern: /^risk\s*details?$/i, confidence: 0.9 },
+    { pattern: /^details?$/i, confidence: 0.8 },
+    { pattern: /^summary$/i, confidence: 0.75 },
+    { pattern: /^narrative$/i, confidence: 0.7 },
+    { pattern: /^notes?$/i, confidence: 0.6 },
+    { pattern: /description/i, confidence: 0.6 },
+    { pattern: /detail/i, confidence: 0.5 },
+  ],
+  category: [
+    { pattern: /^risk\s*category$/i, confidence: 1.0 },
+    { pattern: /^category$/i, confidence: 0.95 },
+    { pattern: /^risk\s*type$/i, confidence: 0.95 },
+    { pattern: /^risk\s*class$/i, confidence: 0.95 },
+    { pattern: /^risk\s*area$/i, confidence: 0.95 },
+    { pattern: /^risk\s*domain$/i, confidence: 0.95 },
+    { pattern: /^principal\s*risk$/i, confidence: 0.9 },
+    { pattern: /^operational\s*risk\s*class(es)?$/i, confidence: 0.9 },
+    { pattern: /^type$/i, confidence: 0.8 },
+    { pattern: /^class$/i, confidence: 0.8 },
+    { pattern: /^division$/i, confidence: 0.75 },
+    { pattern: /^business\s*unit$/i, confidence: 0.75 },
+    { pattern: /^area$/i, confidence: 0.7 },
+    { pattern: /^domain$/i, confidence: 0.7 },
+    { pattern: /^pillar$/i, confidence: 0.7 },
+    { pattern: /category/i, confidence: 0.5 },
+  ],
+  inherentLikelihood: [
+    { pattern: /^inherent\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^gross\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^raw\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^initial\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /inherent.*likelihood/i, confidence: 0.95 },
+    { pattern: /gross.*likelihood/i, confidence: 0.95 },
+    { pattern: /^likelihood\s*\(?rating\)?$/i, confidence: 0.9 },
+    { pattern: /^likelihood\s*\(?score\)?$/i, confidence: 0.9 },
+    { pattern: /^likelihood\s*\(?\d+-\d+\)?$/i, confidence: 0.9 }, // "Likelihood (1-5)"
+    { pattern: /^likelihood$/i, confidence: 0.85 },
+    { pattern: /^probability$/i, confidence: 0.8 },
+    { pattern: /^l\s*rating$/i, confidence: 0.8 },
+    { pattern: /^prob\.?$/i, confidence: 0.7 },
+    { pattern: /likelihood/i, confidence: 0.6 },
+    { pattern: /^l$/i, confidence: 0.4 },
+  ],
+  inherentImpact: [
+    { pattern: /^inherent\s*impact$/i, confidence: 1.0 },
+    { pattern: /^gross\s*impact$/i, confidence: 1.0 },
+    { pattern: /^raw\s*impact$/i, confidence: 1.0 },
+    { pattern: /^initial\s*impact$/i, confidence: 1.0 },
+    { pattern: /inherent.*impact/i, confidence: 0.95 },
+    { pattern: /gross.*impact/i, confidence: 0.95 },
+    { pattern: /^impact\s*\(?rating\)?$/i, confidence: 0.9 },
+    { pattern: /^impact\s*\(?score\)?$/i, confidence: 0.9 },
+    { pattern: /^impact\s*\(?\d+-\d+\)?$/i, confidence: 0.9 }, // "Impact (1-5)"
+    { pattern: /^impact$/i, confidence: 0.85 },
+    { pattern: /^consequence$/i, confidence: 0.8 },
+    { pattern: /^severity$/i, confidence: 0.8 },
+    { pattern: /^i\s*rating$/i, confidence: 0.8 },
+    { pattern: /^sev\.?$/i, confidence: 0.7 },
+    { pattern: /impact/i, confidence: 0.6 },
+    { pattern: /^i$/i, confidence: 0.4 },
+  ],
+  residualLikelihood: [
+    { pattern: /^residual\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^net\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^current\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /^controlled\s*likelihood$/i, confidence: 1.0 },
+    { pattern: /residual.*likelihood/i, confidence: 0.95 },
+    { pattern: /net.*likelihood/i, confidence: 0.95 },
+    { pattern: /^res\.?\s*likelihood$/i, confidence: 0.9 },
+    { pattern: /^res\.?\s*l$/i, confidence: 0.8 },
+    { pattern: /^rl$/i, confidence: 0.7 },
+  ],
+  residualImpact: [
+    { pattern: /^residual\s*impact$/i, confidence: 1.0 },
+    { pattern: /^net\s*impact$/i, confidence: 1.0 },
+    { pattern: /^current\s*impact$/i, confidence: 1.0 },
+    { pattern: /^controlled\s*impact$/i, confidence: 1.0 },
+    { pattern: /residual.*impact/i, confidence: 0.95 },
+    { pattern: /net.*impact/i, confidence: 0.95 },
+    { pattern: /^res\.?\s*impact$/i, confidence: 0.9 },
+    { pattern: /^res\.?\s*i$/i, confidence: 0.8 },
+    { pattern: /^ri$/i, confidence: 0.7 },
+  ],
+  response: [
+    { pattern: /^risk\s*response$/i, confidence: 1.0 },
+    { pattern: /^response\s*strategy$/i, confidence: 1.0 },
+    { pattern: /^response$/i, confidence: 0.9 },
+    { pattern: /^treatment$/i, confidence: 0.9 },
+    { pattern: /^risk\s*treatment$/i, confidence: 1.0 },
+    { pattern: /^strategy$/i, confidence: 0.7 },
+    { pattern: /^action$/i, confidence: 0.6 },
+    { pattern: /response/i, confidence: 0.5 },
+    { pattern: /treatment/i, confidence: 0.5 },
+  ],
+  controls: [
+    { pattern: /^controls?$/i, confidence: 1.0 },
+    { pattern: /^existing\s*controls?$/i, confidence: 1.0 },
+    { pattern: /^current\s*controls?$/i, confidence: 1.0 },
+    { pattern: /^mitigating\s*controls?$/i, confidence: 1.0 },
+    { pattern: /^mitigation$/i, confidence: 0.95 },
+    { pattern: /^mitigations?$/i, confidence: 0.95 },
+    { pattern: /^countermeasures?$/i, confidence: 0.9 },
+    { pattern: /control/i, confidence: 0.6 },
+    { pattern: /mitigation/i, confidence: 0.6 },
+    { pattern: /measure/i, confidence: 0.5 },
+    { pattern: /safeguard/i, confidence: 0.5 },
+  ],
+  status: [
+    { pattern: /^risk\s*status$/i, confidence: 1.0 },
+    { pattern: /^status$/i, confidence: 0.95 },
+    { pattern: /^state$/i, confidence: 0.8 },
+    { pattern: /^progress$/i, confidence: 0.7 },
+    { pattern: /^phase$/i, confidence: 0.6 },
+    { pattern: /status/i, confidence: 0.5 },
+  ],
 }
 
-function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: Record<string, number> } {
+function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: Record<string, number>; debug: string[] } {
   const mapping: ColumnMapping = {
     title: '', description: '', category: '',
     inherentLikelihood: '', inherentImpact: '',
@@ -93,20 +215,26 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
   }
   const confidence: Record<string, number> = {}
   const usedHeaders = new Set<string>()
+  const debug: string[] = []
 
-  // First pass: exact matches (highest confidence)
+  // Log all headers for debugging
+  debug.push(`Found ${headers.length} columns: ${headers.join(', ')}`)
+
+  // Match each field using patterns with confidence
   for (const [field, patterns] of Object.entries(FIELD_PATTERNS)) {
     for (const header of headers) {
       if (usedHeaders.has(header)) continue
       const normalizedHeader = header.trim()
-      for (const pattern of patterns) {
+
+      for (const { pattern, confidence: patternConf } of patterns) {
         if (pattern.test(normalizedHeader)) {
-          const isExact = pattern.source.startsWith('^') && pattern.source.endsWith('$')
-          const conf = isExact ? 1.0 : 0.7
-          if (!mapping[field as keyof ColumnMapping] || conf > (confidence[field] || 0)) {
+          // Only update if this match has higher confidence
+          if (!mapping[field as keyof ColumnMapping] || patternConf > (confidence[field] || 0)) {
             mapping[field as keyof ColumnMapping] = header
-            confidence[field] = conf
-            if (isExact) usedHeaders.add(header)
+            confidence[field] = patternConf
+            debug.push(`Mapped "${header}" → ${field} (${Math.round(patternConf * 100)}%)`)
+            // Mark as used if high confidence to avoid reuse
+            if (patternConf >= 0.9) usedHeaders.add(header)
           }
           break
         }
@@ -117,14 +245,23 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
   // Auto-copy inherent to residual if residual not found
   if (!mapping.residualLikelihood && mapping.inherentLikelihood) {
     mapping.residualLikelihood = mapping.inherentLikelihood
-    confidence.residualLikelihood = 0.5
+    confidence.residualLikelihood = 0.4
+    debug.push(`Auto-copied inherent likelihood → residual likelihood`)
   }
   if (!mapping.residualImpact && mapping.inherentImpact) {
     mapping.residualImpact = mapping.inherentImpact
-    confidence.residualImpact = 0.5
+    confidence.residualImpact = 0.4
+    debug.push(`Auto-copied inherent impact → residual impact`)
   }
 
-  return { mapping, confidence }
+  // Log unmapped required fields
+  const unmapped = ['title', 'description', 'category', 'inherentLikelihood', 'inherentImpact']
+    .filter(f => !mapping[f as keyof ColumnMapping])
+  if (unmapped.length > 0) {
+    debug.push(`⚠️ Unmapped required fields: ${unmapped.join(', ')}`)
+  }
+
+  return { mapping, confidence, debug }
 }
 
 function parseCategory(value: string): string {
@@ -175,6 +312,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     response: '', controls: '', status: '',
   })
   const [mappingConfidence, setMappingConfidence] = useState<Record<string, number>>({})
+  const [mappingDebug, setMappingDebug] = useState<string[]>([])
   const [previewData, setPreviewData] = useState<RiskPreview[]>([])
   const [importedCount, setImportedCount] = useState(0)
   const [error, setError] = useState('')
@@ -285,7 +423,20 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       setStep('preview')
     } catch (err) {
       console.error('Extraction error:', err)
-      setError('Failed to extract risks. Please try again or use Excel import.')
+      // Extract meaningful error message
+      let errorMsg = 'Failed to extract risks.'
+      if (err instanceof Error) {
+        if (err.message.includes('ANTHROPIC_API_KEY')) {
+          errorMsg = 'ANTHROPIC_API_KEY not configured. Please add it to your .env.local file.'
+        } else if (err.message.includes('401') || err.message.includes('authentication')) {
+          errorMsg = 'Invalid API key. Check your ANTHROPIC_API_KEY in .env.local.'
+        } else if (err.message.includes('429')) {
+          errorMsg = 'API rate limit exceeded. Please wait a moment and try again.'
+        } else {
+          errorMsg = err.message
+        }
+      }
+      setError(errorMsg + ' You can also try Excel import instead.')
       setStep('upload')
     }
   }
@@ -294,27 +445,80 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     try {
       const data = await selectedFile.arrayBuffer()
       const workbook = XLSX.read(data, { type: 'array' })
+
+      // Debug: Log all sheet names
+      const debug: string[] = []
+      debug.push(`📊 Workbook has ${workbook.SheetNames.length} sheet(s): ${workbook.SheetNames.join(', ')}`)
+
       const sheetName = workbook.SheetNames[0]
       const sheet = workbook.Sheets[sheetName]
-      const jsonData = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1 })
+      debug.push(`📄 Reading sheet: "${sheetName}"`)
+
+      // Get the range of the sheet
+      const range = sheet['!ref']
+      debug.push(`📐 Sheet range: ${range || 'undefined'}`)
+
+      // Parse as array of arrays
+      const jsonData = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' })
+      debug.push(`📝 Total rows parsed: ${jsonData.length}`)
+
+      // Debug: Show first 8 rows raw
+      debug.push(`\n--- RAW DATA (first 8 rows) ---`)
+      for (let i = 0; i < Math.min(8, jsonData.length); i++) {
+        const row = jsonData[i] || []
+        const nonEmpty = row.filter(c => c !== undefined && c !== '').length
+        const preview = row.slice(0, 10).map(c => String(c || '').substring(0, 25)).join(' | ')
+        debug.push(`Row ${i}: [${nonEmpty} cols] ${preview}${row.length > 10 ? '...' : ''}`)
+      }
+      debug.push(`--- END RAW DATA ---\n`)
 
       if (jsonData.length < 2) {
+        setMappingDebug(debug)
         setError('File must contain at least a header row and one data row')
+        setStep('mapping') // Show mapping step to see debug
         return
       }
 
-      const headerRow = (jsonData[0] || []).map(h => String(h || '').trim())
+      // Try to detect header row (might not be row 0)
+      let headerRowIndex = 0
+      let headerRow: string[] = []
+
+      // Look for the row with the most non-empty cells as header
+      let maxCols = 0
+      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+        const row = jsonData[i] || []
+        const nonEmptyCols = row.filter(c => c !== undefined && c !== '' && c !== null).length
+        if (nonEmptyCols > maxCols) {
+          maxCols = nonEmptyCols
+          headerRowIndex = i
+        }
+      }
+
+      headerRow = (jsonData[headerRowIndex] || []).map(h => String(h || '').trim())
+      debug.push(`🎯 Detected header row: ${headerRowIndex} (${headerRow.length} columns, ${maxCols} non-empty)`)
+      debug.push(`📋 Headers: ${headerRow.filter(h => h).join(', ')}`)
+
+      // Data starts after header row
+      const dataRows = jsonData.slice(headerRowIndex + 1).filter(row =>
+        row.some(cell => cell !== undefined && cell !== '' && cell !== null)
+      )
+      debug.push(`📊 Data rows (after filtering empty): ${dataRows.length}`)
+
       setHeaders(headerRow)
-      setSheetData(jsonData.slice(1).filter(row => row.some(cell => cell !== undefined && cell !== '')))
+      setSheetData(dataRows)
 
       // Smart auto-mapping
-      const { mapping: autoMapping, confidence } = smartAutoMap(headerRow)
-      setMapping(autoMapping)
-      setMappingConfidence(confidence)
+      const autoMapResult = smartAutoMap(headerRow)
+      setMapping(autoMapResult.mapping)
+      setMappingConfidence(autoMapResult.confidence)
+
+      // Combine debug info
+      setMappingDebug([...debug, '', '--- AUTO-MAPPING ---', ...autoMapResult.debug])
 
       setStep('mapping')
     } catch (err) {
-      setError('Failed to parse file. Please ensure it is a valid Excel or CSV file.')
+      console.error('Excel parse error:', err)
+      setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -478,6 +682,21 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 <p className="text-sm text-slate-400">Excel, CSV, PDF, or Word documents</p>
               </div>
 
+              {/* Download Template Button */}
+              <div className="mt-4">
+                <a
+                  href="/templates/risk-import-template.xlsx"
+                  download
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm text-teal-400 hover:text-teal-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Excel Template
+                </a>
+                <p className="text-xs text-slate-500 mt-1">
+                  Includes 10 sample risks and column instructions
+                </p>
+              </div>
+
               <div className="mt-6 grid grid-cols-2 gap-4 text-left">
                 <div className="bg-slate-900 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -546,6 +765,35 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                   </select>
                 </div>
               </div>
+
+              {/* Debug info showing detected columns */}
+              {mappingDebug.length > 0 && (
+                <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                  <details open className="text-sm">
+                    <summary className="cursor-pointer text-slate-400 hover:text-slate-300 font-medium">
+                      🔍 Debug: Excel parsing details ({headers.filter(h => h).length} columns detected)
+                    </summary>
+                    <div className="mt-2 space-y-0.5 font-mono text-xs max-h-64 overflow-y-auto">
+                      {mappingDebug.map((msg, i) => (
+                        <div
+                          key={i}
+                          className={`${
+                            msg.includes('⚠️') ? 'text-yellow-400' :
+                            msg.includes('🎯') ? 'text-teal-400' :
+                            msg.includes('📋') ? 'text-blue-400' :
+                            msg.includes('→') ? 'text-green-400' :
+                            msg.startsWith('Row ') ? 'text-slate-400' :
+                            msg.startsWith('---') ? 'text-slate-600' :
+                            'text-slate-500'
+                          }`}
+                        >
+                          {msg || '\u00A0'}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              )}
 
               <div>
                 <h4 className="font-medium text-white mb-3">Required Fields</h4>

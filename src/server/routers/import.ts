@@ -3,7 +3,15 @@ import { router, protectedProcedure } from '@/lib/trpc'
 import { TRPCError } from '@trpc/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic()
+// Check for API key at startup
+const apiKey = process.env.ANTHROPIC_API_KEY
+if (!apiKey) {
+  console.warn('⚠️ ANTHROPIC_API_KEY not set - AI extraction will fail')
+}
+
+const anthropic = new Anthropic({
+  apiKey: apiKey || 'missing-key', // Will fail gracefully with clear error
+})
 
 const extractedRiskSchema = z.object({
   title: z.string(),
@@ -69,6 +77,16 @@ export const importRouter = router({
       fileName: z.string(),
     }))
     .mutation(async ({ input }) => {
+      // Check API key first
+      if (!process.env.ANTHROPIC_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'ANTHROPIC_API_KEY not configured. Add it to .env.local file.',
+        })
+      }
+
+      console.log(`[AI Extract] Processing ${input.fileName} (${input.content.length} chars)`)
+
       try {
         const response = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
@@ -129,10 +147,27 @@ export const importRouter = router({
         }
       } catch (error) {
         if (error instanceof TRPCError) throw error
+
+        // Log full error for debugging
         console.error('AI extraction error:', error)
+
+        // Extract meaningful error message
+        let errorMessage = 'Failed to extract risks from document'
+        if (error instanceof Error) {
+          errorMessage = error.message
+          // Check for common Anthropic API errors
+          if (error.message.includes('401') || error.message.includes('authentication')) {
+            errorMessage = 'Invalid ANTHROPIC_API_KEY. Check your .env.local file.'
+          } else if (error.message.includes('429')) {
+            errorMessage = 'API rate limit exceeded. Please wait and try again.'
+          } else if (error.message.includes('500')) {
+            errorMessage = 'AI service temporarily unavailable. Try again later.'
+          }
+        }
+
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to extract risks from document'
+          message: errorMessage
         })
       }
     }),
