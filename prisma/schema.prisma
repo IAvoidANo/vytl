@@ -1,0 +1,395 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// ORGANISATION & USER MANAGEMENT
+// ============================================
+
+model Organisation {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  industry         String?
+  employeeCount    Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // POPIA compliance
+  dataRetentionDays Int      @default(2555)
+  consentGiven      Boolean  @default(false)
+  consentDate       DateTime?
+
+  // Relationships
+  users         User[]
+  riskRegisters RiskRegister[]
+  assessments   Assessment[]
+  auditLogs     AuditLog[]
+  kris          Kri[]
+  emailSubmissions EmailSubmission[]
+
+  @@map("organisations")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(VIEWER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Organisation membership
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+
+  // Auth relationships
+  accounts Account[]
+  sessions Session[]
+
+  // Activity
+  createdRisks Risk[]     @relation("RiskCreatedBy")
+  ownedRisks   Risk[]     @relation("RiskOwnedBy")
+  auditLogs    AuditLog[]
+  ownedKris    Kri[]
+
+  @@map("users")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  RISK_MANAGER
+  EDITOR
+  VIEWER
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ============================================
+// RISK MANAGEMENT CORE
+// ============================================
+
+model RiskRegister {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      RegisterStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Organisation ownership
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+
+  // Relationships
+  risks       Risk[]
+  assessments Assessment[]
+  uploads     Upload[]
+
+  @@map("risk_registers")
+}
+
+enum RegisterStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model Risk {
+  id          String       @id @default(cuid())
+  refCode     String
+  title       String
+  description String       @db.Text
+  category    RiskCategory
+
+  // Inherent risk scores (before controls)
+  inherentLikelihood Int
+  inherentImpact     Int
+  inherentScore      Int
+
+  // Residual risk scores (after controls)
+  residualLikelihood Int
+  residualImpact     Int
+  residualScore      Int
+
+  // Risk response
+  response RiskResponse @default(MITIGATE)
+  controls String?      @db.Text
+
+  // Metadata
+  status    RiskStatus @default(OPEN)
+  source    RiskSource @default(MANUAL)
+  sourceRef String?
+  dueDate   DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relationships
+  registerId  String
+  register    RiskRegister @relation(fields: [registerId], references: [id])
+  createdById String
+  createdBy   User         @relation("RiskCreatedBy", fields: [createdById], references: [id])
+  ownerId     String?
+  owner       User?        @relation("RiskOwnedBy", fields: [ownerId], references: [id])
+
+  // AI analysis
+  aiAnalysis AIAnalysis?
+
+  @@unique([registerId, refCode])
+  @@map("risks")
+}
+
+enum RiskCategory {
+  STRATEGIC
+  OPERATIONAL
+  FINANCIAL
+  COMPLIANCE
+  TECHNOLOGY
+  REPUTATIONAL
+  ENVIRONMENTAL
+  PEOPLE
+}
+
+enum RiskResponse {
+  AVOID
+  MITIGATE
+  TRANSFER
+  ACCEPT
+}
+
+enum RiskStatus {
+  OPEN
+  IN_PROGRESS
+  MONITORING
+  CLOSED
+}
+
+enum RiskSource {
+  MANUAL
+  EMAIL
+  EXCEL
+  API
+}
+
+// ============================================
+// AI ANALYSIS
+// ============================================
+
+model AIAnalysis {
+  id     String @id @default(cuid())
+  riskId String @unique
+  risk   Risk   @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  // AI-generated insights
+  summary            String   @db.Text
+  suggestedControls  String?  @db.Text
+  scoreJustification String?  @db.Text
+  relatedRisks       String[]
+
+  // Metadata
+  modelVersion String
+  generatedAt  DateTime @default(now())
+  confidence   Float?
+
+  @@map("ai_analyses")
+}
+
+// ============================================
+// ASSESSMENTS & VYTL SCORE
+// ============================================
+
+model Assessment {
+  id          String           @id @default(cuid())
+  type        AssessmentType
+  status      AssessmentStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  completedAt DateTime?
+
+  // Vytl Score (0-100)
+  vytlScore      Int?
+  vytlGrade      String?
+  scoreBreakdown Json?
+
+  // Relationships
+  orgId        String
+  organisation Organisation  @relation(fields: [orgId], references: [id])
+  registerId   String?
+  register     RiskRegister? @relation(fields: [registerId], references: [id])
+
+  @@map("assessments")
+}
+
+enum AssessmentType {
+  INITIAL
+  QUARTERLY
+  ANNUAL
+  AD_HOC
+}
+
+enum AssessmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// KRI MONITORING
+// ============================================
+
+model Kri {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  unit           String
+  direction      KriDirection
+  currentValue   Decimal?
+  thresholdGreen Decimal
+  thresholdAmber Decimal
+  thresholdRed   Decimal
+  status         KriStatus    @default(GREEN)
+  lastUpdated    DateTime?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+  ownerId      String?
+  owner        User?        @relation(fields: [ownerId], references: [id])
+
+  @@map("kris")
+}
+
+enum KriDirection {
+  HIGHER_IS_WORSE
+  LOWER_IS_WORSE
+}
+
+enum KriStatus {
+  GREEN
+  AMBER
+  RED
+}
+
+// ============================================
+// EMAIL SUBMISSIONS
+// ============================================
+
+model EmailSubmission {
+  id              String              @id @default(cuid())
+  senderEmail     String
+  senderUserId    String?
+  subject         String
+  bodyPreview     String              @db.Text
+  status          EmailSubmissionStatus @default(PENDING)
+  rejectionReason String?
+  createdRiskId   String?
+  processedAt     DateTime?
+  createdAt       DateTime            @default(now())
+
+  // Relationships
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+
+  @@map("email_submissions")
+}
+
+enum EmailSubmissionStatus {
+  PENDING
+  PROCESSED
+  REJECTED
+}
+
+// ============================================
+// FILE UPLOADS & AUDIT
+// ============================================
+
+model Upload {
+  id          String       @id @default(cuid())
+  filename    String
+  s3Key       String
+  mimeType    String
+  sizeBytes   Int
+  status      UploadStatus @default(PENDING)
+  processedAt DateTime?
+  errorMsg    String?
+  createdAt   DateTime     @default(now())
+
+  registerId String
+  register   RiskRegister @relation(fields: [registerId], references: [id])
+
+  @@map("uploads")
+}
+
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String?
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+
+  @@index([orgId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
