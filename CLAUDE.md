@@ -141,6 +141,12 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `ExcelImportModal` - Multi-format import (Excel/CSV/PDF/Word) with AI extraction
 - `AuditTimeline` - Change history display for entities
 
+### Import Template
+Download: `/templates/risk-import-template.xlsx`
+- 10 sample risks across all categories
+- Instructions sheet with column descriptions
+- Regenerate with: `npx tsx scripts/generate-import-template.ts`
+
 ### File Structure
 ```
 src/

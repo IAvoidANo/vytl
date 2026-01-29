@@ -110,17 +110,18 @@
 - [x] Risk heatmap (5x5 matrix)
 - [x] Table/Heatmap view toggle
 
-### Sprint 4 - Monitoring & Import
+### Sprint 4 - Monitoring & Import ✅
 - [x] KRI monitoring dashboard (cards + table views)
 - [x] KRI inline value editing
 - [x] Excel/CSV import with column mapping
 - [x] Audit logging for risk mutations
 - [x] Audit timeline in risk History tab
-- [x] Smart field mapping with pattern-based auto-detection
+- [x] Smart field mapping with pattern-based auto-detection (50+ patterns)
 - [x] PDF document support (pdf-parse)
 - [x] Word document support (mammoth)
 - [x] Claude AI extraction for unstructured documents
 - [x] Enhanced validation preview (green/amber/red rows)
 - [x] Combined L×I column support (parse "3,4", "3x4", "3/4")
 - [x] Intelligent header row detection (skips title rows)
-- [x] Downloadable Excel import template (10 sample risks)
+- [x] Downloadable Excel import template (`/templates/risk-import-template.xlsx`)
+- [x] Detailed error handling for API/parsing failures
