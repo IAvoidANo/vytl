@@ -27,6 +27,9 @@ interface ColumnMapping {
   response: string
   controls: string
   status: string
+  // Combined columns (e.g., "Likelihood_Impact" containing "3,4")
+  inherentCombined: string
+  residualCombined: string
 }
 
 interface RiskPreview {
@@ -62,6 +65,12 @@ const OPTIONAL_FIELDS: { key: keyof ColumnMapping; label: string }[] = [
   { key: 'status', label: 'Status' },
 ]
 
+// Combined L×I columns (alternative to separate likelihood/impact)
+const COMBINED_FIELDS: { key: keyof ColumnMapping; label: string }[] = [
+  { key: 'inherentCombined', label: 'Inherent L×I (combined)' },
+  { key: 'residualCombined', label: 'Residual L×I (combined)' },
+]
+
 const CATEGORIES = [
   'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
   'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
@@ -70,9 +79,22 @@ const CATEGORIES = [
 const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
 const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED']
 
+// Patterns for combined Likelihood/Impact columns (e.g., "3,4" or "3x4")
+const COMBINED_PATTERNS: { pattern: RegExp; confidence: number; type: 'inherent' | 'residual' }[] = [
+  { pattern: /^inherent\s*(?:risk\s*)?(?:l[_x/]i|likelihood[_x/\s]*impact|l\s*[x\/]\s*i)$/i, confidence: 1.0, type: 'inherent' },
+  { pattern: /^gross\s*(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 1.0, type: 'inherent' },
+  { pattern: /^(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 0.9, type: 'inherent' },
+  { pattern: /^inherent\s*(?:risk\s*)?score$/i, confidence: 0.85, type: 'inherent' },
+  { pattern: /^inherent\s*risk$/i, confidence: 0.8, type: 'inherent' },
+  { pattern: /^residual\s*(?:risk\s*)?(?:l[_x/]i|likelihood[_x/\s]*impact|l\s*[x\/]\s*i)$/i, confidence: 1.0, type: 'residual' },
+  { pattern: /^net\s*(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 1.0, type: 'residual' },
+  { pattern: /^residual\s*(?:risk\s*)?score$/i, confidence: 0.85, type: 'residual' },
+  { pattern: /^residual\s*risk$/i, confidence: 0.8, type: 'residual' },
+]
+
 // Smart field mapping patterns - ordered by priority (first match wins)
 // More specific patterns should come before generic ones
-const FIELD_PATTERNS: Record<keyof ColumnMapping, { pattern: RegExp; confidence: number }[]> = {
+const FIELD_PATTERNS: Record<keyof Omit<ColumnMapping, 'inherentCombined' | 'residualCombined'>, { pattern: RegExp; confidence: number }[]> = {
   title: [
     { pattern: /^risk\s*title$/i, confidence: 1.0 },
     { pattern: /^risk\s*name$/i, confidence: 1.0 },
@@ -104,16 +126,21 @@ const FIELD_PATTERNS: Record<keyof ColumnMapping, { pattern: RegExp; confidence:
     { pattern: /^risk\s*class$/i, confidence: 0.95 },
     { pattern: /^risk\s*area$/i, confidence: 0.95 },
     { pattern: /^risk\s*domain$/i, confidence: 0.95 },
-    { pattern: /^principal\s*risk$/i, confidence: 0.9 },
+    { pattern: /^principal\s*risk(s)?$/i, confidence: 0.9 },
     { pattern: /^operational\s*risk\s*class(es)?$/i, confidence: 0.9 },
+    { pattern: /^strategic\s*objectives?$/i, confidence: 0.85 },
     { pattern: /^type$/i, confidence: 0.8 },
     { pattern: /^class$/i, confidence: 0.8 },
     { pattern: /^division$/i, confidence: 0.75 },
     { pattern: /^business\s*unit$/i, confidence: 0.75 },
+    { pattern: /^department$/i, confidence: 0.75 },
+    { pattern: /^function$/i, confidence: 0.7 },
     { pattern: /^area$/i, confidence: 0.7 },
     { pattern: /^domain$/i, confidence: 0.7 },
     { pattern: /^pillar$/i, confidence: 0.7 },
+    { pattern: /^theme$/i, confidence: 0.6 },
     { pattern: /category/i, confidence: 0.5 },
+    { pattern: /class/i, confidence: 0.4 },
   ],
   inherentLikelihood: [
     { pattern: /^inherent\s*likelihood$/i, confidence: 1.0 },
@@ -212,6 +239,7 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
     inherentLikelihood: '', inherentImpact: '',
     residualLikelihood: '', residualImpact: '',
     response: '', controls: '', status: '',
+    inherentCombined: '', residualCombined: '',
   }
   const confidence: Record<string, number> = {}
   const usedHeaders = new Set<string>()
@@ -219,6 +247,23 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
 
   // Log all headers for debugging
   debug.push(`Found ${headers.length} columns: ${headers.join(', ')}`)
+
+  // First, check for combined Likelihood/Impact columns
+  for (const header of headers) {
+    const normalizedHeader = header.trim()
+    for (const { pattern, confidence: patternConf, type } of COMBINED_PATTERNS) {
+      if (pattern.test(normalizedHeader)) {
+        const field = type === 'inherent' ? 'inherentCombined' : 'residualCombined'
+        if (!mapping[field] || patternConf > (confidence[field] || 0)) {
+          mapping[field] = header
+          confidence[field] = patternConf
+          debug.push(`🔗 Combined column: "${header}" → ${field} (${Math.round(patternConf * 100)}%)`)
+          if (patternConf >= 0.9) usedHeaders.add(header)
+        }
+        break
+      }
+    }
+  }
 
   // Match each field using patterns with confidence
   for (const [field, patterns] of Object.entries(FIELD_PATTERNS)) {
@@ -242,21 +287,39 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
     }
   }
 
+  // If we have combined columns but no separate likelihood/impact, note it
+  if (mapping.inherentCombined && !mapping.inherentLikelihood && !mapping.inherentImpact) {
+    debug.push(`ℹ️ Using combined column "${mapping.inherentCombined}" for inherent L×I`)
+  }
+  if (mapping.residualCombined && !mapping.residualLikelihood && !mapping.residualImpact) {
+    debug.push(`ℹ️ Using combined column "${mapping.residualCombined}" for residual L×I`)
+  }
+
   // Auto-copy inherent to residual if residual not found
-  if (!mapping.residualLikelihood && mapping.inherentLikelihood) {
+  if (!mapping.residualLikelihood && !mapping.residualCombined && mapping.inherentLikelihood) {
     mapping.residualLikelihood = mapping.inherentLikelihood
     confidence.residualLikelihood = 0.4
     debug.push(`Auto-copied inherent likelihood → residual likelihood`)
   }
-  if (!mapping.residualImpact && mapping.inherentImpact) {
+  if (!mapping.residualImpact && !mapping.residualCombined && mapping.inherentImpact) {
     mapping.residualImpact = mapping.inherentImpact
     confidence.residualImpact = 0.4
     debug.push(`Auto-copied inherent impact → residual impact`)
   }
+  if (!mapping.residualCombined && mapping.inherentCombined && !mapping.residualLikelihood) {
+    mapping.residualCombined = mapping.inherentCombined
+    confidence.residualCombined = 0.4
+    debug.push(`Auto-copied inherent combined → residual combined`)
+  }
 
-  // Log unmapped required fields
-  const unmapped = ['title', 'description', 'category', 'inherentLikelihood', 'inherentImpact']
+  // Log unmapped required fields (considering combined columns satisfy L+I requirements)
+  const hasInherent = mapping.inherentLikelihood || mapping.inherentCombined
+  const hasResidual = mapping.residualLikelihood || mapping.residualCombined
+  const unmapped = ['title', 'description', 'category']
     .filter(f => !mapping[f as keyof ColumnMapping])
+  if (!hasInherent) unmapped.push('inherentLikelihood/Impact')
+  if (!hasResidual) unmapped.push('residualLikelihood/Impact')
+
   if (unmapped.length > 0) {
     debug.push(`⚠️ Unmapped required fields: ${unmapped.join(', ')}`)
   }
@@ -299,6 +362,35 @@ function parseNumber(value: unknown, min: number, max: number, defaultVal: numbe
   return Math.min(max, Math.max(min, num))
 }
 
+// Parse combined likelihood/impact values like "3,4", "3x4", "3/4", "3 x 4"
+function parseCombinedScore(value: unknown): { likelihood: number; impact: number } | null {
+  if (!value) return null
+  const str = String(value).trim()
+
+  // Try various separators: comma, x, X, /, pipe, hyphen with optional spaces
+  const patterns = [
+    /^(\d+)\s*[,]\s*(\d+)$/,      // "3,4" or "3, 4"
+    /^(\d+)\s*[xX×]\s*(\d+)$/,    // "3x4", "3X4", "3 x 4"
+    /^(\d+)\s*[\/]\s*(\d+)$/,     // "3/4"
+    /^(\d+)\s*[\|]\s*(\d+)$/,     // "3|4"
+    /^(\d+)\s*[-]\s*(\d+)$/,      // "3-4"
+    /^\((\d+)\s*[,]\s*(\d+)\)$/,  // "(3,4)"
+  ]
+
+  for (const pattern of patterns) {
+    const match = str.match(pattern)
+    if (match) {
+      const likelihood = parseInt(match[1])
+      const impact = parseInt(match[2])
+      if (likelihood >= 1 && likelihood <= 5 && impact >= 1 && impact <= 5) {
+        return { likelihood, impact }
+      }
+    }
+  }
+
+  return null
+}
+
 export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) {
   const [step, setStep] = useState<ImportStep>('upload')
   const [fileType, setFileType] = useState<FileType>('excel')
@@ -310,6 +402,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     inherentLikelihood: '', inherentImpact: '',
     residualLikelihood: '', residualImpact: '',
     response: '', controls: '', status: '',
+    inherentCombined: '', residualCombined: '',
   })
   const [mappingConfidence, setMappingConfidence] = useState<Record<string, number>>({})
   const [mappingDebug, setMappingDebug] = useState<string[]>([])
@@ -483,19 +576,37 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       let headerRowIndex = 0
       let headerRow: string[] = []
 
-      // Look for the row with the most non-empty cells as header
-      let maxCols = 0
+      // Score each row to find the header:
+      // - Prefer rows with text content (not just numbers)
+      // - Prefer rows with more non-empty columns
+      // - Headers typically have short, text-like values
+      let maxScore = 0
       for (let i = 0; i < Math.min(10, jsonData.length); i++) {
         const row = jsonData[i] || []
         const nonEmptyCols = row.filter(c => c !== undefined && c !== '' && c !== null).length
-        if (nonEmptyCols > maxCols) {
-          maxCols = nonEmptyCols
+        if (nonEmptyCols === 0) continue
+
+        // Count cells that look like headers (text, not just numbers)
+        const textCells = row.filter(c => {
+          const val = String(c || '').trim()
+          if (!val) return false
+          // Headers are usually short text, not long paragraphs or pure numbers
+          return val.length > 0 && val.length < 50 && !/^\d+([.,]\d+)?$/.test(val)
+        }).length
+
+        // Score: weight text cells heavily, also consider total columns
+        const score = (textCells * 3) + nonEmptyCols
+        debug.push(`Row ${i} score: ${score} (${textCells} text cells, ${nonEmptyCols} non-empty)`)
+
+        if (score > maxScore) {
+          maxScore = score
           headerRowIndex = i
         }
       }
 
       headerRow = (jsonData[headerRowIndex] || []).map(h => String(h || '').trim())
-      debug.push(`🎯 Detected header row: ${headerRowIndex} (${headerRow.length} columns, ${maxCols} non-empty)`)
+      const nonEmptyHeaders = headerRow.filter(h => h).length
+      debug.push(`🎯 Detected header row: ${headerRowIndex} (${headerRow.length} columns, ${nonEmptyHeaders} non-empty)`)
       debug.push(`📋 Headers: ${headerRow.filter(h => h).join(', ')}`)
 
       // Data starts after header row
@@ -523,9 +634,32 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
   }
 
   const validateMapping = (): boolean => {
-    const missing = REQUIRED_FIELDS.filter(f => !mapping[f.key])
+    const missing: string[] = []
+
+    // Check basic required fields
+    if (!mapping.title) missing.push('Title')
+    if (!mapping.description) missing.push('Description')
+    if (!mapping.category) missing.push('Category')
+
+    // Check likelihood/impact - can be separate columns OR combined column
+    const hasInherentL = !!mapping.inherentLikelihood
+    const hasInherentI = !!mapping.inherentImpact
+    const hasInherentCombined = !!mapping.inherentCombined
+    const hasResidualL = !!mapping.residualLikelihood
+    const hasResidualI = !!mapping.residualImpact
+    const hasResidualCombined = !!mapping.residualCombined
+
+    if (!hasInherentCombined && (!hasInherentL || !hasInherentI)) {
+      if (!hasInherentL && !hasInherentCombined) missing.push('Inherent Likelihood')
+      if (!hasInherentI && !hasInherentCombined) missing.push('Inherent Impact')
+    }
+    if (!hasResidualCombined && (!hasResidualL || !hasResidualI)) {
+      if (!hasResidualL && !hasResidualCombined) missing.push('Residual Likelihood')
+      if (!hasResidualI && !hasResidualCombined) missing.push('Residual Impact')
+    }
+
     if (missing.length > 0) {
-      setError(`Please map required fields: ${missing.map(f => f.label).join(', ')}`)
+      setError(`Please map required fields: ${missing.join(', ')}`)
       return false
     }
     if (!selectedRegisterId) {
@@ -558,10 +692,41 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       if (title.length > 200) warnings.push('Title very long')
       if (description.length < 10) warnings.push('Description too short')
 
-      const inherentLikelihood = parseNumber(getValue(mapping.inherentLikelihood), 1, 5, 3)
-      const inherentImpact = parseNumber(getValue(mapping.inherentImpact), 1, 5, 3)
-      const residualLikelihood = parseNumber(getValue(mapping.residualLikelihood), 1, 5, inherentLikelihood)
-      const residualImpact = parseNumber(getValue(mapping.residualImpact), 1, 5, inherentImpact)
+      // Parse inherent scores (from combined or separate columns)
+      let inherentLikelihood: number
+      let inherentImpact: number
+      if (mapping.inherentCombined) {
+        const combined = parseCombinedScore(getValue(mapping.inherentCombined))
+        if (combined) {
+          inherentLikelihood = combined.likelihood
+          inherentImpact = combined.impact
+        } else {
+          inherentLikelihood = 3
+          inherentImpact = 3
+          warnings.push('Could not parse inherent L×I')
+        }
+      } else {
+        inherentLikelihood = parseNumber(getValue(mapping.inherentLikelihood), 1, 5, 3)
+        inherentImpact = parseNumber(getValue(mapping.inherentImpact), 1, 5, 3)
+      }
+
+      // Parse residual scores (from combined or separate columns)
+      let residualLikelihood: number
+      let residualImpact: number
+      if (mapping.residualCombined) {
+        const combined = parseCombinedScore(getValue(mapping.residualCombined))
+        if (combined) {
+          residualLikelihood = combined.likelihood
+          residualImpact = combined.impact
+        } else {
+          residualLikelihood = inherentLikelihood
+          residualImpact = inherentImpact
+          warnings.push('Could not parse residual L×I')
+        }
+      } else {
+        residualLikelihood = parseNumber(getValue(mapping.residualLikelihood), 1, 5, inherentLikelihood)
+        residualImpact = parseNumber(getValue(mapping.residualImpact), 1, 5, inherentImpact)
+      }
 
       if (residualLikelihood > inherentLikelihood) warnings.push('Residual L > Inherent L')
       if (residualImpact > inherentImpact) warnings.push('Residual I > Inherent I')
@@ -849,6 +1014,40 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                   ))}
                 </div>
               </div>
+
+              {/* Combined L×I columns (alternative to separate columns) */}
+              {(mapping.inherentCombined || mapping.residualCombined || headers.some(h => /l[_x\/]i|likelihood.*impact/i.test(h))) && (
+                <div>
+                  <h4 className="font-medium text-white mb-3">
+                    Combined Score Columns
+                    <span className="text-xs text-slate-500 ml-2 font-normal">
+                      (Use if L×I is in one column like &quot;3,4&quot; or &quot;3x4&quot;)
+                    </span>
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {COMBINED_FIELDS.map((field) => (
+                      <div key={field.key}>
+                        <label className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-1">
+                          {field.label}
+                          {getMappingIndicator(field.key)}
+                        </label>
+                        <select
+                          value={mapping[field.key]}
+                          onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
+                          className={`w-full px-3 py-2 bg-slate-700 border rounded-lg text-white ${
+                            mapping[field.key] ? 'border-purple-500/50' : 'border-slate-600'
+                          }`}
+                        >
+                          <option value="">Not mapped</option>
+                          {headers.map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
