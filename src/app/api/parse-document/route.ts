@@ -22,8 +22,9 @@ export async function POST(request: NextRequest) {
 
     if (fileName.endsWith('.pdf')) {
       try {
-        // Dynamic import pdf-parse
-        const pdfParse = (await import('pdf-parse')).default
+        // Dynamic import pdf-parse - use require for CommonJS compatibility
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>
         const buffer = Buffer.from(await file.arrayBuffer())
         console.log(`[parse-document] PDF buffer created: ${buffer.length} bytes`)
         const pdfData = await pdfParse(buffer)

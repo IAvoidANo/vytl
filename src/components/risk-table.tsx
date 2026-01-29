@@ -24,10 +24,12 @@ interface RiskData {
   residualScore: number
   response: RiskResponse
   controls: string | null
+  rootCause: string | null
   status: RiskStatus
   registerId: string
   ownerId: string | null
   dueDate: Date | null
+  isOngoing: boolean
   refCode: string
   createdAt: Date
   register: { name: string }

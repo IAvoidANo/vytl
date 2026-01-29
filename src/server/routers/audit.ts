@@ -26,4 +26,25 @@ export const auditRouter = router({
       })
       return logs
     }),
+
+  // Get recent activity across the organisation
+  recent: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).optional().default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const logs = await db.auditLog.findMany({
+        where: {
+          orgId: ctx.user.orgId,
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: input.limit,
+      })
+      return logs
+    }),
 })

@@ -9,6 +9,18 @@ interface AuditTimelineProps {
   entityId: string
 }
 
+// Explicit type to avoid TS2589 deep type inference error
+interface AuditLogItem {
+  id: string
+  action: string
+  entityType: string | null
+  entityId: string | null
+  oldValues: unknown
+  newValues: unknown
+  createdAt: string
+  user: { id: string; name: string | null; email: string } | null
+}
+
 const ACTION_ICONS = {
   CREATE: Plus,
   UPDATE: Pencil,
@@ -61,7 +73,7 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
 
   return (
     <div className="space-y-1">
-      {logs.map((log, idx) => {
+      {(logs as unknown as AuditLogItem[]).map((log, idx) => {
         const Icon = ACTION_ICONS[log.action as keyof typeof ACTION_ICONS] || Clock
         const colors = ACTION_COLORS[log.action as keyof typeof ACTION_COLORS] || 'bg-slate-500/20 text-slate-400 border-slate-500/30'
         const label = ACTION_LABELS[log.action as keyof typeof ACTION_LABELS] || log.action
@@ -72,7 +84,7 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
               <div className={`w-9 h-9 rounded-full flex items-center justify-center border ${colors}`}>
                 <Icon className="w-4 h-4" />
               </div>
-              {idx < logs.length - 1 && <div className="w-0.5 flex-1 bg-slate-700 min-h-[24px]" />}
+              {idx < (logs as unknown as AuditLogItem[]).length - 1 && <div className="w-0.5 flex-1 bg-slate-700 min-h-[24px]" />}
             </div>
 
             <div className="flex-1 pb-6">
@@ -85,7 +97,7 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
                 {format(new Date(log.createdAt), 'dd MMM yyyy \'at\' HH:mm')}
               </div>
 
-              {log.action === 'UPDATE' && log.oldValues && log.newValues && (
+              {log.action === 'UPDATE' && !!log.oldValues && !!log.newValues && (
                 <div className="bg-slate-900 rounded-lg p-3 text-sm">
                   <ChangesList
                     oldValues={log.oldValues as Record<string, unknown>}
@@ -94,13 +106,13 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
                 </div>
               )}
 
-              {log.action === 'CREATE' && log.newValues && (
+              {log.action === 'CREATE' && !!log.newValues && (
                 <div className="bg-slate-900 rounded-lg p-3 text-sm">
                   <CreatedValuesList values={log.newValues as Record<string, unknown>} />
                 </div>
               )}
 
-              {log.action === 'DELETE' && log.oldValues && (
+              {log.action === 'DELETE' && !!log.oldValues && (
                 <div className="bg-slate-900 rounded-lg p-3 text-sm text-slate-400">
                   <DeletedValuesList values={log.oldValues as Record<string, unknown>} />
                 </div>

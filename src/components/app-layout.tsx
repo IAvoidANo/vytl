@@ -18,6 +18,9 @@ export function AppLayout({ children, userName, userRole }: AppLayoutProps) {
         <main className="flex-1 p-6">
           {children}
         </main>
+        <footer className="py-2 text-center text-xs text-slate-500">
+          Vytl Risk Management
+        </footer>
       </div>
     </div>
   )

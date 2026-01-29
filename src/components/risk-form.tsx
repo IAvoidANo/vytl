@@ -46,10 +46,12 @@ interface RiskFormProps {
     residualImpact: number
     response: RiskResponse
     controls: string | null
+    rootCause: string | null
     status: RiskStatus
     registerId: string
     ownerId: string | null
     dueDate: Date | null
+    isOngoing: boolean
   }
   onClose: () => void
   onSuccess: () => void
@@ -68,10 +70,12 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
     residualImpact: risk?.residualImpact ?? 2,
     response: risk?.response ?? 'MITIGATE' as RiskResponse,
     controls: risk?.controls ?? '',
+    rootCause: risk?.rootCause ?? '',
     status: risk?.status ?? 'OPEN' as RiskStatus,
     registerId: risk?.registerId ?? '',
     ownerId: risk?.ownerId ?? '',
     dueDate: risk?.dueDate ? new Date(risk.dueDate).toISOString().split('T')[0] : '',
+    isOngoing: risk?.isOngoing ?? false,
   })
 
   const [error, setError] = useState('')
@@ -124,10 +128,12 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
         residualLikelihood: formData.residualLikelihood,
         residualImpact: formData.residualImpact,
         response: formData.response,
-        controls: formData.controls || undefined,
+        controls: formData.controls || null,
+        rootCause: formData.rootCause || null,
         status: formData.status,
         ownerId: formData.ownerId || null,
-        dueDate: formData.dueDate || null,
+        dueDate: formData.isOngoing ? null : (formData.dueDate || null),
+        isOngoing: formData.isOngoing,
       })
     } else {
       createMutation.mutate({
@@ -141,8 +147,10 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
         residualImpact: formData.residualImpact,
         response: formData.response,
         controls: formData.controls || undefined,
+        rootCause: formData.rootCause || undefined,
         ownerId: formData.ownerId || undefined,
-        dueDate: formData.dueDate || undefined,
+        dueDate: formData.isOngoing ? undefined : (formData.dueDate || undefined),
+        isOngoing: formData.isOngoing,
       })
     }
   }
@@ -338,6 +346,17 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Root Cause</label>
+            <textarea
+              value={formData.rootCause}
+              onChange={(e) => setFormData({ ...formData, rootCause: e.target.value })}
+              rows={2}
+              placeholder="Describe the underlying cause of this risk..."
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+
           {/* Assignment */}
           <div className="grid grid-cols-3 gap-4">
             {isEditing && (
@@ -371,12 +390,24 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Due Date</label>
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
+              <div className="flex items-center gap-3">
+                <input
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  disabled={formData.isOngoing}
+                  className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isOngoing}
+                  onChange={(e) => setFormData({ ...formData, isOngoing: e.target.checked, dueDate: e.target.checked ? '' : formData.dueDate })}
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500"
+                />
+                <span className="text-sm text-slate-400">Ongoing monitoring (no due date)</span>
+              </label>
             </div>
           </div>
 

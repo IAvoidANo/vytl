@@ -1,4 +1,5 @@
 import { db } from './db'
+import { Prisma } from '@prisma/client'
 
 type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE'
 type EntityType = 'RISK' | 'KRI' | 'REGISTER'
@@ -23,8 +24,8 @@ export async function createAuditLog(params: AuditLogParams) {
       entityId: params.entityId,
       userId: params.userId,
       orgId: params.orgId,
-      oldValues: params.oldValues ?? undefined,
-      newValues: params.newValues ?? undefined,
+      oldValues: params.oldValues as Prisma.InputJsonValue ?? undefined,
+      newValues: params.newValues as Prisma.InputJsonValue ?? undefined,
       ipAddress: params.ipAddress,
       userAgent: params.userAgent,
     },

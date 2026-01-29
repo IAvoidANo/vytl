@@ -1,27 +1,31 @@
 # Vytl MVP Backlog
 
-## Sprint 5 - RECOMMENDED PRIORITY
+## Sprint 5 - COMPLETE ✅
 
-### AI Risk Analysis (High Value)
-- [ ] Claude API integration for individual risk analysis
-- [ ] Auto-generate risk summaries on detail page
-- [ ] Suggested controls recommendations
-- [ ] Score justification narratives
-- [ ] "Generate Analysis" button → AI tab populated
+### AI Risk Analysis (High Value) - COMPLETE ✅
+- [x] Claude API integration for individual risk analysis
+- [x] Auto-generate executive summaries on detail page
+- [x] Suggested controls recommendations (3-5 specific controls)
+- [x] Score justification narratives (likelihood, impact, overall)
+- [x] "Analyse with AI" button in AI Analysis tab
+- [x] Related risk categories identification
+- [x] Suggested KRIs to monitor
+- [x] Confidence score display
+- [x] Regeneration support
 
-### Dashboard Upgrades (User Experience)
-- [ ] Risk Pulse indicator (overall health score)
-- [ ] Top 5 highest-risk items widget
-- [ ] Recent activity feed (from audit logs)
-- [ ] Risk by category donut chart
+### Dashboard Upgrades (User Experience) - COMPLETE ✅
+- [x] Risk Pulse indicator (animated heartbeat based on Vytl Score)
+- [x] Top 5 highest-risk items widget (sorted by residual score)
+- [x] Recent activity feed (last 10 audit log entries)
+- [x] Risk by category donut chart (SVG with legend)
 
-### Vytl Score (Differentiator)
-- [ ] Composite organisation risk score (0-100)
-- [ ] Letter grade assignment (A-F)
-- [ ] Score breakdown by category
-- [ ] Display on dashboard
-
-**Rationale**: AI Analysis adds immediate value to existing risks, Dashboard makes the app more useful daily, and Vytl Score is the unique selling point.
+### Vytl Score (Differentiator) - COMPLETE ✅
+- [x] Composite organisation risk score (0-100)
+- [x] 4 dimensions: Coverage, Control Effectiveness, Maturity, Trend (25 pts each)
+- [x] Letter grade assignment: A (80+), B (60-79), C (40-59), D (20-39), F (0-19)
+- [x] Score breakdown with detailed component analysis
+- [x] Assessment history stored in database
+- [x] VytlScoreCard component on dashboard
 
 ---
 
@@ -37,43 +41,6 @@
 - [ ] Email forwarding for risk capture
 - [ ] KRI trend sparklines
 - [ ] Board report PDF export
-
-## Vytl Score Calculation
-- [ ] Composite risk score (0-100 scale)
-- [ ] Letter grade assignment (A-F)
-- [ ] Score breakdown by category
-- [ ] Trend tracking over time
-- [ ] Score comparison benchmarks
-
-## AI Risk Analysis Integration
-- [ ] Claude API integration for risk analysis
-- [ ] Auto-generate risk summaries
-- [ ] Suggested controls recommendations
-- [ ] Score justification narratives
-- [ ] Similar risk detection
-
-## Email Forwarding for Risk Capture
-- [ ] Inbound email parsing (email-parse)
-- [ ] Auto-create risks from emails
-- [ ] Attachment extraction to S3
-- [ ] Sender verification
-- [ ] Email status tracking (PENDING/PROCESSED/REJECTED)
-
-## Dashboard Upgrades
-- [ ] Risk Pulse indicator (overall health)
-- [ ] Top 5 risks widget
-- [ ] Recent activity feed
-- [ ] KRI trend sparklines
-- [ ] Risk by category chart
-- [ ] Monthly comparison stats
-
-## Settings Page Completion
-- [ ] Organisation profile editing
-- [ ] POPIA compliance settings
-- [ ] Data retention configuration
-- [ ] User management (invite, roles)
-- [ ] Notification preferences
-- [ ] API key management
 
 ## Future Backlog
 - [ ] Board report PDF export
@@ -125,3 +92,27 @@
 - [x] Intelligent header row detection (skips title rows)
 - [x] Downloadable Excel import template (`/templates/risk-import-template.xlsx`)
 - [x] Detailed error handling for API/parsing failures
+
+### Sprint 5 - AI Analysis & Dashboard ✅
+- [x] Vytl Score calculation (0-100, 4 dimensions)
+- [x] Letter grades (A-F) with score breakdown display
+- [x] Assessment history tracking
+- [x] Risk Pulse indicator (animated based on Vytl Score)
+- [x] Top 5 risks widget (compact, sorted by residual score)
+- [x] Recent 10 activity feed (compact audit log)
+- [x] Risk by category donut chart (compact SVG)
+- [x] AI Risk Analysis with Claude API
+  - Executive summary generation
+  - Suggested controls (3-5 recommendations)
+  - Score justification (L×I reasoning)
+  - Related categories identification
+  - Suggested KRIs to monitor
+  - Confidence scoring
+  - Regeneration support
+  - **Apply to Risk** functionality with edit modals
+  - "Applied" indicators after incorporation
+- [x] Dashboard optimized for single-screen (1080p) display
+- [x] Root Cause field added to Risk model
+- [x] Due Date "Ongoing" checkbox option (isOngoing boolean)
+- [x] Quick Actions bar retained for new user onboarding
+- [x] App footer with "Vytl Risk Management" branding

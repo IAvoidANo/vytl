@@ -155,14 +155,16 @@ model Risk {
   residualScore      Int
 
   // Risk response
-  response RiskResponse @default(MITIGATE)
-  controls String?      @db.Text
+  response  RiskResponse @default(MITIGATE)
+  controls  String?      @db.Text
+  rootCause String?      @db.Text
 
   // Metadata
   status    RiskStatus @default(OPEN)
   source    RiskSource @default(MANUAL)
   sourceRef String?
   dueDate   DateTime?
+  isOngoing Boolean    @default(false)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 

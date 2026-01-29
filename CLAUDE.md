@@ -55,6 +55,12 @@ if (!session?.user) redirect('/login')
 - **Residual**: Risk after controls applied
 - Scale: 1-5 for likelihood and impact
 
+### Risk Fields
+- `rootCause`: Optional text field for root cause analysis
+- `isOngoing`: Boolean flag for ongoing monitoring (no due date)
+- `controls`: Mitigation controls (can be populated from AI analysis)
+- `aiAnalysis`: One-to-one relation with AI-generated insights
+
 ### Risk Sources
 - `MANUAL`: User-entered
 - `EMAIL`: Parsed from email submissions
@@ -115,10 +121,36 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - [x] Intelligent header row detection (handles title rows above headers)
 - [x] Downloadable Excel import template with 10 sample risks
 
-### Sprint 5 - PLANNED (Recommended)
-- [ ] AI Risk Analysis in detail page (Claude API)
-- [ ] Dashboard upgrades (Risk Pulse, top risks, activity feed)
-- [ ] Vytl Score calculation (0-100 with A-F grades)
+### Sprint 5 - COMPLETE
+- [x] AI Risk Analysis in detail page (Claude API)
+  - "Analyse with AI" button triggers Claude analysis
+  - Executive summary (2-3 sentences)
+  - Suggested controls (3-5 recommendations)
+  - Score justification (likelihood, impact, overall)
+  - Related risk categories
+  - Suggested KRIs to monitor
+  - Confidence score display
+  - Regeneration support
+  - **Apply to Risk** functionality with edit modals:
+    - "Apply to Description" - copies summary to description
+    - "Add to Controls" - appends to controls field
+    - "Apply as Root Cause" - adds to new rootCause field
+    - Editable content before applying
+    - "Applied" indicator after incorporating
+- [x] Dashboard upgrades - compact single-screen layout (1080p optimized)
+  - VytlScoreCardCompact with integrated Risk Pulse
+  - Stats cards in horizontal row (Total, High Risk, Open, Closed)
+  - TopRisksCompact (3 items), CategoryChartCompact, ActivityFeedCompact (5 items)
+  - Removed Quick Actions bar (redundant with sidebar)
+- [x] Vytl Score calculation with 4 dimensions:
+  - Coverage (25 pts): Risk register completeness
+  - Control Effectiveness (25 pts): Inherent → Residual reduction
+  - Maturity (25 pts): Controls documented, monitoring active
+  - Trend (25 pts): Score improvement over time
+- [x] Letter grades: A (80+), B (60-79), C (40-59), D (20-39), F (0-19)
+- [x] Assessment history stored in database
+- [x] Due Date "Ongoing" option - checkbox to mark as ongoing monitoring
+- [x] Root Cause field added to Risk model
 
 ### Pages
 | Route | Status | Description |
@@ -140,6 +172,11 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `KriForm` - Create/edit KRI with threshold configuration
 - `ExcelImportModal` - Multi-format import (Excel/CSV/PDF/Word) with AI extraction
 - `AuditTimeline` - Change history display for entities
+- `VytlScoreCard` - Animated score display with grade and breakdown
+- `RiskPulse` - Visual heartbeat indicator (green/amber/red based on score)
+- `TopRisks` - Top 5 highest-risk items widget
+- `ActivityFeed` - Recent audit log activity with user/action/timestamp
+- `CategoryChart` - SVG donut chart showing risk distribution by category
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -169,18 +206,26 @@ src/
 │   ├── kri-table.tsx, kri-form.tsx
 │   ├── excel-import-modal.tsx
 │   ├── audit-timeline.tsx
+│   ├── vytl-score-card.tsx
+│   ├── dashboard/
+│   │   ├── risk-pulse.tsx, top-risks.tsx
+│   │   ├── activity-feed.tsx, category-chart.tsx
+│   │   └── index.ts
 │   └── risk-score-badge.tsx, providers.tsx
 ├── lib/
 │   ├── auth.ts          # NextAuth config
 │   ├── db.ts            # Prisma client
 │   ├── trpc.ts          # tRPC server setup
 │   ├── trpc-client.ts   # tRPC React client
-│   └── audit.ts         # Audit logging utilities
+│   ├── audit.ts         # Audit logging utilities
+│   └── vytl-score.ts    # Vytl Score calculation (4 dimensions)
 └── server/routers/
     ├── index.ts         # Root router
-    ├── risk.ts          # Risk CRUD + bulkCreate
+    ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks
     ├── kri.ts           # KRI CRUD + status calc
-    ├── audit.ts         # Audit log queries
+    ├── audit.ts         # Audit log queries + recent activity
+    ├── assessment.ts    # Vytl Score assessment CRUD
+    ├── ai-analysis.ts   # Claude AI risk analysis
     └── import.ts        # AI document extraction
 
 public/templates/

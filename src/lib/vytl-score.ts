@@ -289,9 +289,6 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
   const prevBreakdown = lastAssessment.scoreBreakdown as unknown as ScoreBreakdown
   const prevControlScore = prevBreakdown.controlEffectiveness?.details?.averageReduction || 0
 
-  const currentAvgResidual =
-    currentRisks.reduce((sum, r) => sum + r.residualScore, 0) / currentRisks.length
-
   // Determine trend direction
   // For simplicity, compare control effectiveness as a proxy for improvement
   const currentReduction = await db.risk.findMany({

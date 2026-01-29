@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
-import { Decimal } from '@prisma/client/runtime/library'
 
 const kriDirectionEnum = z.enum(['HIGHER_IS_WORSE', 'LOWER_IS_WORSE'])
 

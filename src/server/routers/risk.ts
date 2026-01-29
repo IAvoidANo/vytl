@@ -29,8 +29,10 @@ const createRiskSchema = z.object({
   residualImpact: z.number().min(1).max(5),
   response: riskResponseEnum,
   controls: z.string().optional(),
+  rootCause: z.string().optional(),
   ownerId: z.string().optional(),
   dueDate: z.string().optional(),
+  isOngoing: z.boolean().optional(),
 })
 
 const updateRiskSchema = z.object({
@@ -43,10 +45,12 @@ const updateRiskSchema = z.object({
   residualLikelihood: z.number().min(1).max(5).optional(),
   residualImpact: z.number().min(1).max(5).optional(),
   response: riskResponseEnum.optional(),
-  controls: z.string().optional(),
+  controls: z.string().nullable().optional(),
+  rootCause: z.string().nullable().optional(),
   status: riskStatusEnum.optional(),
   ownerId: z.string().nullable().optional(),
   dueDate: z.string().nullable().optional(),
+  isOngoing: z.boolean().optional(),
 })
 
 export const riskRouter = router({
@@ -144,6 +148,33 @@ export const riskRouter = router({
     }
   }),
 
+  // Get top 5 highest-risk items
+  topRisks: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(10).optional().default(5),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const risks = await db.risk.findMany({
+        where: { register: { orgId: ctx.user.orgId } },
+        select: {
+          id: true,
+          refCode: true,
+          title: true,
+          category: true,
+          residualScore: true,
+          residualLikelihood: true,
+          residualImpact: true,
+          status: true,
+          owner: { select: { name: true } },
+        },
+        orderBy: { residualScore: 'desc' },
+        take: input.limit,
+      })
+      return risks
+    }),
+
   // Create a new risk
   create: protectedProcedure
     .input(createRiskSchema)
@@ -176,10 +207,12 @@ export const riskRouter = router({
           residualScore: input.residualLikelihood * input.residualImpact,
           response: input.response,
           controls: input.controls,
+          rootCause: input.rootCause,
           registerId: input.registerId,
           createdById: ctx.user.id,
           ownerId: input.ownerId,
           dueDate: input.dueDate ? new Date(input.dueDate) : null,
+          isOngoing: input.isOngoing ?? false,
         },
         include: {
           register: { select: { name: true } },
