@@ -131,26 +131,32 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - Suggested KRIs to monitor
   - Confidence score display
   - Regeneration support
-  - **Apply to Risk** functionality with edit modals:
-    - "Apply to Description" - copies summary to description
-    - "Add to Controls" - appends to controls field
-    - "Apply as Root Cause" - adds to new rootCause field
-    - Editable content before applying
-    - "Applied" indicator after incorporating
+  - **Apply to Risk** functionality with edit modals
 - [x] Dashboard upgrades - compact single-screen layout (1080p optimized)
-  - VytlScoreCardCompact with integrated Risk Pulse
-  - Stats cards in horizontal row (Total, High Risk, Open, Closed)
-  - TopRisksCompact (3 items), CategoryChartCompact, ActivityFeedCompact (5 items)
-  - Removed Quick Actions bar (redundant with sidebar)
-- [x] Vytl Score calculation with 4 dimensions:
-  - Coverage (25 pts): Risk register completeness
-  - Control Effectiveness (25 pts): Inherent → Residual reduction
-  - Maturity (25 pts): Controls documented, monitoring active
-  - Trend (25 pts): Score improvement over time
+  - VytlScoreCard with score breakdown and trend
+  - RiskPulse animated indicator
+  - Top 5 risks widget, Activity feed (10 items), Category donut chart
+  - Quick Actions bar for new user onboarding
+- [x] Vytl Score calculation (4 dimensions × 25 pts each)
 - [x] Letter grades: A (80+), B (60-79), C (40-59), D (20-39), F (0-19)
-- [x] Assessment history stored in database
-- [x] Due Date "Ongoing" option - checkbox to mark as ongoing monitoring
+- [x] Due Date "Ongoing" option (isOngoing checkbox)
 - [x] Root Cause field added to Risk model
+- [x] App footer with Vytl branding
+
+### Sprint 6 - IN PROGRESS (Beta Readiness)
+- [ ] **RBAC Enforcement** - Check user.role on mutations
+- [ ] **User Management** - Invite system, role assignment UI
+- [ ] **Password Reset** - Email-based recovery flow
+- [ ] **Settings Page** - Org profile editing, POPIA settings
+- [ ] **Rate Limiting** - Protect AI/import endpoints
+- [ ] **Error Handling** - Global error boundary, toast notifications
+- [ ] **Audit Improvements** - Populate IP/userAgent fields
+
+#### Beta Blockers Identified:
+1. Roles defined but not enforced (all users have same permissions)
+2. No way to invite team members
+3. No password recovery
+4. Settings page is read-only placeholder
 
 ### Pages
 | Route | Status | Description |
