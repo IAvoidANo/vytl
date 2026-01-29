@@ -71,6 +71,7 @@ DATABASE_URL=        # Supabase pooled connection (port 6543, ?pgbouncer=true)
 DIRECT_URL=          # Supabase session connection (port 5432)
 NEXTAUTH_SECRET=     # JWT signing secret
 NEXTAUTH_URL=        # Base URL (http://localhost:3000)
+ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 ```
 
 ## Conventions
@@ -110,6 +111,9 @@ NEXTAUTH_URL=        # Base URL (http://localhost:3000)
 - [x] Word document support (mammoth)
 - [x] Claude AI extraction for unstructured documents
 - [x] Enhanced validation preview (green/amber/red rows)
+- [x] Combined L×I column support (parse "3,4", "3x4", "3/4" formats)
+- [x] Intelligent header row detection (handles title rows above headers)
+- [x] Downloadable Excel import template with 10 sample risks
 
 ### Sprint 5 - PLANNED (Recommended)
 - [ ] AI Risk Analysis in detail page (Claude API)
@@ -172,4 +176,10 @@ src/
     ├── kri.ts           # KRI CRUD + status calc
     ├── audit.ts         # Audit log queries
     └── import.ts        # AI document extraction
+
+public/templates/
+└── risk-import-template.xlsx  # Downloadable import template
+
+scripts/
+└── generate-import-template.ts  # Regenerate Excel template
 ```

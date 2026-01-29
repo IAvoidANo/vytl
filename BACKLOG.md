@@ -121,3 +121,6 @@
 - [x] Word document support (mammoth)
 - [x] Claude AI extraction for unstructured documents
 - [x] Enhanced validation preview (green/amber/red rows)
+- [x] Combined L×I column support (parse "3,4", "3x4", "3/4")
+- [x] Intelligent header row detection (skips title rows)
+- [x] Downloadable Excel import template (10 sample risks)
