@@ -519,7 +519,9 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       // Extract meaningful error message
       let errorMsg = 'Failed to extract risks.'
       if (err instanceof Error) {
-        if (err.message.includes('ANTHROPIC_API_KEY')) {
+        if (err.message.includes('credit') || err.message.includes('purchase')) {
+          errorMsg = 'Anthropic API credits exhausted. Please add credits at console.anthropic.com'
+        } else if (err.message.includes('ANTHROPIC_API_KEY')) {
           errorMsg = 'ANTHROPIC_API_KEY not configured. Please add it to your .env.local file.'
         } else if (err.message.includes('401') || err.message.includes('authentication')) {
           errorMsg = 'Invalid API key. Check your ANTHROPIC_API_KEY in .env.local.'

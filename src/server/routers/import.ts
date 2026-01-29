@@ -156,7 +156,9 @@ export const importRouter = router({
         if (error instanceof Error) {
           errorMessage = error.message
           // Check for common Anthropic API errors
-          if (error.message.includes('401') || error.message.includes('authentication')) {
+          if (error.message.includes('credit balance') || error.message.includes('purchase credits')) {
+            errorMessage = 'Anthropic API credits exhausted. Please add credits at console.anthropic.com'
+          } else if (error.message.includes('401') || error.message.includes('authentication')) {
             errorMessage = 'Invalid ANTHROPIC_API_KEY. Check your .env.local file.'
           } else if (error.message.includes('429')) {
             errorMessage = 'API rate limit exceeded. Please wait and try again.'
