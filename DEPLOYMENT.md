@@ -4,15 +4,47 @@ This guide covers deploying Vytl to production using Vercel and Supabase.
 
 ## Prerequisites
 
-- GitHub repository with Vytl codebase
-- Vercel account (free tier works)
-- Supabase account (free tier works for beta)
-- Anthropic API key for AI features
-- Custom domain (optional)
+- GitHub account
+- Vercel account (free Hobby tier works)
+- Supabase account (free tier works for beta - 500MB, 2 projects)
+- Anthropic API key for AI features ($5 credit on signup)
+- Custom domain (optional, recommended for production)
+
+## Quick Start (15 minutes)
+
+1. Push code to GitHub
+2. Create Supabase project, get connection strings
+3. Import to Vercel, set environment variables
+4. Run database migration
+5. Test deployment
 
 ---
 
-## 1. Environment Variables
+## Step 1: Push Code to GitHub
+
+### Create GitHub Repository
+
+```bash
+# If not already a git repo
+git init
+git add .
+git commit -m "Initial commit"
+
+# Create repo on GitHub, then:
+git remote add origin https://github.com/YOUR_USERNAME/vytl.git
+git branch -M main
+git push -u origin main
+```
+
+### Or Push Existing Repo
+
+```bash
+git push origin main
+```
+
+---
+
+## Environment Variables Reference
 
 ### Required Variables
 
@@ -51,22 +83,50 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ---
 
-## 2. Supabase Production Setup
+## Step 2: Supabase Production Setup
+
+### Supabase Free Tier Limits (Perfect for Beta)
+
+| Resource | Free Tier Limit |
+|----------|-----------------|
+| Database size | 500 MB |
+| Projects | 2 active |
+| API requests | Unlimited |
+| Auth users | Unlimited |
+| Edge functions | 500K invocations/month |
 
 ### Create Production Project
 
-1. Go to supabase.com and create a new project
-2. Choose a region close to your users (e.g., aws-af-south-1 for South Africa)
-3. Set a strong database password and save it securely
-4. Wait for project provisioning (~2 minutes)
+1. Go to [supabase.com](https://supabase.com) and sign in
+2. Click **"New Project"**
+3. Select your organization (or create one)
+4. Configure project:
+   - **Name:** `vytl-production`
+   - **Database Password:** Generate a strong password (save it!)
+   - **Region:** Choose closest to users:
+     - South Africa: `af-south-1`
+     - EU: `eu-west-1` or `eu-central-1`
+     - US: `us-east-1`
+5. Click **"Create new project"**
+6. Wait ~2 minutes for provisioning
 
 ### Get Connection Strings
 
-1. Go to Settings > Database > Connection string
-2. Copy both connection strings:
-   - Transaction pooler (port 6543) -> DATABASE_URL
-   - Session pooler (port 5432) -> DIRECT_URL
-3. Replace [YOUR-PASSWORD] with your database password
+1. In your Supabase project, go to **Settings** → **Database**
+2. Scroll to **Connection string** section
+3. Copy **two** connection strings:
+
+**Transaction pooler (for DATABASE_URL):**
+```
+postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true
+```
+
+**Session mode (for DIRECT_URL):**
+```
+postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+```
+
+4. Replace `[PASSWORD]` with your database password
 
 ### Run Database Migrations
 
@@ -97,96 +157,138 @@ This creates:
 
 ---
 
-## 3. Vercel Deployment
+## Step 3: Vercel Deployment
 
-### Connect Repository
+### Connect GitHub Repository
 
-1. Go to vercel.com and click "Add New Project"
-2. Import your GitHub repository
-3. Vercel auto-detects Next.js configuration
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+2. Click **"Add New..."** → **"Project"**
+3. Find and select your `vytl` repository
+4. Click **"Import"**
 
-### Configure Environment Variables
+### Configure Environment Variables (BEFORE deploying)
 
-1. In project settings, go to Settings > Environment Variables
-2. Add all required variables:
+**IMPORTANT:** Add these BEFORE clicking Deploy!
 
+1. Expand **"Environment Variables"** section
+2. Add each variable one by one:
+
+| Name | Value | Environment |
+|------|-------|-------------|
+| `DATABASE_URL` | Your Supabase pooler URL (port 6543) | Production |
+| `DIRECT_URL` | Your Supabase direct URL (port 5432) | Production |
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` | Production |
+| `NEXTAUTH_URL` | `https://your-project.vercel.app` (update later) | Production |
+| `ANTHROPIC_API_KEY` | Your Claude API key | Production |
+
+### Generate NEXTAUTH_SECRET
+
+Run one of these commands locally:
+
+```bash
+# macOS/Linux
+openssl rand -base64 32
+
+# Windows PowerShell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])
+
+# Node.js (any platform)
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
-DATABASE_URL = postgresql://...
-DIRECT_URL = postgresql://...
-NEXTAUTH_SECRET = your-secret
-NEXTAUTH_URL = https://your-vercel-domain.vercel.app
-ANTHROPIC_API_KEY = sk-ant-...
-```
-
-3. Set variables for Production environment (and optionally Preview/Development)
 
 ### Build Settings
 
-Vercel auto-detects these, but verify:
-- Framework Preset: Next.js
-- Build Command: npm run build (or prisma generate && next build)
-- Output Directory: .next
-- Install Command: npm install
+Vercel auto-detects from `vercel.json`, but verify:
+- **Framework Preset:** Next.js
+- **Build Command:** `prisma generate && next build`
+- **Output Directory:** `.next`
+- **Install Command:** `npm install`
 
 ### Deploy
 
-1. Click "Deploy"
-2. Wait for build to complete (~2-3 minutes)
-3. Verify deployment at the provided URL
+1. Click **"Deploy"**
+2. Wait for build (~2-3 minutes)
+3. Note your deployment URL: `https://vytl-xxxx.vercel.app`
 
-### Post-Deployment Build Command
+### Run Database Migration
 
-If Prisma client issues occur, update the build command:
+After first deployment, run migrations:
 
 ```bash
-prisma generate && next build
+# Set production environment variables locally
+export DATABASE_URL="your-supabase-pooler-url"
+export DIRECT_URL="your-supabase-direct-url"
+
+# Push schema to production database
+npx prisma db push
+
+# Seed initial admin user (optional)
+npx prisma db seed
 ```
+
+**Seed creates:**
+- Organisation: "Acme Corp"
+- Admin user: `admin@acme.com` / `Password123!`
+
+⚠️ **Change the admin password immediately after first login!**
 
 ---
 
-## 4. Custom Domain Configuration
+## Step 4: Custom Domain Configuration
+
+### Recommended Domain Setup
+
+Use a subdomain like `app.yourcompany.com` or `risk.yourcompany.com`
 
 ### Add Domain in Vercel
 
-1. Go to Settings > Domains
-2. Add your domain (e.g., vytl.yourcompany.com)
-3. Vercel provides DNS records to configure
+1. Go to your project in Vercel
+2. Click **Settings** → **Domains**
+3. Enter your domain: `app.yourcompany.com`
+4. Click **Add**
 
 ### DNS Configuration
 
-Add these records at your domain registrar:
+Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
 
-For apex domain (yourcompany.com):
+**For subdomain (recommended):** `app.yourcompany.com`
 ```
-Type: A
-Name: @
-Value: 76.76.21.21
-```
-
-For subdomain (vytl.yourcompany.com):
-```
-Type: CNAME
-Name: vytl
+Type:  CNAME
+Name:  app
 Value: cname.vercel-dns.com
+TTL:   3600 (or Auto)
 ```
 
-### Update NEXTAUTH_URL
-
-After domain is verified, update the environment variable:
-
+**For apex domain:** `yourcompany.com`
 ```
-NEXTAUTH_URL = https://vytl.yourcompany.com
+Type:  A
+Name:  @
+Value: 76.76.21.21
+TTL:   3600 (or Auto)
 ```
 
-Redeploy for changes to take effect.
+### Update NEXTAUTH_URL (Critical!)
+
+After domain is verified (green checkmark in Vercel):
+
+1. Go to **Settings** → **Environment Variables**
+2. Edit `NEXTAUTH_URL`
+3. Change from `https://vytl-xxx.vercel.app` to `https://app.yourcompany.com`
+4. Click **Save**
+5. Go to **Deployments** → Click **"..."** on latest → **"Redeploy"**
 
 ### SSL Certificate
 
-Vercel automatically provisions SSL certificates via Let's Encrypt. No action needed.
+Vercel automatically provisions free SSL via Let's Encrypt. No action needed.
+
+### DNS Propagation
+
+- Changes take 5 minutes to 48 hours to propagate
+- Check status: `dig app.yourcompany.com` or use [dnschecker.org](https://dnschecker.org)
 
 ---
 
-## 5. Post-Deployment Checklist
+## Step 5: Post-Deployment Testing Checklist
 
 ### Immediate Verification
 
@@ -255,7 +357,7 @@ Vercel automatically provisions SSL certificates via Let's Encrypt. No action ne
 
 ---
 
-## 6. Monitoring and Maintenance
+## Monitoring and Maintenance
 
 ### Vercel Analytics
 
@@ -282,7 +384,7 @@ git push origin main
 
 ---
 
-## 7. Scaling Considerations
+## Scaling Considerations
 
 ### Database
 
