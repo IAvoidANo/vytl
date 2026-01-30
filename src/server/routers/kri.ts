@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '@/lib/trpc'
+import { router, protectedProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 
@@ -97,8 +97,8 @@ export const kriRouter = router({
       return kri
     }),
 
-  // Create a new KRI
-  create: protectedProcedure
+  // Create a new KRI (RISK_MANAGER+)
+  create: riskManagerProcedure
     .input(createKriSchema)
     .mutation(async ({ ctx, input }) => {
       const status = calculateStatus(
@@ -132,8 +132,8 @@ export const kriRouter = router({
       return kri
     }),
 
-  // Update a KRI
-  update: protectedProcedure
+  // Update a KRI (RISK_MANAGER+)
+  update: riskManagerProcedure
     .input(updateKriSchema)
     .mutation(async ({ ctx, input }) => {
       const existing = await db.kri.findFirst({
@@ -172,8 +172,8 @@ export const kriRouter = router({
       return kri
     }),
 
-  // Update just the current value (for quick updates)
-  updateValue: protectedProcedure
+  // Update just the current value (for quick updates, RISK_MANAGER+)
+  updateValue: riskManagerProcedure
     .input(z.object({
       id: z.string(),
       value: z.number(),
@@ -207,8 +207,8 @@ export const kriRouter = router({
       return kri
     }),
 
-  // Delete a KRI
-  delete: protectedProcedure
+  // Delete a KRI (RISK_MANAGER+)
+  delete: riskManagerProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const existing = await db.kri.findFirst({

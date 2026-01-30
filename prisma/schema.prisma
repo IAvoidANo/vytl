@@ -40,19 +40,31 @@ model Organisation {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String     @id @default(cuid())
+  email         String     @unique
   name          String?
   passwordHash  String?
   emailVerified DateTime?
   image         String?
-  role          Role      @default(VIEWER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role          Role       @default(VIEWER)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   // Organisation membership
   orgId        String
   organisation Organisation @relation(fields: [orgId], references: [id])
+
+  // Invite system
+  inviteToken        String?   @unique
+  inviteTokenExpires DateTime?
+  invitedById        String?
+  invitedBy          User?     @relation("UserInvites", fields: [invitedById], references: [id])
+  invitedUsers       User[]    @relation("UserInvites")
+
+  // Password reset
+  resetToken        String?   @unique
+  resetTokenExpires DateTime?
 
   // Auth relationships
   accounts Account[]
@@ -65,6 +77,12 @@ model User {
   ownedKris    Kri[]
 
   @@map("users")
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  DISABLED
 }
 
 enum Role {

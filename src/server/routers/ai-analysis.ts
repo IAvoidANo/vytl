@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '@/lib/trpc'
+import { router, protectedProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
 
 // AI Analysis response structure
 interface AIAnalysisResponse {
@@ -54,10 +55,16 @@ export const aiAnalysisRouter = router({
       return risk.aiAnalysis
     }),
 
-  // Generate new AI analysis
-  generate: protectedProcedure
+  // Generate new AI analysis (RISK_MANAGER+)
+  generate: riskManagerProcedure
     .input(z.object({ riskId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // Rate limit: 10 AI requests per minute per user
+      checkRateLimit(
+        createRateLimitKey(ctx.user.id, ctx.user.orgId, 'ai-analysis'),
+        RATE_LIMITS.ai
+      )
+
       // Verify risk belongs to user's org
       const risk = await db.risk.findFirst({
         where: {
@@ -184,6 +191,93 @@ export const aiAnalysisRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate AI analysis. Please try again.',
         })
+      }
+    }),
+
+  // Quick suggestions for risk form (lightweight, fast)
+  suggest: protectedProcedure
+    .input(z.object({
+      description: z.string().min(50, 'Description too short for suggestions'),
+      title: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Rate limit: 20 suggestion requests per minute (more lenient)
+      checkRateLimit(
+        createRateLimitKey(ctx.user.id, ctx.user.orgId, 'ai-suggest'),
+        { windowMs: 60 * 1000, maxRequests: 20 }
+      )
+
+      const apiKey = process.env.ANTHROPIC_API_KEY
+      if (!apiKey) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'AI not configured',
+        })
+      }
+
+      try {
+        const anthropic = new Anthropic({ apiKey })
+
+        const prompt = `Based on this risk description, suggest the most appropriate category and risk scores.
+
+Risk Title: ${input.title || 'Not provided'}
+Risk Description: ${input.description}
+
+Respond with ONLY a JSON object (no markdown, no explanation):
+{
+  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE",
+  "likelihood": 1-5,
+  "impact": 1-5,
+  "reasoning": "Brief 10-word max explanation"
+}
+
+Categories:
+- STRATEGIC: Long-term business strategy risks
+- OPERATIONAL: Day-to-day process risks
+- FINANCIAL: Money, revenue, cost risks
+- COMPLIANCE: Regulatory, legal risks
+- TECHNOLOGY: IT, cyber, systems risks
+- REPUTATIONAL: Brand, PR risks
+- ENVIRONMENTAL: Climate, sustainability risks
+- PEOPLE: HR, workforce risks
+
+Likelihood scale: 1=Rare, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain
+Impact scale: 1=Insignificant, 2=Minor, 3=Moderate, 4=Major, 5=Catastrophic`
+
+        const message = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{ role: 'user', content: prompt }],
+        })
+
+        const textContent = message.content.find((c) => c.type === 'text')
+        if (!textContent || textContent.type !== 'text') {
+          throw new Error('No response')
+        }
+
+        let jsonText = textContent.text.trim()
+        // Handle markdown code blocks
+        if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+        }
+
+        const parsed = JSON.parse(jsonText) as {
+          category: string
+          likelihood: number
+          impact: number
+          reasoning: string
+        }
+
+        return {
+          category: parsed.category,
+          likelihood: Math.min(5, Math.max(1, parsed.likelihood)),
+          impact: Math.min(5, Math.max(1, parsed.impact)),
+          reasoning: parsed.reasoning,
+        }
+      } catch (error) {
+        // Don't throw - just return null for suggestions
+        console.error('[ai-suggest] Error:', error)
+        return null
       }
     }),
 })

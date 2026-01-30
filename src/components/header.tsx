@@ -2,6 +2,7 @@
 
 import { signOut } from 'next-auth/react'
 import { LogOut } from 'lucide-react'
+import { CommandPalette } from './command-palette'
 
 interface HeaderProps {
   userName?: string | null
@@ -9,6 +10,8 @@ interface HeaderProps {
 }
 
 export function Header({ userName, userRole }: HeaderProps) {
+  const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
+
   return (
     <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -16,6 +19,7 @@ export function Header({ userName, userRole }: HeaderProps) {
           Risk Management
         </h1>
         <div className="flex items-center gap-4">
+          <CommandPalette isAdmin={isAdmin} />
           <span className="text-slate-300">{userName}</span>
           <span className="text-xs bg-teal-500/20 text-teal-400 px-2 py-1 rounded">
             {userRole}

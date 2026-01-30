@@ -143,40 +143,96 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - [x] Root Cause field added to Risk model
 - [x] App footer with Vytl branding
 
-### Sprint 6 - IN PROGRESS (Beta Readiness)
-- [ ] **RBAC Enforcement** - Check user.role on mutations
-- [ ] **User Management** - Invite system, role assignment UI
-- [ ] **Password Reset** - Email-based recovery flow
-- [ ] **Settings Page** - Org profile editing, POPIA settings
-- [ ] **Rate Limiting** - Protect AI/import endpoints
-- [ ] **Error Handling** - Global error boundary, toast notifications
-- [ ] **Audit Improvements** - Populate IP/userAgent fields
+### Sprint 6 - COMPLETE (Beta Readiness)
+- [x] **RBAC Enforcement** - Role-based procedures (editorProcedure, riskManagerProcedure, adminProcedure, ownerProcedure)
+  - VIEWER: Read-only access
+  - EDITOR: Can create/edit risks, import documents
+  - RISK_MANAGER: Can delete risks, manage KRIs, run AI analysis
+  - ADMIN: Can manage users, organisation settings
+  - OWNER: Full access including user deletion
+- [x] **User Management** - Complete invite system with role assignment
+  - Invite users with token-based activation (7-day expiry)
+  - Role assignment UI with dropdown selector
+  - User enable/disable functionality
+  - User deletion (OWNER only)
+  - Accept invite page (/accept-invite)
+- [x] **Password Reset** - Token-based password recovery
+  - Forgot password page (/forgot-password)
+  - Reset password page (/reset-password)
+  - 1-hour token expiry
+  - Rate limited (10 requests per 15 minutes)
+- [x] **Settings Page** - Full settings with tabs
+  - Profile tab: Name editing
+  - Security tab: Password change
+  - Organisation tab (ADMIN+): Org name, industry, employee count
+  - POPIA tab (ADMIN+): Data retention settings, consent management
+- [x] **Rate Limiting** - In-memory rate limiting
+  - AI analysis: 10 requests/minute
+  - Document import: 5 requests/minute
+  - Password reset: 10 requests/15 minutes
+- [x] **Error Handling** - Comprehensive error UI
+  - Global ErrorBoundary component
+  - Next.js error.tsx page
+  - 404 not-found.tsx page
+  - Toast notifications via Sonner
+- [x] **Audit Improvements** - IP/userAgent tracking
+  - Extracted from request headers in tRPC context
+  - Passed to all createAuditLog calls
 
-#### Beta Blockers Identified:
-1. Roles defined but not enforced (all users have same permissions)
-2. No way to invite team members
-3. No password recovery
-4. Settings page is read-only placeholder
+### Sprint 7 - COMPLETE (UX & Adoption Enhancements)
+- [x] **Command Palette** (Cmd+K / Ctrl+K)
+  - Quick navigation to all pages
+  - Risk search with refCode and title matching
+  - Quick actions: Create Risk, Create KRI, Import Risks
+  - Recent items tracking (localStorage)
+  - cmdk library integration
+- [x] **Proactive AI Suggestions in Risk Form**
+  - Auto-suggest category as user types description (50+ chars)
+  - Suggest likelihood/impact scores with reasoning tooltip
+  - "AI suggests: [Category] | L:[1-5] I:[1-5]" banner below description
+  - Tab key to accept suggestions
+  - Apply button with visual feedback
+  - Debounced API calls (500ms) to reduce load
+- [x] **Sparklines in Risk Table**
+  - Mini SVG trend charts showing score history
+  - Color-coded: green (improving), red (worsening), gray (stable)
+  - Data extracted from audit log score changes
+  - 30-day trend window
+- [x] **Bento Grid Dashboard**
+  - Draggable, resizable widgets using react-grid-layout
+  - Lock/Unlock toggle for customization mode
+  - Layout persistence in localStorage
+  - Reset to default layout button
+  - Responsive grid (12/8/4 columns based on viewport)
 
 ### Pages
 | Route | Status | Description |
 |-------|--------|-------------|
 | `/` | ✅ | Auth redirect |
-| `/login` | ✅ | Login form |
-| `/dashboard` | ✅ | Stats overview |
-| `/risks` | ✅ | Risk register (table/heatmap) |
+| `/login` | ✅ | Login form with forgot password link |
+| `/dashboard` | ✅ | Bento grid dashboard with draggable widgets |
+| `/risks` | ✅ | Risk register (table/heatmap) with sparklines |
 | `/risks/[id]` | ✅ | Risk detail (5 tabs) |
-| `/settings` | 🔲 | Org settings placeholder |
+| `/users` | ✅ | Team management (ADMIN+) |
+| `/settings` | ✅ | Profile, Security, Org, POPIA settings |
+| `/forgot-password` | ✅ | Password reset request |
+| `/reset-password` | ✅ | Password reset with token |
+| `/accept-invite` | ✅ | Accept user invitation |
 
 ### Key Components
-- `RiskTable` - Sortable table with filters
-- `RiskForm` - Create/edit modal with scoring
+- `RiskTable` - Sortable table with filters and sparkline trends (Sprint 7)
+- `RiskForm` - Create/edit modal with scoring + AI suggestions (Sprint 7)
 - `RiskHeatmap` - 5×5 matrix visualization
 - `RiskScoreBadge` - Color-coded score display
-- `AppLayout` / `Sidebar` / `Header` - Layout system
+- `AppLayout` / `Sidebar` / `Header` - Layout system (Sidebar shows Team link for ADMIN+)
+- `CommandPalette` - Cmd+K quick navigation and search (Sprint 7)
+- `DashboardGrid` - Draggable bento grid with react-grid-layout (Sprint 7)
+- `Sparkline` - SVG mini line chart for trends (Sprint 7)
 - `KriTable` - KRI list with status indicators and inline editing
 - `KriForm` - Create/edit KRI with threshold configuration
 - `ExcelImportModal` - Multi-format import (Excel/CSV/PDF/Word) with AI extraction
+- `ErrorBoundary` - Global error boundary for React errors
+- `Providers` - App providers with ErrorBoundary, tRPC, QueryClient, Session, Toaster
 - `AuditTimeline` - Change history display for entities
 - `VytlScoreCard` - Animated score display with grade and breakdown
 - `RiskPulse` - Visual heartbeat indicator (green/amber/red based on score)
@@ -205,14 +261,26 @@ src/
 │   │   └── [id]/page.tsx, risk-detail-client.tsx
 │   ├── kris/
 │   │   └── page.tsx, kris-client.tsx
-│   └── settings/page.tsx
+│   ├── users/
+│   │   └── page.tsx, users-client.tsx    # Team management (Sprint 6)
+│   ├── settings/
+│   │   └── page.tsx, settings-client.tsx # Full settings (Sprint 6)
+│   ├── accept-invite/page.tsx            # User invite acceptance (Sprint 6)
+│   ├── forgot-password/page.tsx          # Password reset request (Sprint 6)
+│   ├── reset-password/page.tsx           # Password reset with token (Sprint 6)
+│   ├── error.tsx                         # Global error page (Sprint 6)
+│   └── not-found.tsx                     # 404 page (Sprint 6)
 ├── components/
 │   ├── app-layout.tsx, sidebar.tsx, header.tsx
 │   ├── risk-table.tsx, risk-form.tsx, risk-heatmap.tsx
+│   ├── command-palette.tsx              # Cmd+K navigation (Sprint 7)
+│   ├── dashboard-grid.tsx               # Bento grid layout (Sprint 7)
+│   ├── sparkline.tsx                    # SVG trend charts (Sprint 7)
 │   ├── kri-table.tsx, kri-form.tsx
 │   ├── excel-import-modal.tsx
 │   ├── audit-timeline.tsx
 │   ├── vytl-score-card.tsx
+│   ├── error-boundary.tsx               # React error boundary (Sprint 6)
 │   ├── dashboard/
 │   │   ├── risk-pulse.tsx, top-risks.tsx
 │   │   ├── activity-feed.tsx, category-chart.tsx
@@ -221,9 +289,12 @@ src/
 ├── lib/
 │   ├── auth.ts          # NextAuth config
 │   ├── db.ts            # Prisma client
-│   ├── trpc.ts          # tRPC server setup
+│   ├── trpc.ts          # tRPC server setup + RBAC procedures (Sprint 6)
 │   ├── trpc-client.ts   # tRPC React client
 │   ├── audit.ts         # Audit logging utilities
+│   ├── rate-limit.ts    # In-memory rate limiting (Sprint 6)
+│   ├── use-debounce.ts  # Debounce hooks for AI suggestions (Sprint 7)
+│   ├── recent-items.ts  # Recent items localStorage tracking (Sprint 7)
 │   └── vytl-score.ts    # Vytl Score calculation (4 dimensions)
 └── server/routers/
     ├── index.ts         # Root router
@@ -231,8 +302,10 @@ src/
     ├── kri.ts           # KRI CRUD + status calc
     ├── audit.ts         # Audit log queries + recent activity
     ├── assessment.ts    # Vytl Score assessment CRUD
-    ├── ai-analysis.ts   # Claude AI risk analysis
-    └── import.ts        # AI document extraction
+    ├── ai-analysis.ts   # Claude AI risk analysis (rate limited)
+    ├── import.ts        # AI document extraction (rate limited)
+    ├── user.ts          # User management + password reset (Sprint 6)
+    └── organisation.ts  # Org settings + POPIA (Sprint 6)
 
 public/templates/
 └── risk-import-template.xlsx  # Downloadable import template

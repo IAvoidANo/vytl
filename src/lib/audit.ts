@@ -1,8 +1,13 @@
 import { db } from './db'
 import { Prisma } from '@prisma/client'
 
-type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE'
-type EntityType = 'RISK' | 'KRI' | 'REGISTER'
+type AuditAction =
+  | 'CREATE' | 'UPDATE' | 'DELETE'
+  | 'INVITE_USER' | 'UPDATE_USER_ROLE' | 'DISABLE_USER' | 'ENABLE_USER' | 'DELETE_USER'
+  | 'ACCEPT_INVITE' | 'CHANGE_PASSWORD' | 'RESET_PASSWORD'
+  | 'UPDATE_ORGANISATION' | 'UPDATE_POPIA_SETTINGS'
+
+type EntityType = 'RISK' | 'KRI' | 'REGISTER' | 'USER' | 'ORGANISATION'
 
 interface AuditLogParams {
   action: AuditAction

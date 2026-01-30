@@ -5,6 +5,8 @@ import { SessionProvider } from 'next-auth/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
 import { trpc } from '@/lib/trpc-client'
+import { Toaster } from 'sonner'
+import { ErrorBoundary } from './error-boundary'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return ''
@@ -32,12 +34,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <SessionProvider>
-          {children}
-        </SessionProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ErrorBoundary>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <SessionProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+              }}
+            />
+          </SessionProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ErrorBoundary>
   )
 }

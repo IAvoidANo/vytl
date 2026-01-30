@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, Sparkles, Check } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
+import { useDebounce } from '@/lib/use-debounce'
 
 const CATEGORIES = [
   { value: 'STRATEGIC', label: 'Strategic' },
@@ -80,6 +81,19 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
 
   const [error, setError] = useState('')
 
+  // AI Suggestions state
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    category: string
+    likelihood: number
+    impact: number
+    reasoning: string
+  } | null>(null)
+  const [suggestionApplied, setSuggestionApplied] = useState(false)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+
+  // Debounce description for AI suggestions (500ms delay)
+  const debouncedDescription = useDebounce(formData.description, 500)
+
   const { data: registers } = trpc.risk.registers.useQuery()
   const { data: users } = trpc.risk.users.useQuery()
 
@@ -100,6 +114,55 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
     },
     onError: (err) => setError(err.message),
   })
+
+  // AI suggestion mutation
+  const suggestMutation = trpc.aiAnalysis.suggest.useMutation({
+    onSuccess: (data) => {
+      if (data) {
+        setAiSuggestion(data)
+        setSuggestionApplied(false)
+      }
+    },
+    onError: () => {
+      // Silently fail - suggestions are optional
+      setAiSuggestion(null)
+    },
+  })
+
+  // Trigger AI suggestions when description changes (50+ chars, not editing existing risk)
+  useEffect(() => {
+    if (!isEditing && debouncedDescription.length >= 50 && !suggestionApplied) {
+      suggestMutation.mutate({
+        description: debouncedDescription,
+        title: formData.title || undefined,
+      })
+    } else if (debouncedDescription.length < 50) {
+      setAiSuggestion(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedDescription, formData.title, isEditing, suggestionApplied])
+
+  // Handle Tab key to accept suggestions
+  const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab' && aiSuggestion && !suggestionApplied) {
+      e.preventDefault()
+      applySuggestion()
+    }
+  }
+
+  const applySuggestion = () => {
+    if (!aiSuggestion) return
+
+    setFormData(prev => ({
+      ...prev,
+      category: aiSuggestion.category as RiskCategory,
+      inherentLikelihood: aiSuggestion.likelihood,
+      inherentImpact: aiSuggestion.impact,
+      residualLikelihood: Math.max(1, aiSuggestion.likelihood - 1),
+      residualImpact: Math.max(1, aiSuggestion.impact - 1),
+    }))
+    setSuggestionApplied(true)
+  }
 
   // Auto-select first register if none selected
   useEffect(() => {
@@ -208,11 +271,20 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Category *</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Category *
+                {aiSuggestion && !suggestionApplied && formData.category !== aiSuggestion.category && (
+                  <span className="ml-2 text-xs text-teal-400">(AI suggests: {CATEGORIES.find(c => c.value === aiSuggestion.category)?.label})</span>
+                )}
+              </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as RiskCategory })}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={`w-full px-3 py-2 bg-slate-700 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  aiSuggestion && !suggestionApplied && formData.category !== aiSuggestion.category
+                    ? 'border-teal-500/50'
+                    : 'border-slate-600'
+                }`}
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -224,12 +296,63 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Description *</label>
             <textarea
+              ref={descriptionRef}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onKeyDown={handleDescriptionKeyDown}
               rows={3}
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               required
             />
+
+            {/* AI Suggestion Banner */}
+            {!isEditing && formData.description.length >= 50 && (
+              <div className="mt-2">
+                {suggestMutation.isPending ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <Sparkles className="w-4 h-4 animate-pulse text-teal-400" />
+                    <span>AI analyzing...</span>
+                  </div>
+                ) : aiSuggestion && !suggestionApplied ? (
+                  <div className="flex items-center justify-between p-2 bg-teal-500/10 border border-teal-500/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-teal-400" />
+                      <span className="text-sm text-slate-300">
+                        AI suggests:{' '}
+                        <span className="text-teal-400 font-medium">
+                          {CATEGORIES.find(c => c.value === aiSuggestion.category)?.label || aiSuggestion.category}
+                        </span>
+                        {' | '}
+                        <span className="text-amber-400">
+                          L:{aiSuggestion.likelihood} I:{aiSuggestion.impact}
+                        </span>
+                      </span>
+                      <span className="text-xs text-slate-500" title={aiSuggestion.reasoning}>
+                        ({aiSuggestion.reasoning})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={applySuggestion}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 rounded transition-colors"
+                      >
+                        <Check className="w-3 h-3" />
+                        Apply
+                      </button>
+                      <kbd className="px-1.5 py-0.5 text-xs bg-slate-800 border border-slate-600 rounded text-slate-400">
+                        Tab
+                      </kbd>
+                    </div>
+                  </div>
+                ) : suggestionApplied ? (
+                  <div className="flex items-center gap-2 text-sm text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span>AI suggestions applied</span>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {/* Risk Scoring */}
@@ -243,6 +366,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
                     Likelihood (1-5): {formData.inherentLikelihood}
+                    {aiSuggestion && !suggestionApplied && formData.inherentLikelihood !== aiSuggestion.likelihood && (
+                      <span className="ml-2 text-teal-400">(AI: {aiSuggestion.likelihood})</span>
+                    )}
                   </label>
                   <input
                     type="range"
@@ -256,6 +382,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
                     Impact (1-5): {formData.inherentImpact}
+                    {aiSuggestion && !suggestionApplied && formData.inherentImpact !== aiSuggestion.impact && (
+                      <span className="ml-2 text-teal-400">(AI: {aiSuggestion.impact})</span>
+                    )}
                   </label>
                   <input
                     type="range"

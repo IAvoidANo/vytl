@@ -1,7 +1,8 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '@/lib/trpc'
+import { router, editorProcedure } from '@/lib/trpc'
 import { TRPCError } from '@trpc/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
 
 // Check for API key at startup
 const apiKey = process.env.ANTHROPIC_API_KEY
@@ -70,13 +71,20 @@ Document to analyse:
 `
 
 export const importRouter = router({
-  extractFromDocument: protectedProcedure
+  // Extract risks from documents using AI (EDITOR+)
+  extractFromDocument: editorProcedure
     .input(z.object({
       content: z.string(),
       fileType: z.enum(['pdf', 'docx', 'txt']),
       fileName: z.string(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      // Rate limit: 5 import requests per minute per user
+      checkRateLimit(
+        createRateLimitKey(ctx.user.id, ctx.user.orgId, 'import'),
+        RATE_LIMITS.import
+      )
+
       // Check API key first
       if (!process.env.ANTHROPIC_API_KEY) {
         throw new TRPCError({
@@ -174,7 +182,8 @@ export const importRouter = router({
       }
     }),
 
-  suggestMappings: protectedProcedure
+  // Suggest column mappings for imports (EDITOR+)
+  suggestMappings: editorProcedure
     .input(z.object({
       headers: z.array(z.string()),
       sampleData: z.array(z.array(z.string())).optional(),

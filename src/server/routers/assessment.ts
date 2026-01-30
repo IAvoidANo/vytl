@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '@/lib/trpc'
+import { router, protectedProcedure, riskManagerProcedure } from '@/lib/trpc'
 import {
   calculateVytlScore,
   saveAssessment,
@@ -17,9 +17,9 @@ export const assessmentRouter = router({
   }),
 
   /**
-   * Calculate and save a new assessment
+   * Calculate and save a new assessment (RISK_MANAGER+)
    */
-  create: protectedProcedure
+  create: riskManagerProcedure
     .input(
       z.object({
         type: z.enum(['INITIAL', 'QUARTERLY', 'ANNUAL', 'AD_HOC']).default('AD_HOC'),

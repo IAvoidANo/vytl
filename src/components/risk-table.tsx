@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Pencil, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
 import { RiskForm } from './risk-form'
+import { Sparkline } from './sparkline'
 import type { RiskCategory, RiskResponse, RiskStatus } from '@prisma/client'
 
 type SortField = 'title' | 'category' | 'inherentScore' | 'residualScore' | 'status' | 'createdAt'
@@ -73,6 +74,15 @@ export function RiskTable({ filters }: RiskTableProps) {
     status: filters.status as RiskStatus | undefined,
   } : undefined
   const risks = trpc.risk.list.useQuery(queryInput)
+
+  // Get risk IDs for trends query
+  const riskIds = useMemo(() => risks.data?.map((r) => r.id) ?? [], [risks.data])
+
+  // Fetch trends data for all risks
+  const { data: trendsData } = trpc.risk.trends.useQuery(
+    { riskIds, days: 30 },
+    { enabled: riskIds.length > 0 }
+  )
 
   const deleteMutation = trpc.risk.delete.useMutation({
     onSuccess: () => {
@@ -210,6 +220,9 @@ export function RiskTable({ filters }: RiskTableProps) {
                     Residual <SortIcon field="residualScore" />
                   </span>
                 </th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  Trend
+                </th>
                 <th
                   className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
                   onClick={() => handleSort('status')}
@@ -246,6 +259,13 @@ export function RiskTable({ filters }: RiskTableProps) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <RiskScoreBadge score={risk.residualScore} size="sm" />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Sparkline
+                      data={trendsData?.[risk.id] ?? []}
+                      width={60}
+                      height={24}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded ${STATUS_COLORS[risk.status]}`}>

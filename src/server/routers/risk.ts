@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '@/lib/trpc'
+import { router, protectedProcedure, editorProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import { createAuditLog, pickAuditFields, hasChanges } from '@/lib/audit'
@@ -175,8 +175,8 @@ export const riskRouter = router({
       return risks
     }),
 
-  // Create a new risk
-  create: protectedProcedure
+  // Create a new risk (EDITOR+)
+  create: editorProcedure
     .input(createRiskSchema)
     .mutation(async ({ ctx, input }) => {
       // Verify register belongs to user's org
@@ -226,6 +226,8 @@ export const riskRouter = router({
         entityId: risk.id,
         userId: ctx.user.id,
         orgId: ctx.user.orgId,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
         newValues: {
           refCode: risk.refCode,
           title: risk.title,
@@ -240,8 +242,8 @@ export const riskRouter = router({
       return risk
     }),
 
-  // Update a risk
-  update: protectedProcedure
+  // Update a risk (EDITOR+)
+  update: editorProcedure
     .input(updateRiskSchema)
     .mutation(async ({ ctx, input }) => {
       // Verify risk belongs to user's org
@@ -291,6 +293,8 @@ export const riskRouter = router({
           entityId: risk.id,
           userId: ctx.user.id,
           orgId: ctx.user.orgId,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
           oldValues,
           newValues,
         })
@@ -299,8 +303,8 @@ export const riskRouter = router({
       return risk
     }),
 
-  // Delete a risk
-  delete: protectedProcedure
+  // Delete a risk (RISK_MANAGER+)
+  delete: riskManagerProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Verify risk belongs to user's org
@@ -320,6 +324,8 @@ export const riskRouter = router({
         entityId: input.id,
         userId: ctx.user.id,
         orgId: ctx.user.orgId,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
         oldValues: {
           refCode: existing.refCode,
           title: existing.title,
@@ -330,8 +336,8 @@ export const riskRouter = router({
       return { success: true }
     }),
 
-  // Bulk create risks from Excel import
-  bulkCreate: protectedProcedure
+  // Bulk create risks from Excel import (EDITOR+)
+  bulkCreate: editorProcedure
     .input(
       z.object({
         registerId: z.string(),
@@ -399,6 +405,8 @@ export const riskRouter = router({
           entityId: risk.id,
           userId: ctx.user.id,
           orgId: ctx.user.orgId,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
           newValues: {
             refCode: risk.refCode,
             title: risk.title,
@@ -430,4 +438,86 @@ export const riskRouter = router({
     })
     return users
   }),
+
+  // Get score trends for risks (extracted from audit logs)
+  trends: protectedProcedure
+    .input(
+      z.object({
+        riskIds: z.array(z.string()),
+        days: z.number().min(1).max(90).optional().default(30),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // Verify risks belong to user's org
+      const risks = await db.risk.findMany({
+        where: {
+          id: { in: input.riskIds },
+          register: { orgId: ctx.user.orgId },
+        },
+        select: {
+          id: true,
+          residualScore: true,
+          createdAt: true,
+        },
+      })
+
+      const riskMap = new Map(risks.map((r) => [r.id, r]))
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - input.days)
+
+      // Get audit logs for these risks
+      const auditLogs = await db.auditLog.findMany({
+        where: {
+          orgId: ctx.user.orgId,
+          entityType: 'RISK',
+          entityId: { in: input.riskIds },
+          action: { in: ['CREATE', 'UPDATE'] },
+          createdAt: { gte: cutoffDate },
+        },
+        select: {
+          entityId: true,
+          action: true,
+          oldValues: true,
+          newValues: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      })
+
+      // Build trend data for each risk
+      const trends: Record<string, number[]> = {}
+
+      for (const riskId of input.riskIds) {
+        const risk = riskMap.get(riskId)
+        if (!risk) continue
+
+        const riskLogs = auditLogs.filter((log) => log.entityId === riskId)
+        const scores: number[] = []
+
+        // Get initial score from CREATE or first UPDATE
+        for (const log of riskLogs) {
+          const values = log.action === 'CREATE' ? log.newValues : log.newValues
+          if (values && typeof values === 'object' && 'residualScore' in values) {
+            const score = (values as Record<string, unknown>).residualScore
+            if (typeof score === 'number') {
+              scores.push(score)
+            }
+          }
+        }
+
+        // Add current score as last data point
+        if (scores.length === 0 || scores[scores.length - 1] !== risk.residualScore) {
+          scores.push(risk.residualScore)
+        }
+
+        // If only one data point, duplicate it to show a flat line
+        if (scores.length === 1) {
+          scores.push(scores[0])
+        }
+
+        trends[riskId] = scores
+      }
+
+      return trends
+    }),
 })

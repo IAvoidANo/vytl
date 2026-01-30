@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -29,6 +29,7 @@ import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
 import { RiskForm } from '@/components/risk-form'
 import { AuditTimeline } from '@/components/audit-timeline'
+import { addRecentItem } from '@/lib/recent-items'
 import { format } from 'date-fns'
 
 type TabId = 'overview' | 'analysis' | 'controls' | 'history' | 'documents'
@@ -83,6 +84,18 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
       router.push('/risks')
     },
   })
+
+  // Track in recent items for command palette
+  useEffect(() => {
+    if (risk) {
+      addRecentItem({
+        id: risk.id,
+        title: risk.title,
+        type: 'risk',
+        refCode: risk.refCode,
+      })
+    }
+  }, [risk])
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this risk? This action cannot be undone.')) {

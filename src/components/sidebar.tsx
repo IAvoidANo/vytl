@@ -2,17 +2,23 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, AlertTriangle, Activity, Settings } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { LayoutDashboard, AlertTriangle, Activity, Users, Settings } from 'lucide-react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/risks', label: 'Risks', icon: AlertTriangle },
   { href: '/kris', label: 'KRIs', icon: Activity },
+  { href: '/users', label: 'Team', icon: Users, adminOnly: true },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const userRole = (session?.user as { role?: string })?.role
+
+  const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
 
   return (
     <aside className="w-64 bg-slate-800 border-r border-slate-700 min-h-screen">
@@ -24,6 +30,9 @@ export function Sidebar() {
 
       <nav className="px-4">
         {navItems.map((item) => {
+          // Skip admin-only items for non-admins
+          if (item.adminOnly && !isAdmin) return null
+
           const isActive = pathname === item.href
           const Icon = item.icon
 
