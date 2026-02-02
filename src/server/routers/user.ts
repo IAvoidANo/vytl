@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 import { router, protectedProcedure, adminProcedure, ownerProcedure, publicProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
@@ -570,4 +571,35 @@ export const userRouter = router({
 
       return { success: true }
     }),
+
+  // Get dashboard layout
+  getDashboardLayout: protectedProcedure.query(async ({ ctx }) => {
+    const user = await db.user.findUnique({
+      where: { id: ctx.user.id },
+      select: { dashboardLayout: true },
+    })
+    return user?.dashboardLayout as Record<string, unknown> | null
+  }),
+
+  // Save dashboard layout
+  saveDashboardLayout: protectedProcedure
+    .input(z.object({
+      layout: z.record(z.unknown()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await db.user.update({
+        where: { id: ctx.user.id },
+        data: { dashboardLayout: input.layout as object },
+      })
+      return { success: true }
+    }),
+
+  // Reset dashboard layout to default
+  resetDashboardLayout: protectedProcedure.mutation(async ({ ctx }) => {
+    await db.user.update({
+      where: { id: ctx.user.id },
+      data: { dashboardLayout: Prisma.DbNull },
+    })
+    return { success: true }
+  }),
 })

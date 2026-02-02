@@ -7,6 +7,7 @@ import { httpBatchLink } from '@trpc/client'
 import { trpc } from '@/lib/trpc-client'
 import { Toaster } from 'sonner'
 import { ErrorBoundary } from './error-boundary'
+import { ThemeProvider } from '@/lib/theme-context'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return ''
@@ -38,15 +39,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <SessionProvider>
-            {children}
-            <Toaster
-              position="bottom-right"
-              richColors
-              closeButton
-              toastOptions={{
-                duration: 4000,
-              }}
-            />
+            <ThemeProvider>
+              {children}
+              <Toaster
+                position="bottom-right"
+                richColors
+                closeButton
+                toastOptions={{
+                  duration: 4000,
+                }}
+              />
+            </ThemeProvider>
           </SessionProvider>
         </QueryClientProvider>
       </trpc.Provider>

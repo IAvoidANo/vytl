@@ -2,7 +2,7 @@
 
 import { trpc } from '@/lib/trpc-client'
 import { RefreshCw, TrendingUp, TrendingDown, Minus, Shield, Users, Calendar, Target } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ScoreDimension {
   score: number
@@ -10,10 +10,12 @@ interface ScoreDimension {
   label: string
   icon: React.ReactNode
   color: string
+  bgColor: string
 }
 
 export function VytlScoreCard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [animatedScore, setAnimatedScore] = useState(0)
 
   const { data: scoreData, isLoading, refetch } = trpc.assessment.current.useQuery()
   const saveMutation = trpc.assessment.create.useMutation({
@@ -26,6 +28,26 @@ export function VytlScoreCard() {
     },
   })
 
+  // Animate score on mount
+  useEffect(() => {
+    if (scoreData?.score) {
+      const duration = 1000
+      const steps = 60
+      const increment = scoreData.score / steps
+      let current = 0
+      const timer = setInterval(() => {
+        current += increment
+        if (current >= scoreData.score) {
+          setAnimatedScore(scoreData.score)
+          clearInterval(timer)
+        } else {
+          setAnimatedScore(Math.floor(current))
+        }
+      }, duration / steps)
+      return () => clearInterval(timer)
+    }
+  }, [scoreData?.score])
+
   const handleRefresh = () => {
     setIsRefreshing(true)
     saveMutation.mutate({ type: 'AD_HOC' })
@@ -33,45 +55,64 @@ export function VytlScoreCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 animate-pulse">
-        <div className="h-6 bg-slate-700 rounded w-1/3 mb-3"></div>
-        <div className="h-20 bg-slate-700 rounded mb-3"></div>
-        <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+      <div className="h-full bg-slate-800 rounded-xl p-6 border border-slate-700 animate-pulse">
+        <div className="flex items-center gap-8">
+          <div className="w-48 h-48 bg-slate-700 rounded-full"></div>
+          <div className="flex-1 space-y-4">
+            <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+            <div className="h-6 bg-slate-700 rounded w-full"></div>
+            <div className="h-6 bg-slate-700 rounded w-full"></div>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (!scoreData) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <p className="text-slate-400 text-sm">Unable to calculate score</p>
+      <div className="h-full bg-slate-800 rounded-xl p-6 border border-slate-700 flex items-center justify-center">
+        <p className="text-slate-400">Unable to calculate score</p>
       </div>
     )
   }
 
   const { score, grade, gradeColor, breakdown, riskCount } = scoreData
 
-  const getGradeColorClasses = (color: string) => {
-    switch (color) {
-      case 'green':
-        return 'text-green-400 border-green-500/50 bg-green-500/10'
-      case 'yellow':
-        return 'text-yellow-400 border-yellow-500/50 bg-yellow-500/10'
-      case 'red':
-        return 'text-red-400 border-red-500/50 bg-red-500/10'
-      default:
-        return 'text-slate-400 border-slate-500/50 bg-slate-500/10'
-    }
+  // Color configurations
+  const gradeConfig = {
+    green: {
+      gradient: 'from-green-500/20 via-green-500/5 to-transparent',
+      glow: 'shadow-green-500/20',
+      ring: 'stroke-green-500',
+      text: 'text-green-400',
+      bg: 'bg-green-500',
+    },
+    yellow: {
+      gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
+      glow: 'shadow-amber-500/20',
+      ring: 'stroke-amber-500',
+      text: 'text-amber-400',
+      bg: 'bg-amber-500',
+    },
+    red: {
+      gradient: 'from-red-500/20 via-red-500/5 to-transparent',
+      glow: 'shadow-red-500/20',
+      ring: 'stroke-red-500',
+      text: 'text-red-400',
+      bg: 'bg-red-500',
+    },
   }
+
+  const colors = gradeConfig[gradeColor as keyof typeof gradeConfig] || gradeConfig.red
 
   const getTrendIcon = (direction: string) => {
     switch (direction) {
       case 'improving':
-        return <TrendingUp className="w-3 h-3 text-green-400" />
+        return <TrendingUp className="w-5 h-5 text-green-400" />
       case 'worsening':
-        return <TrendingDown className="w-3 h-3 text-red-400" />
+        return <TrendingDown className="w-5 h-5 text-red-400" />
       default:
-        return <Minus className="w-3 h-3 text-slate-400" />
+        return <Minus className="w-5 h-5 text-slate-400" />
     }
   }
 
@@ -80,134 +121,139 @@ export function VytlScoreCard() {
       score: breakdown.coverage.score,
       maxScore: breakdown.coverage.maxScore,
       label: 'Coverage',
-      icon: <Target className="w-3 h-3" />,
+      icon: <Target className="w-4 h-4" />,
       color: 'text-blue-400',
+      bgColor: 'bg-blue-500',
     },
     {
       score: breakdown.controlEffectiveness.score,
       maxScore: breakdown.controlEffectiveness.maxScore,
       label: 'Controls',
-      icon: <Shield className="w-3 h-3" />,
+      icon: <Shield className="w-4 h-4" />,
       color: 'text-purple-400',
+      bgColor: 'bg-purple-500',
     },
     {
       score: breakdown.maturity.score,
       maxScore: breakdown.maturity.maxScore,
       label: 'Maturity',
-      icon: <Users className="w-3 h-3" />,
+      icon: <Users className="w-4 h-4" />,
       color: 'text-teal-400',
+      bgColor: 'bg-teal-500',
     },
     {
       score: breakdown.trend.score,
       maxScore: breakdown.trend.maxScore,
       label: 'Trend',
-      icon: <Calendar className="w-3 h-3" />,
+      icon: <Calendar className="w-4 h-4" />,
       color: 'text-orange-400',
+      bgColor: 'bg-orange-500',
     },
   ]
 
+  // Calculate SVG circle values - LARGER circle
+  const circleRadius = 85
+  const circumference = 2 * Math.PI * circleRadius
+  const strokeDashoffset = circumference - (score / 100) * circumference
+
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+    <div
+      className={`h-full bg-gradient-to-br ${colors.gradient} bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-xl ${colors.glow}`}
+    >
       {/* Header */}
-      <div className="px-3 py-2 border-b border-slate-700 flex items-center justify-between">
+      <div className="px-5 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30">
         <h3 className="text-sm font-semibold text-white">Vytl Score</h3>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing || saveMutation.isPending}
-          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors disabled:opacity-50"
+          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
           title="Recalculate score"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      {/* Main Score Display */}
-      <div className="p-3">
-        <div className="flex items-center gap-4 mb-3">
-          {/* Score Circle - Compact */}
-          <div className={`relative flex items-center justify-center w-20 h-20 rounded-full border-4 ${getGradeColorClasses(gradeColor)}`}>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">{score}</div>
-              <div className="text-[10px] text-slate-400">/ 100</div>
-            </div>
-          </div>
+      {/* Main Content */}
+      <div className="p-5 flex items-center gap-8 h-[calc(100%-44px)]">
+        {/* Left: Score Circle with Animated Ring - LARGER */}
+        <div className="relative flex-shrink-0 p-2">
+          {/* SVG Progress Ring - 200x200 for 100px+ number */}
+          <svg className="w-52 h-52 -rotate-90" viewBox="0 0 200 200">
+            {/* Background ring */}
+            <circle
+              cx="100"
+              cy="100"
+              r={circleRadius}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="10"
+              className="text-slate-700"
+            />
+            {/* Progress ring */}
+            <circle
+              cx="100"
+              cy="100"
+              r={circleRadius}
+              fill="none"
+              strokeWidth="10"
+              strokeLinecap="round"
+              className={`${colors.ring} transition-all duration-1000 ease-out`}
+              style={{
+                strokeDasharray: circumference,
+                strokeDashoffset: strokeDashoffset,
+              }}
+            />
+          </svg>
 
-          {/* Grade & Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-3xl font-bold ${gradeColor === 'green' ? 'text-green-400' : gradeColor === 'yellow' ? 'text-yellow-400' : 'text-red-400'}`}>
-                {grade}
-              </span>
-              <div className="flex items-center gap-1 text-xs text-slate-400">
-                {getTrendIcon(breakdown.trend.details.direction)}
-                <span className="capitalize">{breakdown.trend.details.direction.replace('_', ' ')}</span>
-              </div>
-            </div>
-            <p className="text-xs text-slate-400">
-              Based on {riskCount} risk{riskCount !== 1 ? 's' : ''}
-            </p>
+          {/* Center Content - 100px+ score */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span
+              className="font-bold text-white tabular-nums leading-none"
+              style={{ fontSize: '100px' }}
+            >
+              {animatedScore}
+            </span>
+            <span className={`text-3xl font-bold ${colors.text} -mt-2`}>{grade}</span>
           </div>
         </div>
 
-        {/* Score Breakdown - Compact */}
-        <div className="space-y-2">
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Score Breakdown</p>
-          <div className="grid grid-cols-2 gap-2">
-            {dimensions.map((dim) => {
-              const percentage = Math.round((dim.score / dim.maxScore) * 100)
-              return (
-                <div key={dim.label} className="bg-slate-900/50 rounded p-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className={`flex items-center gap-1.5 ${dim.color}`}>
-                      {dim.icon}
-                      <span className="text-xs font-medium text-white">{dim.label}</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">
-                      {dim.score}/{dim.maxScore}
-                    </span>
+        {/* Right: Metrics Vertical Layout */}
+        <div className="flex-1 space-y-3 min-w-0">
+          {/* Trend indicator */}
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-700/50">
+            {getTrendIcon(breakdown.trend.details.direction)}
+            <span className="text-sm text-slate-300 capitalize">
+              {breakdown.trend.details.direction.replace('_', ' ')}
+            </span>
+            <span className="text-xs text-slate-500">
+              • {riskCount} risk{riskCount !== 1 ? 's' : ''} tracked
+            </span>
+          </div>
+
+          {/* Dimension Bars */}
+          {dimensions.map((dim) => {
+            const percentage = Math.round((dim.score / dim.maxScore) * 100)
+            return (
+              <div key={dim.label} className="group">
+                <div className="flex items-center justify-between mb-1">
+                  <div className={`flex items-center gap-2 ${dim.color}`}>
+                    {dim.icon}
+                    <span className="text-sm font-medium text-slate-300">{dim.label}</span>
                   </div>
-                  <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        percentage >= 70
-                          ? 'bg-green-500'
-                          : percentage >= 40
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
+                  <span className="text-sm font-mono text-slate-400">
+                    {dim.score}/{dim.maxScore}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+                <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${dim.bgColor}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
-
-        {/* Details Expandable */}
-        <details className="mt-2">
-          <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-300">
-            View detailed breakdown
-          </summary>
-          <div className="mt-2 space-y-2 text-[10px] text-slate-400">
-            <div className="bg-slate-900/50 rounded p-2">
-              <p className="font-medium text-white mb-0.5">Coverage ({breakdown.coverage.score}/{breakdown.coverage.maxScore})</p>
-              <p>Categories: {breakdown.coverage.details.categoriesCovered}/{breakdown.coverage.details.totalCategories} | Descriptions: {breakdown.coverage.details.risksWithDescriptions}/{breakdown.coverage.details.totalRisks}</p>
-            </div>
-            <div className="bg-slate-900/50 rounded p-2">
-              <p className="font-medium text-white mb-0.5">Control Effectiveness ({breakdown.controlEffectiveness.score}/{breakdown.controlEffectiveness.maxScore})</p>
-              <p>Avg reduction: {breakdown.controlEffectiveness.details.averageReduction}% | With controls: {breakdown.controlEffectiveness.details.risksWithControls}/{breakdown.controlEffectiveness.details.totalRisks}</p>
-            </div>
-            <div className="bg-slate-900/50 rounded p-2">
-              <p className="font-medium text-white mb-0.5">Maturity ({breakdown.maturity.score}/{breakdown.maturity.maxScore})</p>
-              <p>With owners: {breakdown.maturity.details.risksWithOwners}/{breakdown.maturity.details.totalRisks} | With due dates: {breakdown.maturity.details.risksWithDueDates}/{breakdown.maturity.details.totalRisks}</p>
-            </div>
-            <div className="bg-slate-900/50 rounded p-2">
-              <p className="font-medium text-white mb-0.5">Trend ({breakdown.trend.score}/{breakdown.trend.maxScore})</p>
-              <p>Direction: {breakdown.trend.details.direction.replace('_', ' ')}</p>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
   )

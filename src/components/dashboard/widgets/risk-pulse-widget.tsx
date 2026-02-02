@@ -3,12 +3,9 @@
 import { trpc } from '@/lib/trpc-client'
 import { useState, useEffect, useMemo } from 'react'
 import { Activity } from 'lucide-react'
+import { useResponsiveValue } from '../widget-wrapper'
 
-interface RiskPulseProps {
-  className?: string
-}
-
-export function RiskPulse({ className = '' }: RiskPulseProps) {
+export function RiskPulseWidget() {
   const { data: scoreData, isLoading } = trpc.assessment.current.useQuery()
   const [mounted, setMounted] = useState(false)
 
@@ -17,6 +14,9 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
   }, [])
 
   const score = scoreData?.score ?? 0
+
+  // Number of bars based on width
+  const numBars = useResponsiveValue({ xs: 10, sm: 15, md: 20, lg: 25 }, 20)
 
   // Determine status based on Vytl Score
   const status = useMemo(() => {
@@ -28,7 +28,6 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
         badgeBg: 'bg-green-500/20',
         barColor: 'bg-green-500',
         gradient: 'from-green-500/20 via-green-500/5 to-transparent',
-        glow: 'shadow-green-500/20',
       }
     } else if (score >= 40) {
       return {
@@ -38,7 +37,6 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
         badgeBg: 'bg-amber-500/20',
         barColor: 'bg-amber-500',
         gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
-        glow: 'shadow-amber-500/20',
       }
     } else {
       return {
@@ -48,22 +46,17 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
         badgeBg: 'bg-red-500/20',
         barColor: 'bg-red-500',
         gradient: 'from-red-500/20 via-red-500/5 to-transparent',
-        glow: 'shadow-red-500/20',
       }
     }
   }, [score])
 
-  // Generate bar heights based on score - creates audio equalizer effect
+  // Generate bar heights based on score
   const barHeights = useMemo(() => {
-    const numBars = 20
     const bars: number[] = []
-
-    // Base height influenced by score (higher score = more variance, lower = more uniform/spiky)
     const baseHeight = score >= 70 ? 0.4 : score >= 40 ? 0.5 : 0.3
     const variance = score >= 70 ? 0.5 : score >= 40 ? 0.4 : 0.6
 
     for (let i = 0; i < numBars; i++) {
-      // Create a wave pattern with some randomness
       const wave = Math.sin((i / numBars) * Math.PI * 2) * 0.3
       const random = (Math.random() - 0.5) * variance
       const height = Math.max(0.15, Math.min(1, baseHeight + wave + random))
@@ -72,33 +65,29 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
 
     return bars
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [score, mounted]) // Re-generate on mount for animation effect
+  }, [score, mounted, numBars])
 
-  // Animation speeds based on health
   const animationDuration = score >= 70 ? '3s' : score >= 40 ? '2s' : '1.2s'
 
   if (isLoading) {
     return (
-      <div className={`bg-slate-800 rounded-xl border border-slate-700 h-full ${className}`}>
-        <div className="animate-pulse h-full flex flex-col">
-          <div className="px-4 py-2.5 border-b border-slate-700">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-          </div>
-          <div className="flex-1 p-4">
-            <div className="h-full bg-slate-700 rounded"></div>
-          </div>
-          <div className="px-4 py-2 border-t border-slate-700">
-            <div className="h-3 bg-slate-700 rounded w-1/2"></div>
-          </div>
+      <div className="h-full flex flex-col">
+        <div className="px-4 py-2.5 border-b border-slate-700/50 bg-slate-900/30">
+          <div className="h-4 bg-slate-700 rounded w-1/3 animate-pulse"></div>
+        </div>
+        <div className="flex-1 p-4 flex items-end justify-center gap-1">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div key={i} className="flex-1 max-w-3 bg-slate-700 rounded-t animate-pulse" style={{ height: '50%' }} />
+          ))}
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`bg-gradient-to-br ${status.gradient} bg-slate-800 rounded-xl border border-slate-700 h-full flex flex-col overflow-hidden shadow-lg ${status.glow} ${className}`}>
+    <div className={`h-full bg-gradient-to-br ${status.gradient} flex flex-col`}>
       {/* Header */}
-      <div className="px-4 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30">
+      <div className="px-4 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Activity className={`w-4 h-4 ${status.color}`} />
           <h3 className="text-sm font-semibold text-white">Risk Pulse</h3>
@@ -109,7 +98,7 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
       </div>
 
       {/* Bar Visualization */}
-      <div className="flex-1 p-4 flex items-end justify-center gap-1">
+      <div className="flex-1 min-h-0 p-4 flex items-end justify-center gap-1">
         {barHeights.map((height, index) => (
           <div
             key={index}
@@ -125,7 +114,7 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2.5 border-t border-slate-700/50 bg-slate-900/30">
+      <div className="px-4 py-2.5 border-t border-slate-700/50 bg-slate-900/30 flex-shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-400">Based on Vytl Score</span>
           <span className={`text-sm font-mono font-medium ${status.color}`}>

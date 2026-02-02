@@ -76,6 +76,19 @@ export function DashboardGrid({
     }
   }
 
+  const toggleLock = () => {
+    const newLocked = !isLocked
+    setIsLocked(newLocked)
+    if (newLocked) {
+      // Save layout when locking
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(layout))
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  }
+
   if (!mounted) {
     return (
       <div className="animate-pulse space-y-4">
@@ -103,7 +116,7 @@ export function DashboardGrid({
       {/* Grid Controls */}
       <div className="absolute -top-8 right-0 flex items-center gap-2 z-10">
         <button
-          onClick={() => setIsLocked(!isLocked)}
+          onClick={toggleLock}
           className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
             isLocked
               ? 'bg-slate-700 text-slate-400 hover:bg-slate-600'
@@ -136,7 +149,7 @@ export function DashboardGrid({
       </div>
 
       {/* CSS Grid Layout */}
-      <div className="grid grid-cols-12 gap-3 auto-rows-[80px]">
+      <div className="grid grid-cols-12 gap-2 auto-rows-[72px]">
         {sortedWidgets.map((widget) => {
           const layoutItem = layout.find((l) => l.i === widget.id)
           if (!layoutItem) return null
@@ -144,7 +157,7 @@ export function DashboardGrid({
           return (
             <div
               key={widget.id}
-              className={`bg-slate-800 rounded-lg border overflow-hidden transition-all ${
+              className={`bg-slate-800 rounded-xl border overflow-hidden transition-all ${
                 isLocked ? 'border-slate-700' : 'border-teal-500/30 shadow-lg shadow-teal-500/5'
               }`}
               style={{
@@ -161,7 +174,7 @@ export function DashboardGrid({
       {/* Edit mode hint */}
       {!isLocked && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 border border-teal-500/30 text-teal-400 px-4 py-2 rounded-lg text-sm shadow-lg z-50">
-          Layout customization coming soon • Click Lock to save
+          Drag & resize coming soon • Click Lock to save current layout
         </div>
       )}
     </div>

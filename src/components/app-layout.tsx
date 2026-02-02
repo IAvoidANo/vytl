@@ -11,15 +11,15 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, userName, userRole }: AppLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    <div className="flex h-screen bg-slate-900 overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header userName={userName} userRole={userRole} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 overflow-auto">
           {children}
         </main>
-        <footer className="py-2 text-center text-xs text-slate-500">
-          Vytl Risk Management
+        <footer className="py-1.5 text-center text-[10px] text-slate-600 border-t border-slate-800 flex-shrink-0">
+          Vytl v1.0.0 Beta
         </footer>
       </div>
     </div>

@@ -76,3 +76,70 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Light mode overrides for main UI components */
+.light .bg-slate-900 {
+  background-color: #f1f5f9 !important; /* slate-100 */
+}
+
+.light .bg-slate-800 {
+  background-color: #ffffff !important; /* white */
+}
+
+.light .bg-slate-700 {
+  background-color: #e2e8f0 !important; /* slate-200 */
+}
+
+.light .border-slate-700 {
+  border-color: #e2e8f0 !important; /* slate-200 */
+}
+
+.light .border-slate-600 {
+  border-color: #cbd5e1 !important; /* slate-300 */
+}
+
+.light .text-white {
+  color: #0f172a !important; /* slate-900 */
+}
+
+.light .text-slate-300 {
+  color: #475569 !important; /* slate-600 */
+}
+
+.light .text-slate-400 {
+  color: #64748b !important; /* slate-500 */
+}
+
+.light .text-slate-500 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+.light .hover\:bg-slate-700:hover {
+  background-color: #e2e8f0 !important; /* slate-200 */
+}
+
+.light .hover\:text-white:hover {
+  color: #0f172a !important; /* slate-900 */
+}
+
+/* Light mode for gradient backgrounds */
+.light .bg-gradient-to-br.from-slate-900 {
+  --tw-gradient-from: #f1f5f9 !important;
+}
+
+/* Light mode inputs and selects */
+.light select,
+.light input[type="text"],
+.light input[type="email"],
+.light input[type="password"],
+.light textarea {
+  background-color: #f8fafc !important; /* slate-50 */
+  border-color: #cbd5e1 !important; /* slate-300 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+.light select:focus,
+.light input:focus,
+.light textarea:focus {
+  border-color: #14b8a6 !important; /* teal-500 */
+}

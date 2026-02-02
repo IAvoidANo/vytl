@@ -18,21 +18,32 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; fill: string }
   PEOPLE: { bg: 'bg-orange-500/20', text: 'text-orange-400', fill: '#f97316' },
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  STRATEGIC: 'Strategic',
+  OPERATIONAL: 'Operational',
+  FINANCIAL: 'Financial',
+  COMPLIANCE: 'Compliance',
+  TECHNOLOGY: 'Technology',
+  REPUTATIONAL: 'Reputational',
+  ENVIRONMENTAL: 'Environmental',
+  PEOPLE: 'People',
+}
+
 export function CategoryChart({ className = '' }: CategoryChartProps) {
   const { data: stats, isLoading } = trpc.risk.stats.useQuery()
 
   if (isLoading) {
     return (
-      <div className={`bg-slate-800 rounded-lg border border-slate-700 ${className}`}>
-        <div className="px-3 py-2 border-b border-slate-700">
+      <div className={`bg-slate-800 rounded-xl border border-slate-700 ${className}`}>
+        <div className="px-4 py-3 border-b border-slate-700/50">
           <h3 className="text-sm font-semibold text-white">Risks by Category</h3>
         </div>
-        <div className="p-3">
-          <div className="animate-pulse">
-            <div className="w-24 h-24 bg-slate-700 rounded-full mx-auto mb-3"></div>
-            <div className="space-y-1.5">
+        <div className="p-4">
+          <div className="animate-pulse flex items-center gap-6">
+            <div className="w-28 h-28 bg-slate-700 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 space-y-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-3 bg-slate-700 rounded"></div>
+                <div key={i} className="h-4 bg-slate-700 rounded"></div>
               ))}
             </div>
           </div>
@@ -46,13 +57,13 @@ export function CategoryChart({ className = '' }: CategoryChartProps) {
 
   if (total === 0) {
     return (
-      <div className={`bg-slate-800 rounded-lg border border-slate-700 ${className}`}>
-        <div className="px-3 py-2 border-b border-slate-700">
+      <div className={`bg-slate-800 rounded-xl border border-slate-700 ${className}`}>
+        <div className="px-4 py-3 border-b border-slate-700/50">
           <h3 className="text-sm font-semibold text-white">Risks by Category</h3>
         </div>
-        <div className="p-6 text-center">
-          <PieChart className="w-6 h-6 text-slate-600 mx-auto mb-2" />
-          <p className="text-slate-400 text-xs">No data to display</p>
+        <div className="p-8 text-center">
+          <PieChart className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+          <p className="text-slate-400 text-sm">No data to display</p>
         </div>
       </div>
     )
@@ -61,10 +72,10 @@ export function CategoryChart({ className = '' }: CategoryChartProps) {
   // Sort categories by count
   const sortedCategories = Object.entries(categoryData)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 8)
+    .slice(0, 6)
 
   // Calculate SVG donut chart segments
-  const radius = 38
+  const radius = 42
   const circumference = 2 * Math.PI * radius
   let cumulativePercent = 0
 
@@ -85,62 +96,90 @@ export function CategoryChart({ className = '' }: CategoryChartProps) {
   })
 
   return (
-    <div className={`bg-slate-800 rounded-lg border border-slate-700 ${className}`}>
-      <div className="px-3 py-2 border-b border-slate-700">
+    <div className={`bg-slate-800 rounded-xl border border-slate-700 ${className}`}>
+      <div className="px-4 py-3 border-b border-slate-700/50">
         <h3 className="text-sm font-semibold text-white">Risks by Category</h3>
       </div>
-      <div className="p-3">
-        {/* Donut Chart */}
-        <div className="flex items-center justify-center mb-3">
-          <div className="relative">
-            <svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
+      <div className="p-4">
+        <div className="flex items-center gap-5">
+          {/* Donut Chart - Left Side */}
+          <div className="relative flex-shrink-0">
+            <svg width="110" height="110" viewBox="0 0 110 110" className="transform -rotate-90">
               {/* Background circle */}
               <circle
-                cx="50"
-                cy="50"
+                cx="55"
+                cy="55"
                 r={radius}
                 fill="none"
                 stroke="#334155"
-                strokeWidth="10"
+                strokeWidth="12"
               />
               {/* Data segments */}
               {segments.map((segment) => (
                 <circle
                   key={segment.category}
-                  cx="50"
-                  cy="50"
+                  cx="55"
+                  cy="55"
                   r={radius}
                   fill="none"
                   stroke={segment.color}
-                  strokeWidth="10"
+                  strokeWidth="12"
                   strokeDasharray={segment.strokeDasharray}
                   strokeDashoffset={segment.strokeDashoffset}
-                  className="transition-all duration-500"
-                  style={{ transformOrigin: '50px 50px' }}
+                  className="transition-all duration-500 hover:opacity-80"
+                  style={{ transformOrigin: '55px 55px' }}
                 />
               ))}
             </svg>
             {/* Center text */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-xl font-bold text-white">{total}</p>
-                <p className="text-[10px] text-slate-400">risks</p>
+                <p className="text-2xl font-bold text-white">{total}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total</p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Legend */}
-        <div className="grid grid-cols-2 gap-1">
-          {sortedCategories.map(([category, count]) => {
-            return (
-              <div key={category} className="flex items-center gap-1.5 text-[10px]">
-                <div className={`w-2 h-2 rounded-sm flex-shrink-0`} style={{ backgroundColor: CATEGORY_COLORS[category]?.fill || '#64748b' }}></div>
-                <span className="text-slate-400 truncate">{category.slice(0, 3)}</span>
-                <span className="text-slate-500">{count}</span>
+          {/* Legend - Right Side */}
+          <div className="flex-1 space-y-1.5">
+            {sortedCategories.map(([category, count]) => {
+              const percentage = Math.round((count / total) * 100)
+              const colors = CATEGORY_COLORS[category] || { fill: '#64748b', text: 'text-slate-400' }
+              const label = CATEGORY_LABELS[category] || category
+
+              return (
+                <div key={category} className="flex items-center gap-2 group">
+                  {/* Color indicator */}
+                  <div
+                    className="w-3 h-3 rounded flex-shrink-0 transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: colors.fill }}
+                  />
+                  {/* Category name */}
+                  <span className="flex-1 text-xs text-slate-300 truncate">
+                    {label}
+                  </span>
+                  {/* Count */}
+                  <span className="text-xs font-mono text-slate-400 w-6 text-right">
+                    {count}
+                  </span>
+                  {/* Percentage */}
+                  <span className="text-[10px] text-slate-500 w-8 text-right">
+                    {percentage}%
+                  </span>
+                </div>
+              )
+            })}
+
+            {/* Show "Others" if there are more categories */}
+            {Object.keys(categoryData).length > 6 && (
+              <div className="flex items-center gap-2 pt-1 border-t border-slate-700/50">
+                <div className="w-3 h-3 rounded flex-shrink-0 bg-slate-600" />
+                <span className="flex-1 text-xs text-slate-500 italic">
+                  +{Object.keys(categoryData).length - 6} more
+                </span>
               </div>
-            )
-          })}
+            )}
+          </div>
         </div>
       </div>
     </div>

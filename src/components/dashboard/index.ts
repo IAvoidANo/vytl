@@ -3,7 +3,17 @@ export { TopRisks } from './top-risks'
 export { ActivityFeed } from './activity-feed'
 export { CategoryChart } from './category-chart'
 
-// Compact versions for dashboard
-export { TopRisksCompact } from './top-risks-compact'
-export { ActivityFeedCompact } from './activity-feed-compact'
-export { CategoryChartCompact } from './category-chart-compact'
+// Dashboard Grid
+export { DashboardGrid } from './dashboard-grid'
+export { WidgetWrapper, useWidgetSize, useResponsiveValue, useVisibleRows } from './widget-wrapper'
+
+// Auto-scaling widgets
+export {
+  VytlScoreWidget,
+  RiskPulseWidget,
+  StatWidget,
+  StatusBreakdownWidget,
+  TopRisksWidget,
+  CategoryChartWidget,
+  ActivityFeedWidget,
+} from './widgets'

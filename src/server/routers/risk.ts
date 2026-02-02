@@ -3,6 +3,8 @@ import { router, protectedProcedure, editorProcedure, riskManagerProcedure } fro
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import { createAuditLog, pickAuditFields, hasChanges } from '@/lib/audit'
+import Anthropic from '@anthropic-ai/sdk'
+import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
 
 const riskCategoryEnum = z.enum([
   'STRATEGIC',
@@ -519,5 +521,270 @@ export const riskRouter = router({
       }
 
       return trends
+    }),
+
+  // Get risks for workspace kanban board
+  listForWorkspace: protectedProcedure.query(async ({ ctx }) => {
+    const risks = await db.risk.findMany({
+      where: {
+        register: { orgId: ctx.user.orgId },
+      },
+      select: {
+        id: true,
+        refCode: true,
+        title: true,
+        description: true,
+        category: true,
+        source: true,
+        workflowStatus: true,
+        residualScore: true,
+        createdAt: true,
+        owner: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    return risks
+  }),
+
+  // Update risk workflow status (for kanban drag-and-drop)
+  updateWorkflowStatus: editorProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        workflowStatus: z.enum(['INBOX', 'TRIAGE', 'ASSIGNED', 'APPROVED']),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify risk belongs to user's org
+      const existing = await db.risk.findFirst({
+        where: { id: input.id, register: { orgId: ctx.user.orgId } },
+      })
+
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Risk not found' })
+      }
+
+      const risk = await db.risk.update({
+        where: { id: input.id },
+        data: { workflowStatus: input.workflowStatus },
+      })
+
+      await createAuditLog({
+        action: 'UPDATE',
+        entityType: 'RISK',
+        entityId: risk.id,
+        userId: ctx.user.id,
+        orgId: ctx.user.orgId,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        oldValues: { workflowStatus: existing.workflowStatus },
+        newValues: { workflowStatus: input.workflowStatus },
+      })
+
+      return risk
+    }),
+
+  // Create risk from forwarded email (AI extraction)
+  createFromEmail: editorProcedure
+    .input(
+      z.object({
+        fromEmail: z.string().optional(),
+        subject: z.string().min(1, 'Subject is required'),
+        body: z.string().min(1, 'Body is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Rate limit AI requests
+      checkRateLimit(
+        createRateLimitKey(ctx.user.id, ctx.user.orgId, 'ai-email'),
+        RATE_LIMITS.ai
+      )
+
+      // Get or create default risk register
+      let register = await db.riskRegister.findFirst({
+        where: { orgId: ctx.user.orgId },
+        orderBy: { createdAt: 'asc' },
+      })
+
+      if (!register) {
+        register = await db.riskRegister.create({
+          data: {
+            name: 'Default Register',
+            orgId: ctx.user.orgId,
+          },
+        })
+      }
+
+      // Check API key
+      const apiKey = process.env.ANTHROPIC_API_KEY
+      if (!apiKey) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'AI analysis is not configured. Please contact your administrator.',
+        })
+      }
+
+      try {
+        const anthropic = new Anthropic({ apiKey })
+
+        const prompt = `You are a risk management AI assistant. Analyse this email and extract risk information.
+
+## Email Details
+From: ${input.fromEmail || 'Unknown'}
+Subject: ${input.subject}
+
+Body:
+${input.body}
+
+## Task
+Extract the risk information from this email and respond with ONLY a JSON object (no markdown, no explanation):
+
+{
+  "title": "Concise risk title (max 100 chars)",
+  "description": "Full description of the risk based on the email content",
+  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE",
+  "inherentLikelihood": 1-5,
+  "inherentImpact": 1-5,
+  "residualLikelihood": 1-5,
+  "residualImpact": 1-5,
+  "response": "AVOID|MITIGATE|TRANSFER|ACCEPT",
+  "suggestedControls": "Brief suggested controls or mitigations"
+}
+
+Category definitions:
+- STRATEGIC: Long-term business strategy risks
+- OPERATIONAL: Day-to-day process and operational risks
+- FINANCIAL: Money, revenue, cost, financial market risks
+- COMPLIANCE: Regulatory, legal, compliance risks
+- TECHNOLOGY: IT, cybersecurity, systems risks
+- REPUTATIONAL: Brand, PR, stakeholder relationship risks
+- ENVIRONMENTAL: Climate, sustainability, environmental risks
+- PEOPLE: HR, workforce, organizational culture risks
+
+Likelihood scale: 1=Rare, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain
+Impact scale: 1=Insignificant, 2=Minor, 3=Moderate, 4=Major, 5=Catastrophic
+
+Response strategies:
+- AVOID: Eliminate the risk by avoiding the activity
+- MITIGATE: Reduce likelihood or impact through controls
+- TRANSFER: Transfer risk to third party (insurance, outsourcing)
+- ACCEPT: Accept the risk without additional controls
+
+If the email doesn't clearly describe a risk, still extract the most relevant risk-related content.`
+
+        const message = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }],
+        })
+
+        const textContent = message.content.find((c) => c.type === 'text')
+        if (!textContent || textContent.type !== 'text') {
+          throw new Error('No response from AI')
+        }
+
+        let jsonText = textContent.text.trim()
+        // Handle markdown code blocks
+        if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+        }
+
+        const parsed = JSON.parse(jsonText) as {
+          title: string
+          description: string
+          category: string
+          inherentLikelihood: number
+          inherentImpact: number
+          residualLikelihood: number
+          residualImpact: number
+          response: string
+          suggestedControls: string
+        }
+
+        // Validate category
+        const validCategories = [
+          'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
+          'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE'
+        ]
+        const category = validCategories.includes(parsed.category) ? parsed.category : 'OPERATIONAL'
+
+        // Validate response
+        const validResponses = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
+        const response = validResponses.includes(parsed.response) ? parsed.response : 'MITIGATE'
+
+        // Clamp scores
+        const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)))
+        const inherentLikelihood = clamp(parsed.inherentLikelihood)
+        const inherentImpact = clamp(parsed.inherentImpact)
+        const residualLikelihood = clamp(parsed.residualLikelihood)
+        const residualImpact = clamp(parsed.residualImpact)
+
+        // Generate ref code
+        const riskCount = await db.risk.count({ where: { registerId: register.id } })
+        const categoryPrefix = category.substring(0, 3).toUpperCase()
+        const refCode = `${categoryPrefix}-${String(riskCount + 1).padStart(3, '0')}`
+
+        // Create the risk
+        const risk = await db.risk.create({
+          data: {
+            refCode,
+            title: parsed.title.substring(0, 100),
+            description: parsed.description + `\n\n---\n*Source email from: ${input.fromEmail || 'Unknown'}*\n*Subject: ${input.subject}*`,
+            category: category as 'STRATEGIC' | 'OPERATIONAL' | 'FINANCIAL' | 'COMPLIANCE' | 'TECHNOLOGY' | 'REPUTATIONAL' | 'ENVIRONMENTAL' | 'PEOPLE',
+            inherentLikelihood,
+            inherentImpact,
+            inherentScore: inherentLikelihood * inherentImpact,
+            residualLikelihood,
+            residualImpact,
+            residualScore: residualLikelihood * residualImpact,
+            response: response as 'AVOID' | 'MITIGATE' | 'TRANSFER' | 'ACCEPT',
+            controls: parsed.suggestedControls,
+            source: 'EMAIL',
+            workflowStatus: 'INBOX',
+            registerId: register.id,
+            createdById: ctx.user.id,
+          },
+        })
+
+        await createAuditLog({
+          action: 'CREATE',
+          entityType: 'RISK',
+          entityId: risk.id,
+          userId: ctx.user.id,
+          orgId: ctx.user.orgId,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+          newValues: {
+            refCode: risk.refCode,
+            title: risk.title,
+            category: risk.category,
+            source: 'EMAIL',
+            workflowStatus: 'INBOX',
+          },
+        })
+
+        return risk
+      } catch (error) {
+        console.error('[createFromEmail] Error:', error)
+
+        if (error instanceof Anthropic.APIError) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `AI service error: ${error.message}`,
+          })
+        }
+
+        if (error instanceof SyntaxError) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to parse AI response. Please try again.',
+          })
+        }
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to process email. Please try again.',
+        })
+      }
     }),
 })
