@@ -21,6 +21,8 @@ Vytl is an AI-powered risk management SaaS for South African businesses. Multi-t
 npm run dev          # Start dev server (localhost:3000)
 npm run build        # Production build
 npm run lint         # ESLint check
+npm run test         # Run Vitest tests
+npm run test:ui      # Run Vitest with UI
 npx prisma studio    # Database GUI
 npx prisma migrate dev   # Run migrations
 npx prisma db seed   # Seed test data (admin@acme.com / Password123!)
@@ -66,6 +68,12 @@ if (!session?.user) redirect('/login')
 - `EMAIL`: Parsed from email submissions
 - `EXCEL`: Bulk imported
 - `API`: External integrations
+
+### Workflow Status (Kanban)
+- `INBOX`: Newly received risks awaiting triage
+- `TRIAGE`: Under review for categorization/scoring
+- `ASSIGNED`: Assigned to risk owner for action
+- `APPROVED`: Fully reviewed and approved
 
 ### User Roles (hierarchical)
 `OWNER` > `ADMIN` > `RISK_MANAGER` > `EDITOR` > `VIEWER`
@@ -205,6 +213,35 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - Reset to default layout button
   - Responsive grid (12/8/4 columns based on viewport)
 
+### Sprint 8 - COMPLETE (Workspace & Theming)
+- [x] **Risk Workspace** - Kanban board for risk workflow management
+  - Drag-and-drop between columns: Inbox → Triage → Assigned → Approved
+  - Source filtering (Manual, Email, Import, API)
+  - Email forward modal (UI ready for future email ingestion)
+  - @dnd-kit/core integration for smooth drag interactions
+  - Real-time workflow status updates
+- [x] **Theme Toggle** - Dark/Light mode support
+  - ThemeProvider context with localStorage persistence
+  - System preference detection on first visit
+  - Toggle button in header
+  - CSS class-based theming (dark/light on html element)
+- [x] **Modular Dashboard Widgets**
+  - WidgetWrapper component for consistent styling
+  - StatWidget, TopRisksWidget, ActivityFeedWidget
+  - CategoryChartWidget, VytlScoreWidget, RiskPulseWidget
+  - StatusBreakdownWidget for workflow status distribution
+- [x] **Testing Infrastructure**
+  - Vitest setup with React Testing Library
+  - Happy-DOM for browser environment simulation
+  - Test commands: `npm run test`, `npm run test:ui`
+- [x] **Schema Updates**
+  - `workflowStatus` field on Risk model (INBOX, TRIAGE, ASSIGNED, APPROVED)
+  - `dashboardLayout` JSON field on User for persisted widget layouts
+- [x] **Session Templates** - Development documentation
+  - API routes reference
+  - Data model documentation
+  - Common patterns (tRPC endpoints, client components, server pages)
+
 ### Pages
 | Route | Status | Description |
 |-------|--------|-------------|
@@ -213,6 +250,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | `/dashboard` | ✅ | Bento grid dashboard with draggable widgets |
 | `/risks` | ✅ | Risk register (table/heatmap) with sparklines |
 | `/risks/[id]` | ✅ | Risk detail (5 tabs) |
+| `/workspace` | ✅ | Kanban board for risk workflow (Sprint 8) |
 | `/users` | ✅ | Team management (ADMIN+) |
 | `/settings` | ✅ | Profile, Security, Org, POPIA settings |
 | `/forgot-password` | ✅ | Password reset request |
@@ -232,13 +270,18 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `KriForm` - Create/edit KRI with threshold configuration
 - `ExcelImportModal` - Multi-format import (Excel/CSV/PDF/Word) with AI extraction
 - `ErrorBoundary` - Global error boundary for React errors
-- `Providers` - App providers with ErrorBoundary, tRPC, QueryClient, Session, Toaster
+- `Providers` - App providers with ErrorBoundary, tRPC, QueryClient, Session, Toaster, ThemeProvider
 - `AuditTimeline` - Change history display for entities
 - `VytlScoreCard` - Animated score display with grade and breakdown
 - `RiskPulse` - Visual heartbeat indicator (green/amber/red based on score)
 - `TopRisks` - Top 5 highest-risk items widget
 - `ActivityFeed` - Recent audit log activity with user/action/timestamp
 - `CategoryChart` - SVG donut chart showing risk distribution by category
+- `ThemeToggle` - Dark/light mode toggle button (Sprint 8)
+- `WorkspaceClient` - Kanban board with drag-and-drop (Sprint 8)
+- `KanbanColumn` / `KanbanCard` - Workspace drag-and-drop components (Sprint 8)
+- `WidgetWrapper` - Consistent dashboard widget container (Sprint 8)
+- Dashboard Widgets - Modular widgets: StatWidget, TopRisksWidget, etc. (Sprint 8)
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -261,6 +304,8 @@ src/
 │   │   └── [id]/page.tsx, risk-detail-client.tsx
 │   ├── kris/
 │   │   └── page.tsx, kris-client.tsx
+│   ├── workspace/                        # Risk workflow kanban (Sprint 8)
+│   │   └── page.tsx, workspace-client.tsx
 │   ├── users/
 │   │   └── page.tsx, users-client.tsx    # Team management (Sprint 6)
 │   ├── settings/
@@ -276,6 +321,7 @@ src/
 │   ├── command-palette.tsx              # Cmd+K navigation (Sprint 7)
 │   ├── dashboard-grid.tsx               # Bento grid layout (Sprint 7)
 │   ├── sparkline.tsx                    # SVG trend charts (Sprint 7)
+│   ├── theme-toggle.tsx                 # Dark/light mode toggle (Sprint 8)
 │   ├── kri-table.tsx, kri-form.tsx
 │   ├── excel-import-modal.tsx
 │   ├── audit-timeline.tsx
@@ -284,7 +330,21 @@ src/
 │   ├── dashboard/
 │   │   ├── risk-pulse.tsx, top-risks.tsx
 │   │   ├── activity-feed.tsx, category-chart.tsx
+│   │   ├── widget-wrapper.tsx           # Widget container (Sprint 8)
+│   │   ├── widgets/                     # Modular widgets (Sprint 8)
+│   │   │   ├── stat-widget.tsx
+│   │   │   ├── top-risks-widget.tsx
+│   │   │   ├── activity-feed-widget.tsx
+│   │   │   ├── category-chart-widget.tsx
+│   │   │   ├── vytl-score-widget.tsx
+│   │   │   ├── risk-pulse-widget.tsx
+│   │   │   ├── status-breakdown-widget.tsx
+│   │   │   └── index.ts
 │   │   └── index.ts
+│   ├── workspace/                       # Kanban components (Sprint 8)
+│   │   ├── kanban-column.tsx
+│   │   ├── kanban-card.tsx
+│   │   └── email-forward-modal.tsx
 │   └── risk-score-badge.tsx, providers.tsx
 ├── lib/
 │   ├── auth.ts          # NextAuth config
@@ -295,10 +355,11 @@ src/
 │   ├── rate-limit.ts    # In-memory rate limiting (Sprint 6)
 │   ├── use-debounce.ts  # Debounce hooks for AI suggestions (Sprint 7)
 │   ├── recent-items.ts  # Recent items localStorage tracking (Sprint 7)
+│   ├── theme-context.tsx # Theme provider context (Sprint 8)
 │   └── vytl-score.ts    # Vytl Score calculation (4 dimensions)
 └── server/routers/
     ├── index.ts         # Root router
-    ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks
+    ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace
     ├── kri.ts           # KRI CRUD + status calc
     ├── audit.ts         # Audit log queries + recent activity
     ├── assessment.ts    # Vytl Score assessment CRUD
@@ -306,6 +367,15 @@ src/
     ├── import.ts        # AI document extraction (rate limited)
     ├── user.ts          # User management + password reset (Sprint 6)
     └── organisation.ts  # Org settings + POPIA (Sprint 6)
+
+tests/                                   # Vitest tests (Sprint 8)
+├── setup.ts
+└── server/routers/risk.test.ts
+
+.session-templates/                      # Dev documentation (Sprint 8)
+├── api-routes.md
+├── data-model.md
+└── common-patterns/
 
 public/templates/
 └── risk-import-template.xlsx  # Downloadable import template
