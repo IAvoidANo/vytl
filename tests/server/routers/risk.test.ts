@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { createTRPCMsw } from 'msw'
+import { describe, it, expect } from 'vitest'
 
 describe('Risk Router', () => {
   describe('risk.create', () => {
@@ -33,21 +32,3 @@ describe('Risk Router', () => {
     })
   })
 })
-```
-
-Save the file (Ctrl+S).
-
----
-
-## You should now see tests running!
-
-In the Vitest terminal, you should see:
-```
-✓ tests/server/routers/risk.test.ts (4 tests)
-  ✓ Risk Router
-    ✓ risk.create
-      ✓ should create a risk with correct ref code
-      ✓ should calculate inherent score correctly
-      ✓ should calculate residual score correctly
-    ✓ Multi-tenancy isolation
-      ✓ should not allow user to access another org risk
