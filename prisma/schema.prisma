@@ -35,6 +35,7 @@ model Organisation {
   auditLogs     AuditLog[]
   kris          Kri[]
   emailSubmissions EmailSubmission[]
+  scoringProfiles  ScoringProfile[]
 
   @@map("organisations")
 }
@@ -78,6 +79,8 @@ model User {
   ownedRisks   Risk[]     @relation("RiskOwnedBy")
   auditLogs    AuditLog[]
   ownedKris    Kri[]
+  assignedActions  TreatmentAction[] @relation("ActionAssignee")
+  createdActions   TreatmentAction[] @relation("ActionCreatedBy")
 
   @@map("users")
 }
@@ -200,6 +203,9 @@ model Risk {
 
   // AI analysis
   aiAnalysis AIAnalysis?
+
+  // Treatment actions
+  treatmentActions TreatmentAction[]
 
   @@unique([registerId, refCode])
   @@map("risks")
@@ -347,6 +353,97 @@ enum KriStatus {
 }
 
 // ============================================
+// SCORING ENGINE
+// ============================================
+
+model ScoringProfile {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  industry    String?
+
+  // Dimension weights (must sum to 100)
+  weightBase          Int @default(40)  // Base L×I score
+  weightControlQuality Int @default(20) // Control description quality
+  weightVelocity      Int @default(15)  // Rate of score change
+  weightCorrelation   Int @default(15)  // Cross-risk correlation
+  weightKriAlignment  Int @default(10)  // KRI trend alignment
+
+  // Category importance multipliers (1.0 = normal, >1.0 = higher importance)
+  categoryMultipliers Json? // Record<RiskCategory, number>
+
+  // Thresholds
+  thresholdLow    Int @default(25)  // Below = low risk
+  thresholdMedium Int @default(50)  // Below = medium risk
+  thresholdHigh   Int @default(75)  // Below = high, above = critical
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Organisation ownership
+  orgId        String
+  organisation Organisation @relation(fields: [orgId], references: [id])
+
+  // Relationships
+  rules        ScoringRule[]
+  scoreHistory ScoreHistory[]
+
+  @@unique([orgId, isDefault])
+  @@map("scoring_profiles")
+}
+
+model ScoringRule {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  priority    Int     @default(50) // 1-100, lower = applied first
+
+  // Condition (what triggers the rule)
+  conditionField    String  // e.g. "category", "status", "residualScore"
+  conditionOperator String  // "equals", "greaterThan", "lessThan", "contains", "isEmpty"
+  conditionValue    String  // e.g. "COMPLIANCE", "25", "OPEN"
+
+  // Effect
+  scoreModifier Int    // -25 to +25 points adjustment
+  modifierType  String @default("absolute") // "absolute" or "percentage"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  profileId String
+  profile   ScoringProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("scoring_rules")
+}
+
+model ScoreHistory {
+  id        String   @id @default(cuid())
+  riskId    String
+  createdAt DateTime @default(now())
+
+  // Score snapshot
+  compositeScore     Int   // 0-100 weighted composite
+  baseScore          Int   // Traditional L×I normalized
+  controlQualityScore Int  // Control quality dimension
+  velocityScore      Int   // Velocity dimension
+  correlationScore   Int   // Correlation dimension
+  kriAlignmentScore  Int   // KRI alignment dimension
+
+  // Breakdown stored as JSON for flexibility
+  breakdown Json?
+
+  // Profile used for this calculation
+  profileId String?
+  profile   ScoringProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([riskId, createdAt])
+  @@map("score_history")
+}
+
+// ============================================
 // EMAIL SUBMISSIONS
 // ============================================
 
@@ -423,4 +520,42 @@ model AuditLog {
   @@index([orgId, createdAt])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+// ============================================
+// TREATMENT ACTIONS
+// ============================================
+
+model TreatmentAction {
+  id          String         @id @default(cuid())
+  title       String
+  description String?        @db.Text
+  priority    ActionPriority @default(MEDIUM)
+  status      ActionStatus   @default(OPEN)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  riskId      String
+  risk        Risk           @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?          @relation("ActionAssignee", fields: [assigneeId], references: [id])
+  createdById String
+  createdBy   User           @relation("ActionCreatedBy", fields: [createdById], references: [id])
+  @@index([riskId])
+  @@map("treatment_actions")
+}
+
+enum ActionPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

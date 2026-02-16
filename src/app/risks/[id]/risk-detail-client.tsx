@@ -24,20 +24,26 @@ import {
   TrendingUp,
   Activity,
   X,
+  Gauge,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
 import { RiskForm } from '@/components/risk-form'
 import { AuditTimeline } from '@/components/audit-timeline'
+import { TreatmentActions } from '@/components/treatment-actions'
 import { addRecentItem } from '@/lib/recent-items'
 import { format } from 'date-fns'
 
-type TabId = 'overview' | 'analysis' | 'controls' | 'history' | 'documents'
+type TabId = 'overview' | 'analysis' | 'controls' | 'history' | 'documents' | 'scoring'
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview', label: 'Overview', icon: FileText },
   { id: 'analysis', label: 'AI Analysis', icon: Brain },
-  { id: 'controls', label: 'Controls', icon: Shield },
+  { id: 'controls', label: 'Treatment', icon: Shield },
+  { id: 'scoring', label: 'Scoring', icon: Gauge },
   { id: 'history', label: 'History', icon: Clock },
   { id: 'documents', label: 'Documents', icon: Paperclip },
 ]
@@ -276,20 +282,18 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
 
         {activeTab === 'controls' && (
           <div className="p-6">
-            {risk.controls ? (
-              <div>
+            {risk.controls && (
+              <div className="mb-6">
                 <h3 className="text-sm font-medium text-slate-400 mb-2">Mitigation Controls</h3>
                 <div className="bg-slate-900 rounded-lg p-4">
                   <p className="text-slate-300 whitespace-pre-wrap">{risk.controls}</p>
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <Shield className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-400 mb-2">No Controls Defined</h3>
-                <p className="text-slate-500">Add controls to mitigate this risk.</p>
-              </div>
             )}
+
+            <div className={risk.controls ? 'border-t border-slate-700 pt-6' : ''}>
+              <TreatmentActions riskId={riskId} />
+            </div>
           </div>
         )}
 
@@ -310,6 +314,10 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
               </button>
             </div>
           </div>
+        )}
+
+        {activeTab === 'scoring' && (
+          <ScoringTab riskId={riskId} />
         )}
       </div>
 
@@ -676,6 +684,172 @@ function AIAnalysisTab({ riskId, existingAnalysis }: AIAnalysisTabProps) {
           Powered by Claude AI. Analysis typically takes 10-20 seconds.
         </p>
       </div>
+    </div>
+  )
+}
+
+// Scoring Tab Component
+function ScoringTab({ riskId }: { riskId: string }) {
+  const utils = trpc.useUtils()
+  const [scoreResult, setScoreResult] = useState<{
+    compositeScore: number
+    grade: string
+    gradeColor: string
+    dimensions: {
+      base: { score: number }
+      controlQuality: { score: number }
+      velocity: { score: number }
+      correlation: { score: number }
+      kriAlignment: { score: number }
+    }
+    rulesApplied: { ruleName: string; modifier: number }[]
+  } | null>(null)
+
+  const calculateMutation = trpc.scoring.calculate.useMutation({
+    onSuccess: (data) => {
+      setScoreResult(data)
+      utils.scoring.getHistory.invalidate({ riskId })
+    },
+  })
+
+  const { data: historyData } = trpc.scoring.getHistory.useQuery(
+    { riskId, limit: 10 },
+  )
+
+  const handleCalculate = () => {
+    calculateMutation.mutate({ riskId, saveHistory: true })
+  }
+
+  const GRADE_COLORS: Record<string, string> = {
+    green: 'bg-green-500/20 text-green-400 border-green-500/30',
+    yellow: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    red: 'bg-red-500/20 text-red-400 border-red-500/30',
+  }
+
+  const DIMENSION_LABELS: { key: string; label: string; color: string }[] = [
+    { key: 'base', label: 'Base (L×I)', color: 'bg-blue-500' },
+    { key: 'controlQuality', label: 'Control Quality', color: 'bg-teal-500' },
+    { key: 'velocity', label: 'Velocity', color: 'bg-purple-500' },
+    { key: 'correlation', label: 'Correlation', color: 'bg-orange-500' },
+    { key: 'kriAlignment', label: 'KRI Alignment', color: 'bg-pink-500' },
+  ]
+
+  return (
+    <div className="p-6">
+      {/* Header / Calculate */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Gauge className="w-5 h-5 text-teal-400" />
+          <h3 className="font-semibold text-white">Composite Risk Score</h3>
+        </div>
+        <button
+          onClick={handleCalculate}
+          disabled={calculateMutation.isPending}
+          className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {calculateMutation.isPending ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Calculating...
+            </>
+          ) : (
+            <>
+              <Activity className="w-4 h-4" />
+              Calculate Score
+            </>
+          )}
+        </button>
+      </div>
+
+      {calculateMutation.isError && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-red-400 text-sm">
+          {calculateMutation.error.message}
+        </div>
+      )}
+
+      {scoreResult ? (
+        <>
+          {/* Composite Score Display */}
+          <div className="flex items-center gap-6 mb-8">
+            <div className="text-center">
+              <div className="text-5xl font-bold text-white tabular-nums">
+                {scoreResult.compositeScore}
+              </div>
+              <div className="text-sm text-slate-400 mt-1">out of 100</div>
+            </div>
+            <span className={`text-sm px-3 py-1.5 rounded border ${GRADE_COLORS[scoreResult.gradeColor] || GRADE_COLORS.yellow}`}>
+              {scoreResult.grade}
+            </span>
+          </div>
+
+          {/* Dimension Breakdown */}
+          <div className="mb-8">
+            <h4 className="text-sm font-medium text-slate-400 mb-4">Dimension Breakdown</h4>
+            <div className="space-y-3">
+              {DIMENSION_LABELS.map(({ key, label, color }) => {
+                const dimScore = scoreResult.dimensions[key as keyof typeof scoreResult.dimensions].score
+                return (
+                  <div key={key}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-slate-300">{label}</span>
+                      <span className="text-sm font-medium text-white tabular-nums">{dimScore}/100</span>
+                    </div>
+                    <div className="w-full bg-slate-700 rounded-full h-2.5">
+                      <div
+                        className={`${color} h-2.5 rounded-full transition-all duration-500`}
+                        style={{ width: `${dimScore}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Rules Applied */}
+          {scoreResult.rulesApplied.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-sm font-medium text-slate-400 mb-3">Rules Applied</h4>
+              <div className="space-y-2">
+                {scoreResult.rulesApplied.map((rule, i) => (
+                  <div key={i} className="flex items-center justify-between bg-slate-900 rounded-lg px-3 py-2">
+                    <span className="text-sm text-slate-300">{rule.ruleName}</span>
+                    <span className={`text-sm font-medium ${rule.modifier > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      {rule.modifier > 0 ? '+' : ''}{rule.modifier} pts
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-8">
+          <Gauge className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <p className="text-slate-400 mb-2">No score calculated yet</p>
+          <p className="text-slate-500 text-sm">Click &ldquo;Calculate Score&rdquo; to generate a composite risk score.</p>
+        </div>
+      )}
+
+      {/* Score History */}
+      {historyData && historyData.items.length > 0 && (
+        <div className="border-t border-slate-700 pt-6">
+          <h4 className="text-sm font-medium text-slate-400 mb-3">Score History (Last 10)</h4>
+          <div className="space-y-2">
+            {historyData.items.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between bg-slate-900 rounded-lg px-3 py-2">
+                <span className="text-sm text-slate-400">
+                  {format(new Date(entry.createdAt), 'dd MMM yyyy HH:mm')}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-white tabular-nums">{entry.compositeScore}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

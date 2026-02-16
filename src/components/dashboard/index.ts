@@ -16,4 +16,6 @@ export {
   TopRisksWidget,
   CategoryChartWidget,
   ActivityFeedWidget,
+  ScoringRecommendationsWidget,
+  CategoryTrendsWidget,
 } from './widgets'
