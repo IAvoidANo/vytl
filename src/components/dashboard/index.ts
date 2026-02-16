@@ -18,4 +18,5 @@ export {
   ActivityFeedWidget,
   ScoringRecommendationsWidget,
   CategoryTrendsWidget,
+  ComplianceCoverageWidget,
 } from './widgets'

@@ -25,6 +25,7 @@ import {
   Activity,
   X,
   Gauge,
+  ClipboardCheck,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
@@ -34,15 +35,17 @@ import { RiskScoreBadge } from '@/components/risk-score-badge'
 import { RiskForm } from '@/components/risk-form'
 import { AuditTimeline } from '@/components/audit-timeline'
 import { TreatmentActions } from '@/components/treatment-actions'
+import { RegulatoryMappings } from '@/components/regulatory-mappings'
 import { addRecentItem } from '@/lib/recent-items'
 import { format } from 'date-fns'
 
-type TabId = 'overview' | 'analysis' | 'controls' | 'history' | 'documents' | 'scoring'
+type TabId = 'overview' | 'analysis' | 'controls' | 'compliance' | 'history' | 'documents' | 'scoring'
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview', label: 'Overview', icon: FileText },
   { id: 'analysis', label: 'AI Analysis', icon: Brain },
   { id: 'controls', label: 'Treatment', icon: Shield },
+  { id: 'compliance', label: 'Compliance', icon: ClipboardCheck },
   { id: 'scoring', label: 'Scoring', icon: Gauge },
   { id: 'history', label: 'History', icon: Clock },
   { id: 'documents', label: 'Documents', icon: Paperclip },
@@ -295,6 +298,10 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
               <TreatmentActions riskId={riskId} />
             </div>
           </div>
+        )}
+
+        {activeTab === 'compliance' && (
+          <RegulatoryMappings riskId={riskId} />
         )}
 
         {activeTab === 'history' && (

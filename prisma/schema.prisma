@@ -81,6 +81,7 @@ model User {
   ownedKris    Kri[]
   assignedActions  TreatmentAction[] @relation("ActionAssignee")
   createdActions   TreatmentAction[] @relation("ActionCreatedBy")
+  createdMappings  RegulatoryMapping[] @relation("MappingCreatedBy")
 
   @@map("users")
 }
@@ -206,6 +207,9 @@ model Risk {
 
   // Treatment actions
   treatmentActions TreatmentAction[]
+
+  // Regulatory mappings
+  regulatoryMappings RegulatoryMapping[]
 
   @@unique([registerId, refCode])
   @@map("risks")
@@ -558,4 +562,35 @@ enum ActionStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+// ============================================
+// REGULATORY MAPPINGS
+// ============================================
+
+model RegulatoryMapping {
+  id              String           @id @default(cuid())
+  requirementCode String
+  complianceStatus ComplianceStatus @default(NOT_ASSESSED)
+  notes           String?          @db.Text
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relationships
+  riskId      String
+  risk        Risk   @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User   @relation("MappingCreatedBy", fields: [createdById], references: [id])
+
+  @@unique([riskId, requirementCode])
+  @@index([riskId])
+  @@map("regulatory_mappings")
+}
+
+enum ComplianceStatus {
+  COMPLIANT
+  PARTIALLY_COMPLIANT
+  NON_COMPLIANT
+  NOT_ASSESSED
+  NOT_APPLICABLE
 }

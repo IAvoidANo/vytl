@@ -325,6 +325,15 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - Register selector in risk form, register filter on risk list + workspace
   - 27 tests
 
+### Sprint 12 - COMPLETE (Regulatory Mapping)
+- [x] **Static Framework Data** - King V (35 requirements, 13 principles) + ISO 31000:2018 (16 requirements)
+- [x] **Validation Schemas** - Zod schemas + pure coverage calculation functions
+- [x] **Prisma Schema** - ComplianceStatus enum, RegulatoryMapping model with unique constraint
+- [x] **tRPC Router** - 7 endpoints: list, create, bulkCreate, update, delete, coverage, riskCoverage
+- [x] **Compliance Tab** - 7th tab in risk detail with coverage bars, status cycling, bulk add panel
+- [x] **Dashboard Widget** - ComplianceCoverageWidget with per-framework progress bars
+- [x] **Tests** - 50 new tests (676 total across 19 files, all passing)
+
 ### Pages
 | Route | Status | Description |
 |-------|--------|-------------|
@@ -332,7 +341,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | `/login` | ✅ | Login form with forgot password link |
 | `/dashboard` | ✅ | Bento grid dashboard with draggable widgets + Board Report |
 | `/risks` | ✅ | Risk register (table/heatmap) with sparklines + register filter |
-| `/risks/[id]` | ✅ | Risk detail (6 tabs: Overview, AI, Treatment, Scoring, History, Docs) |
+| `/risks/[id]` | ✅ | Risk detail (7 tabs: Overview, AI, Treatment, Compliance, Scoring, History, Docs) |
 | `/workspace` | ✅ | Kanban board for risk workflow + register filter |
 | `/users` | ✅ | Team management (ADMIN+) |
 | `/settings` | ✅ | Profile, Security, Org, POPIA, Scoring, Registers |
@@ -369,6 +378,8 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `CategoryTrendsWidget` - Category score trends with direction arrows (Sprint 10)
 - `BoardReportModal` - PDF generation modal with data readiness checklist (Sprint 11)
 - `TreatmentActions` - Treatment action list with progress bar and inline form (Sprint 11)
+- `RegulatoryMappings` - Compliance tab: coverage bars, status cycling, bulk add (Sprint 12)
+- `ComplianceCoverageWidget` - Dashboard widget: per-framework coverage bars (Sprint 12)
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -428,6 +439,7 @@ src/
 │   │   │   ├── status-breakdown-widget.tsx
 │   │   │   ├── scoring-recommendations-widget.tsx  # Sprint 10
 │   │   │   ├── category-trends-widget.tsx           # Sprint 10
+│   │   │   ├── compliance-coverage-widget.tsx       # Sprint 12
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── workspace/                       # Kanban components (Sprint 8)
@@ -453,10 +465,13 @@ src/
 │   ├── industry-profiles.ts     # SA industry scoring presets (Sprint 9)
 │   ├── board-report.ts          # Board report PDF generation (Sprint 11)
 │   ├── treatment-validation.ts  # Treatment action Zod schemas (Sprint 11)
-│   └── register-validation.ts   # Register Zod schemas + delete guards (Sprint 11)
+│   ├── register-validation.ts   # Register Zod schemas + delete guards (Sprint 11)
+│   ├── regulatory-frameworks.ts  # Static King V + ISO 31000 framework data (Sprint 12)
+│   └── regulatory-validation.ts  # Regulatory mapping schemas + coverage calc (Sprint 12)
 ├── components/
 │   ├── board-report-modal.tsx   # PDF report generation modal (Sprint 11)
-│   └── treatment-actions.tsx    # Treatment action list + form (Sprint 11)
+│   ├── treatment-actions.tsx    # Treatment action list + form (Sprint 11)
+│   └── regulatory-mappings.tsx  # Compliance tab component (Sprint 12)
 └── server/routers/
     ├── index.ts         # Root router
     ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace + registers
@@ -469,7 +484,8 @@ src/
     ├── organisation.ts  # Org settings + POPIA (Sprint 6)
     ├── scoring.ts       # Scoring engine API (14 endpoints) (Sprint 9)
     ├── treatment.ts     # Treatment action CRUD (Sprint 11)
-    └── register.ts      # Risk register CRUD (Sprint 11)
+    ├── register.ts      # Risk register CRUD (Sprint 11)
+    └── regulatory.ts    # Regulatory mapping CRUD + coverage (Sprint 12)
 
 tests/                                   # Vitest tests (Sprint 8-11)
 ├── setup.ts
@@ -481,7 +497,9 @@ tests/                                   # Vitest tests (Sprint 8-11)
     ├── score-trends.test.ts         # Trend analysis tests (Sprint 9)
     ├── board-report.test.ts         # Board report PDF tests (Sprint 11)
     ├── treatment-actions.test.ts    # Treatment action tests (Sprint 11)
-    └── register-validation.test.ts  # Register validation tests (Sprint 11)
+    ├── register-validation.test.ts  # Register validation tests (Sprint 11)
+    ├── regulatory-frameworks.test.ts  # Framework data integrity tests (Sprint 12)
+    └── regulatory-validation.test.ts  # Validation + coverage tests (Sprint 12)
 
 .session-templates/                      # Dev documentation (Sprint 8)
 ├── api-routes.md

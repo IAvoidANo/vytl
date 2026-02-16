@@ -160,8 +160,52 @@
 
 ---
 
+## Sprint 12 - COMPLETE ✅
+
+### Regulatory Mapping (King V + ISO 31000) - COMPLETE ✅
+- [x] **Static Framework Data** (`regulatory-frameworks.ts`)
+  - King V Code: 35 requirements across 13 principles (corporate governance)
+  - ISO 31000:2018: 16 requirements (8 principles + 8 process steps)
+  - Each requirement: code, frameworkId, principle, title, riskCategories[]
+  - Accessor functions: getAllFrameworks, getFramework, getRequirement, etc.
+  - Map-based lookups for fast access
+- [x] **Validation Schemas** (`regulatory-validation.ts`)
+  - Zod schemas: createRegulatoryMapping, updateRegulatoryMapping, bulkCreateMappings
+  - Compliance statuses: COMPLIANT, PARTIALLY_COMPLIANT, NON_COMPLIANT, NOT_ASSESSED, NOT_APPLICABLE
+  - Pure functions: calculateCoverage(), calculateOverallCoverage()
+  - CoverageResult interface with per-framework and overall metrics
+- [x] **Prisma Schema**
+  - ComplianceStatus enum (5 statuses)
+  - RegulatoryMapping model (riskId, requirementCode, complianceStatus, notes, createdById)
+  - @@unique([riskId, requirementCode]) prevents duplicate mappings
+  - Relations on Risk and User models
+- [x] **tRPC Router** (`regulatory.ts`) with 7 endpoints
+  - list (protectedProcedure): mappings for a risk
+  - create (editorProcedure): single mapping with code validation
+  - bulkCreate (editorProcedure): map risk to multiple requirements, skip duplicates
+  - update (editorProcedure): change compliance status/notes
+  - delete (riskManagerProcedure): remove mapping
+  - coverage (protectedProcedure): org-wide coverage report
+  - riskCoverage (protectedProcedure): per-risk coverage
+  - All mutations audit logged with REGULATORY_MAPPING entity type
+- [x] **Compliance Tab** in Risk Detail (7th tab with ClipboardCheck icon)
+  - Coverage summary bars per framework (King V %, ISO 31000 %)
+  - Color-coded: green (>80%), yellow (50-80%), red (<50%)
+  - Framework sections with expandable requirement lists
+  - Clickable status badges to cycle compliance status
+  - "Add Mappings" panel with framework selector + requirement checkboxes
+  - Grouped by principle, select-all per principle, skip already-mapped codes
+  - Delete button per mapping with confirmation
+- [x] **Dashboard Widget** (ComplianceCoverageWidget)
+  - Overall coverage %, per-framework mini progress bars
+  - Color-coded thresholds, mapped/total counts, gap indicators
+- [x] **Testing** - 50 new tests across 2 test files (676 total, all passing)
+  - regulatory-frameworks.test.ts (26 tests): data integrity, uniqueness, accessors
+  - regulatory-validation.test.ts (24 tests): schemas, enums, coverage calculations
+
+---
+
 ## Future Backlog
-- [ ] Regulatory mapping (King V, ISO 31000)
 - [ ] Risk appetite configuration
 - [ ] Incident linking
 - [ ] Action item tracking

@@ -14,6 +14,7 @@ import {
   ActivityFeedWidget,
   ScoringRecommendationsWidget,
   CategoryTrendsWidget,
+  ComplianceCoverageWidget,
 } from '@/components/dashboard'
 import { BoardReportModal } from '@/components/board-report-modal'
 
@@ -111,6 +112,11 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
         </GridItem>
         <GridItem id="category-trends" className="lg:col-span-2">
           <CategoryTrendsWidget />
+        </GridItem>
+
+        {/* Row 5: Compliance */}
+        <GridItem id="compliance-coverage" className="lg:col-span-2">
+          <ComplianceCoverageWidget />
         </GridItem>
       </DashboardGrid>
 
