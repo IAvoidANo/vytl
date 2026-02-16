@@ -57,6 +57,19 @@ if (!session?.user) redirect('/login')
 - **Residual**: Risk after controls applied
 - Scale: 1-5 for likelihood and impact
 
+### Scoring Engine (Sprint 9)
+- **Composite Score (0-100)**: 5 weighted dimensions via `ScoringProfile`
+  - Base (40%): Normalized L×I
+  - Control Quality (20%): Depth/specificity of documented controls
+  - Velocity (15%): Rate of score change over time
+  - Correlation (15%): Connectedness to other high-scoring risks
+  - KRI Alignment (10%): KRI status trends
+- **Custom Rules**: `ScoringRule` applies score modifiers based on conditions (e.g., category=COMPLIANCE → +5)
+- **Industry Profiles**: Pre-configured weights for financial_services, mining_resources, technology, healthcare, manufacturing, retail
+- **SA Regulatory Factors**: King IV, POPIA, B-BBEE, NCA, FICA
+- **Score History**: Per-risk score snapshots in `ScoreHistory` for trend analysis
+- **Recommendations**: Auto-detect under/over-scored risks, missing categories, KRI gaps, inconsistencies
+
 ### Risk Fields
 - `rootCause`: Optional text field for root cause analysis
 - `isOngoing`: Boolean flag for ongoing monitoring (no due date)
@@ -242,24 +255,94 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - Data model documentation
   - Common patterns (tRPC endpoints, client components, server pages)
 
+### Sprint 9 - COMPLETE (Scoring Engine)
+- [x] **Scoring Engine** - 5-dimension composite risk scoring (0-100)
+  - Base Score (40%): Normalized residual L×I
+  - Control Quality (20%): Analysis of control depth, specificity, structure
+  - Velocity (15%): Rate of score change via audit log history
+  - Correlation (15%): Cross-risk category concentration and high-risk density
+  - KRI Alignment (10%): Active KRI status distribution (GREEN/AMBER/RED)
+- [x] **Scoring Profiles** - Configurable per-org scoring configuration
+  - Dimension weight customization (must sum to 100)
+  - Category importance multipliers (0.1-3.0x)
+  - Risk threshold configuration (low/medium/high)
+- [x] **Custom Scoring Rules** - Condition-based score modifiers
+  - 10 condition fields × 7 operators
+  - Score modifiers: -25 to +25 (absolute or percentage)
+  - Priority ordering (1-100)
+- [x] **Industry Profiles** - 6 SA industry presets
+  - Financial Services, Mining & Resources, Technology, Healthcare, Manufacturing, Retail
+  - SA regulatory framework integration (King IV, POPIA, B-BBEE, NCA, FICA)
+- [x] **Score Trends** - Historical analysis
+  - Moving averages (7-day, 30-day)
+  - Trend direction detection (improving/stable/worsening)
+  - Anomaly detection (>2 std deviations)
+  - Linear forecast (30-day projection)
+  - Category-level trend aggregation
+- [x] **Scoring Recommendations** - Automated insights
+  - Under-scored risk detection (severity language vs low score)
+  - Over-scored risk detection (strong controls vs high score)
+  - Missing category alerts (industry-aware)
+  - KRI gap identification
+  - Scoring consistency analysis (within-category variance)
+  - Stale assessment warnings (>90 days)
+- [x] **Prisma Models** - ScoringProfile, ScoringRule, ScoreHistory
+- [x] **tRPC Router** - `scoring.*` with 14 endpoints (RBAC enforced)
+- [x] **Validation** - Zod schemas for all scoring inputs
+- [x] **Tests** - 83 new tests (559 total), all passing
+
+### Sprint 10 - COMPLETE (Scoring Engine UI)
+- [x] **Settings > Scoring Tab** (ADMIN+)
+  - Profile config: 5 dimension weight inputs with live total validation
+  - Score thresholds (low/medium/high)
+  - Industry presets dropdown with apply
+  - Custom scoring rules CRUD with condition builder
+  - Engine status read-only display
+- [x] **Risk Detail > Scoring Tab**
+  - Calculate Score button (scoring.calculate mutation)
+  - Composite score + grade badge display
+  - 5 CSS bar charts for dimension breakdown
+  - Rules applied list
+  - Score history (last 10 entries)
+- [x] **Dashboard Scoring Widgets**
+  - ScoringRecommendationsWidget: top recommendations with severity badges
+  - CategoryTrendsWidget: category scores with trend direction arrows
+
+### Sprint 11 - COMPLETE (Board Report, Treatment Plans, Multi-Register)
+- [x] **Board Report PDF Export** - Multi-page governance report (jsPDF)
+  - Cover page, exec summary, risk overview, top 10, heatmap, trends, recommendations, KRI status
+  - BoardReportModal with section readiness checklist
+  - "Board Report" button on dashboard
+  - 12 tests
+- [x] **Risk Treatment Plans** - Action items per risk
+  - TreatmentAction model: title, description, priority (LOW-CRITICAL), status (OPEN-CANCELLED), dueDate, assignee
+  - tRPC treatment router: CRUD + stats (RBAC enforced, audit logged)
+  - TreatmentActions UI component with progress bar, inline form, status cycling
+  - 28 tests
+- [x] **Multi-Register Support** - Multiple risk registers per org
+  - Register CRUD router (ADMIN+, audit logged, delete safety checks)
+  - Settings > Registers tab with create/edit/delete
+  - Register selector in risk form, register filter on risk list + workspace
+  - 27 tests
+
 ### Pages
 | Route | Status | Description |
 |-------|--------|-------------|
 | `/` | ✅ | Auth redirect |
 | `/login` | ✅ | Login form with forgot password link |
-| `/dashboard` | ✅ | Bento grid dashboard with draggable widgets |
-| `/risks` | ✅ | Risk register (table/heatmap) with sparklines |
-| `/risks/[id]` | ✅ | Risk detail (5 tabs) |
-| `/workspace` | ✅ | Kanban board for risk workflow (Sprint 8) |
+| `/dashboard` | ✅ | Bento grid dashboard with draggable widgets + Board Report |
+| `/risks` | ✅ | Risk register (table/heatmap) with sparklines + register filter |
+| `/risks/[id]` | ✅ | Risk detail (6 tabs: Overview, AI, Treatment, Scoring, History, Docs) |
+| `/workspace` | ✅ | Kanban board for risk workflow + register filter |
 | `/users` | ✅ | Team management (ADMIN+) |
-| `/settings` | ✅ | Profile, Security, Org, POPIA settings |
+| `/settings` | ✅ | Profile, Security, Org, POPIA, Scoring, Registers |
 | `/forgot-password` | ✅ | Password reset request |
 | `/reset-password` | ✅ | Password reset with token |
 | `/accept-invite` | ✅ | Accept user invitation |
 
 ### Key Components
 - `RiskTable` - Sortable table with filters and sparkline trends (Sprint 7)
-- `RiskForm` - Create/edit modal with scoring + AI suggestions (Sprint 7)
+- `RiskForm` - Create/edit modal with scoring + AI suggestions + register selector (Sprint 7/11)
 - `RiskHeatmap` - 5×5 matrix visualization
 - `RiskScoreBadge` - Color-coded score display
 - `AppLayout` / `Sidebar` / `Header` - Layout system (Sidebar shows Team link for ADMIN+)
@@ -282,6 +365,10 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `KanbanColumn` / `KanbanCard` - Workspace drag-and-drop components (Sprint 8)
 - `WidgetWrapper` - Consistent dashboard widget container (Sprint 8)
 - Dashboard Widgets - Modular widgets: StatWidget, TopRisksWidget, etc. (Sprint 8)
+- `ScoringRecommendationsWidget` - Top scoring recommendations with severity (Sprint 10)
+- `CategoryTrendsWidget` - Category score trends with direction arrows (Sprint 10)
+- `BoardReportModal` - PDF generation modal with data readiness checklist (Sprint 11)
+- `TreatmentActions` - Treatment action list with progress bar and inline form (Sprint 11)
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -339,6 +426,8 @@ src/
 │   │   │   ├── vytl-score-widget.tsx
 │   │   │   ├── risk-pulse-widget.tsx
 │   │   │   ├── status-breakdown-widget.tsx
+│   │   │   ├── scoring-recommendations-widget.tsx  # Sprint 10
+│   │   │   ├── category-trends-widget.tsx           # Sprint 10
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── workspace/                       # Kanban components (Sprint 8)
@@ -355,22 +444,44 @@ src/
 │   ├── rate-limit.ts    # In-memory rate limiting (Sprint 6)
 │   ├── use-debounce.ts  # Debounce hooks for AI suggestions (Sprint 7)
 │   ├── recent-items.ts  # Recent items localStorage tracking (Sprint 7)
-│   ├── theme-context.tsx # Theme provider context (Sprint 8)
-│   └── vytl-score.ts    # Vytl Score calculation (4 dimensions)
+│   ├── theme-context.tsx         # Theme provider context (Sprint 8)
+│   ├── vytl-score.ts            # Vytl Score calculation (4 dimensions)
+│   ├── scoring-engine.ts        # 5-dimension composite scoring engine (Sprint 9)
+│   ├── scoring-validation.ts    # Zod schemas for scoring inputs (Sprint 9)
+│   ├── scoring-recommendations.ts # Auto-generated scoring insights (Sprint 9)
+│   ├── score-trends.ts          # Trend analysis + forecasting (Sprint 9)
+│   ├── industry-profiles.ts     # SA industry scoring presets (Sprint 9)
+│   ├── board-report.ts          # Board report PDF generation (Sprint 11)
+│   ├── treatment-validation.ts  # Treatment action Zod schemas (Sprint 11)
+│   └── register-validation.ts   # Register Zod schemas + delete guards (Sprint 11)
+├── components/
+│   ├── board-report-modal.tsx   # PDF report generation modal (Sprint 11)
+│   └── treatment-actions.tsx    # Treatment action list + form (Sprint 11)
 └── server/routers/
     ├── index.ts         # Root router
-    ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace
+    ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace + registers
     ├── kri.ts           # KRI CRUD + status calc
     ├── audit.ts         # Audit log queries + recent activity
     ├── assessment.ts    # Vytl Score assessment CRUD
     ├── ai-analysis.ts   # Claude AI risk analysis (rate limited)
     ├── import.ts        # AI document extraction (rate limited)
     ├── user.ts          # User management + password reset (Sprint 6)
-    └── organisation.ts  # Org settings + POPIA (Sprint 6)
+    ├── organisation.ts  # Org settings + POPIA (Sprint 6)
+    ├── scoring.ts       # Scoring engine API (14 endpoints) (Sprint 9)
+    ├── treatment.ts     # Treatment action CRUD (Sprint 11)
+    └── register.ts      # Risk register CRUD (Sprint 11)
 
-tests/                                   # Vitest tests (Sprint 8)
+tests/                                   # Vitest tests (Sprint 8-11)
 ├── setup.ts
-└── server/routers/risk.test.ts
+├── server/routers/risk.test.ts
+└── utils/
+    ├── scoring-engine.test.ts       # Scoring engine tests (Sprint 9)
+    ├── scoring-validation.test.ts   # Validation schema tests (Sprint 9)
+    ├── industry-profiles.test.ts    # Industry profile tests (Sprint 9)
+    ├── score-trends.test.ts         # Trend analysis tests (Sprint 9)
+    ├── board-report.test.ts         # Board report PDF tests (Sprint 11)
+    ├── treatment-actions.test.ts    # Treatment action tests (Sprint 11)
+    └── register-validation.test.ts  # Register validation tests (Sprint 11)
 
 .session-templates/                      # Dev documentation (Sprint 8)
 ├── api-routes.md

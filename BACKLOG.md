@@ -29,12 +29,139 @@
 
 ---
 
+## Sprint 9 - COMPLETE ✅
+
+### Scoring Engine (Backend) - COMPLETE ✅
+- [x] 5-dimension composite risk scoring engine (0-100)
+  - Base Score (40%): Normalized residual likelihood × impact
+  - Control Quality (20%): Depth, specificity, and structure of controls
+  - Velocity (15%): Rate of score change from audit log history
+  - Correlation (15%): Cross-risk category concentration and high-risk density
+  - KRI Alignment (10%): Active KRI GREEN/AMBER/RED distribution
+- [x] Configurable scoring profiles per organisation
+  - Dimension weight customization (must sum to 100)
+  - Category importance multipliers (0.1-3.0x)
+  - Risk threshold configuration (low/medium/high)
+- [x] Custom scoring rules engine
+  - 10 condition fields (category, status, residualScore, controls, etc.)
+  - 7 operators (equals, greaterThan, contains, isEmpty, etc.)
+  - Score modifiers: -25 to +25 (absolute or percentage)
+  - Priority ordering (1-100)
+- [x] Prisma models: ScoringProfile, ScoringRule, ScoreHistory
+- [x] tRPC scoring router with 14 endpoints (RBAC enforced)
+- [x] Zod validation schemas for all scoring inputs
+
+### Industry Profiles - COMPLETE ✅
+- [x] 6 pre-configured South African industry profiles:
+  - Financial Services (higher compliance/regulatory weight)
+  - Mining & Resources (higher environmental/safety weight)
+  - Technology (higher cybersecurity/velocity weight)
+  - Healthcare (higher patient safety/compliance weight)
+  - Manufacturing (higher operational/supply chain weight)
+  - Retail & Consumer (higher reputational/financial weight)
+- [x] SA regulatory framework integration: King IV, POPIA, B-BBEE, NCA, FICA
+
+### Score Trends & Recommendations - COMPLETE ✅
+- [x] Moving average calculations (7-day, 30-day)
+- [x] Trend direction detection (improving/stable/worsening)
+- [x] Anomaly detection (>2 standard deviations)
+- [x] Linear forecast (30-day projection)
+- [x] Category-level trend aggregation
+- [x] Under-scored risk detection (severity language vs low score)
+- [x] Over-scored risk detection (strong controls vs high score)
+- [x] Missing risk category alerts (industry-aware)
+- [x] KRI gap identification
+- [x] Scoring consistency analysis (within-category variance)
+- [x] Stale assessment warnings (>90 days)
+
+### Testing - COMPLETE ✅
+- [x] 83 new tests across 4 test files (559 total, all passing)
+  - scoring-engine.test.ts (20 tests)
+  - scoring-validation.test.ts (31 tests)
+  - industry-profiles.test.ts (20 tests)
+  - score-trends.test.ts (12 tests)
+
+---
+
+## Sprint 10 - COMPLETE ✅
+
+### Scoring Engine UI - COMPLETE ✅
+- [x] **Settings > Scoring Tab** (ADMIN+)
+  - Profile configuration: 5 dimension weight inputs with live total validation
+  - Score threshold configuration (low/medium/high)
+  - Industry presets: dropdown to apply pre-configured profiles
+  - Custom scoring rules: create/delete rules with condition builder
+  - Engine status: read-only display of profile, rules, risks, snapshots, KRIs
+- [x] **Risk Detail > Scoring Tab**
+  - "Calculate Score" button calling scoring.calculate mutation
+  - Composite score display (large number + grade badge, color-coded)
+  - 5 CSS bar charts for dimension breakdown (Base, Control Quality, Velocity, Correlation, KRI)
+  - Rules applied list with modifier values
+  - Score history (last 10 entries from scoring.getHistory)
+- [x] **Dashboard Widgets**
+  - Scoring Recommendations widget: top recommendations with severity badges
+  - Category Trends widget: category scores with trend direction arrows
+
+---
+
+## Sprint 11 - COMPLETE ✅
+
+### Board Report PDF Export - COMPLETE ✅
+- [x] Multi-page PDF generation with jsPDF (A4, professional styling)
+  - Cover page with org name, date, Vytl branding
+  - Executive summary: Vytl Score, grade, total risks, high risk count, KRIs in red
+  - Risk overview: by status and by category tables with percentages
+  - Top 10 risks table (ref, title, category, score, status, owner)
+  - 5×5 risk heatmap (colour-coded cells with risk counts)
+  - Category trends table with direction indicators
+  - Top 5 scoring recommendations with severity
+  - KRI status dashboard (name, current value, thresholds, status)
+  - Page footers with date and page numbers
+- [x] Board Report modal on dashboard with section readiness checklist
+- [x] "Board Report" button in dashboard header
+- [x] 12 tests covering empty data, null scores, many risks, special chars, PDF output
+
+### Risk Treatment Plans - COMPLETE ✅
+- [x] TreatmentAction Prisma model (title, description, priority, status, dueDate, assignee)
+  - Priorities: LOW, MEDIUM, HIGH, CRITICAL
+  - Statuses: OPEN, IN_PROGRESS, COMPLETED, CANCELLED
+  - completedAt auto-set on status transition to COMPLETED
+- [x] tRPC treatment router: list, create (EDITOR+), update (EDITOR+), delete (RISK_MANAGER+), stats
+  - Org-scoped via risk → register → org chain
+  - Audit logged for all mutations
+- [x] TreatmentActions UI component in risk detail Treatment tab
+  - Progress bar (completed/total)
+  - Inline add form with title, description, priority, due date, assignee
+  - Action cards with clickable status cycling, priority badges, delete
+- [x] Zod validation schemas with pure function status transition logic
+- [x] 28 tests covering validation, priority sorting, status transitions, enums
+
+### Multi-Register Support - COMPLETE ✅
+- [x] Register CRUD router: list, create (ADMIN+), update (ADMIN+), delete (ADMIN+)
+  - Unique name enforcement within org
+  - Delete safety: blocks if register has risks or is the only register
+  - Audit logged for all mutations
+- [x] Settings > Registers tab (ADMIN+)
+  - Create register form (name, description, status: Draft/Active/Archived)
+  - Register list with risk counts and status badges
+  - Inline edit (name, description, status)
+  - Delete with error feedback
+- [x] Register selector in risk creation form (auto-selects first register)
+- [x] Register filter dropdown on risk list page and workspace kanban
+- [x] listForWorkspace supports optional registerId filter
+- [x] Zod validation schemas with canDeleteRegister pure function
+- [x] 27 tests covering create/update schemas, status enum, delete safety checks
+
+### Testing - COMPLETE ✅
+- [x] 67 new tests across 3 test files (626 total, all passing)
+  - board-report.test.ts (12 tests)
+  - treatment-actions.test.ts (28 tests)
+  - register-validation.test.ts (27 tests)
+
+---
+
 ## Future Backlog
-- [ ] Board report PDF export
-- [ ] Risk treatment plans
-- [ ] Control effectiveness tracking
 - [ ] Regulatory mapping (King IV, ISO 31000)
-- [ ] Multi-register support
 - [ ] Risk appetite configuration
 - [ ] Incident linking
 - [ ] Action item tracking
@@ -176,11 +303,19 @@
 
 ---
 
-## MVP Complete - Ready for Beta Deployment 🚀
+## MVP Complete - Ready for Beta Deployment
 
-The Vytl Risk Management platform is now feature-complete for beta release with:
+The Vytl Risk Management platform is feature-complete for beta release with:
 - Full risk lifecycle management (CRUD, scoring, analysis)
 - AI-powered risk analysis and form suggestions
+- 5-dimension composite scoring engine with configurable profiles (Sprint 9)
+- 6 SA industry-specific scoring presets with regulatory alignment (Sprint 9)
+- Score trend analysis, anomaly detection, and forecasting (Sprint 9)
+- Automated scoring recommendations and gap analysis (Sprint 9)
+- Scoring engine UI with settings, risk detail tab, and dashboard widgets (Sprint 10)
+- Board report PDF export for governance meetings (Sprint 11)
+- Risk treatment plans with progress tracking (Sprint 11)
+- Multi-register support with filtering (Sprint 11)
 - Role-based access control (5 roles)
 - User management with invite system
 - Password reset functionality
@@ -190,3 +325,4 @@ The Vytl Risk Management platform is now feature-complete for beta release with:
 - Customizable bento grid dashboard
 - Command palette for power users
 - POPIA compliance settings
+- 626 tests across 17 test files (all passing)
