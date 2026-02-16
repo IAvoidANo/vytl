@@ -350,7 +350,7 @@ Provide your analysis as a JSON object with the following structure:
 ## Guidelines
 
 1. **Executive Summary**: Be concise but capture the essence of the risk and its potential business impact
-2. **Suggested Controls**: Provide 3-5 specific, practical controls tailored to this risk. Consider South African regulatory context (POPIA, King IV, etc.) where relevant
+2. **Suggested Controls**: Provide 3-5 specific, practical controls tailored to this risk. Consider South African regulatory context (POPIA, King V, etc.) where relevant
 3. **Score Justification**: Evaluate if the current likelihood and impact scores seem reasonable given the risk description
 4. **Related Categories**: List other risk categories (from: STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, TECHNOLOGY, REPUTATIONAL, ENVIRONMENTAL, PEOPLE) that might be affected by this risk
 5. **Suggested KRIs**: Recommend 2-3 Key Risk Indicators that could help monitor this risk

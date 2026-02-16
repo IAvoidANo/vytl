@@ -140,10 +140,10 @@ describe('Industry Profiles', () => {
       expect(names).toContain('POPIA')
     })
 
-    it('should return King IV for mining', () => {
+    it('should return King V for mining', () => {
       const factors = getRegulatorFactors('mining_resources')
       const names = factors.map((f: { name: string }) => f.name)
-      expect(names).toContain('King IV Code')
+      expect(names).toContain('King V Code')
     })
 
     it('should return empty for unknown industry', () => {

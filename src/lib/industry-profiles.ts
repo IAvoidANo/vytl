@@ -25,9 +25,9 @@ export interface IndustryProfile {
  * South African regulatory frameworks that apply across industries
  */
 export const SA_REGULATORY_FRAMEWORKS = {
-  KING_IV: {
-    name: 'King IV Code',
-    description: 'King IV Report on Corporate Governance for South Africa',
+  KING_V: {
+    name: 'King V Code',
+    description: 'King V Report on Corporate Governance for South Africa',
     riskCategories: ['STRATEGIC', 'COMPLIANCE', 'OPERATIONAL'],
     weight: 1.15,
   },
@@ -80,7 +80,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       PEOPLE: 0.9,
     },
     thresholds: { low: 20, medium: 45, high: 70 }, // Lower thresholds: less risk tolerance
-    regulatoryFactors: ['KING_IV', 'POPIA', 'FICA', 'NCA'],
+    regulatoryFactors: ['KING_V', 'POPIA', 'FICA', 'NCA'],
   },
 
   mining_resources: {
@@ -105,7 +105,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       REPUTATIONAL: 1.1,
     },
     thresholds: { low: 20, medium: 45, high: 65 }, // Low tolerance for safety
-    regulatoryFactors: ['KING_IV', 'BBBEE'],
+    regulatoryFactors: ['KING_V', 'BBBEE'],
   },
 
   technology: {
@@ -130,7 +130,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       ENVIRONMENTAL: 0.7,
     },
     thresholds: { low: 25, medium: 50, high: 75 },
-    regulatoryFactors: ['POPIA', 'KING_IV'],
+    regulatoryFactors: ['POPIA', 'KING_V'],
   },
 
   healthcare: {
@@ -155,7 +155,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       ENVIRONMENTAL: 0.8,
     },
     thresholds: { low: 20, medium: 40, high: 65 }, // Low tolerance
-    regulatoryFactors: ['POPIA', 'KING_IV'],
+    regulatoryFactors: ['POPIA', 'KING_V'],
   },
 
   manufacturing: {
@@ -180,7 +180,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       REPUTATIONAL: 0.9,
     },
     thresholds: { low: 25, medium: 50, high: 70 },
-    regulatoryFactors: ['KING_IV', 'BBBEE'],
+    regulatoryFactors: ['KING_V', 'BBBEE'],
   },
 
   retail: {
@@ -205,7 +205,7 @@ const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
       ENVIRONMENTAL: 0.8,
     },
     thresholds: { low: 25, medium: 50, high: 75 },
-    regulatoryFactors: ['POPIA', 'KING_IV', 'BBBEE'],
+    regulatoryFactors: ['POPIA', 'KING_V', 'BBBEE'],
   },
 }
 

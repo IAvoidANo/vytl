@@ -66,7 +66,7 @@ if (!session?.user) redirect('/login')
   - KRI Alignment (10%): KRI status trends
 - **Custom Rules**: `ScoringRule` applies score modifiers based on conditions (e.g., category=COMPLIANCE → +5)
 - **Industry Profiles**: Pre-configured weights for financial_services, mining_resources, technology, healthcare, manufacturing, retail
-- **SA Regulatory Factors**: King IV, POPIA, B-BBEE, NCA, FICA
+- **SA Regulatory Factors**: King V, POPIA, B-BBEE, NCA, FICA
 - **Score History**: Per-risk score snapshots in `ScoreHistory` for trend analysis
 - **Recommendations**: Auto-detect under/over-scored risks, missing categories, KRI gaps, inconsistencies
 
@@ -272,7 +272,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - Priority ordering (1-100)
 - [x] **Industry Profiles** - 6 SA industry presets
   - Financial Services, Mining & Resources, Technology, Healthcare, Manufacturing, Retail
-  - SA regulatory framework integration (King IV, POPIA, B-BBEE, NCA, FICA)
+  - SA regulatory framework integration (King V, POPIA, B-BBEE, NCA, FICA)
 - [x] **Score Trends** - Historical analysis
   - Moving averages (7-day, 30-day)
   - Trend direction detection (improving/stable/worsening)

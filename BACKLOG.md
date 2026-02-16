@@ -59,7 +59,7 @@
   - Healthcare (higher patient safety/compliance weight)
   - Manufacturing (higher operational/supply chain weight)
   - Retail & Consumer (higher reputational/financial weight)
-- [x] SA regulatory framework integration: King IV, POPIA, B-BBEE, NCA, FICA
+- [x] SA regulatory framework integration: King V, POPIA, B-BBEE, NCA, FICA
 
 ### Score Trends & Recommendations - COMPLETE ✅
 - [x] Moving average calculations (7-day, 30-day)
@@ -161,7 +161,7 @@
 ---
 
 ## Future Backlog
-- [ ] Regulatory mapping (King IV, ISO 31000)
+- [ ] Regulatory mapping (King V, ISO 31000)
 - [ ] Risk appetite configuration
 - [ ] Incident linking
 - [ ] Action item tracking
