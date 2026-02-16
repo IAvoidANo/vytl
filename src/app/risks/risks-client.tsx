@@ -17,15 +17,19 @@ export function RisksClient() {
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [categoryFilter, setCategoryFilter] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [registerFilter, setRegisterFilter] = useState<string>('')
+
+  const { data: registers } = trpc.risk.registers.useQuery()
 
   const filters = {
     category: categoryFilter || undefined,
     status: statusFilter || undefined,
   }
 
-  const queryInput = (categoryFilter || statusFilter) ? {
+  const queryInput = (categoryFilter || statusFilter || registerFilter) ? {
     category: categoryFilter ? categoryFilter as RiskCategory : undefined,
     status: statusFilter ? statusFilter as RiskStatus : undefined,
+    registerId: registerFilter || undefined,
   } : undefined
 
   const { data: risks } = trpc.risk.list.useQuery(queryInput)
@@ -39,9 +43,10 @@ export function RisksClient() {
   const clearFilters = () => {
     setCategoryFilter('')
     setStatusFilter('')
+    setRegisterFilter('')
   }
 
-  const hasFilters = categoryFilter || statusFilter
+  const hasFilters = categoryFilter || statusFilter || registerFilter
 
   return (
     <div className="text-white">
@@ -111,6 +116,18 @@ export function RisksClient() {
           <Filter className="w-4 h-4" />
           <span className="text-sm">Filter:</span>
         </div>
+        <select
+          value={registerFilter}
+          onChange={(e) => setRegisterFilter(e.target.value)}
+          className="px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+        >
+          <option value="">All Registers</option>
+          {registers?.map((reg) => (
+            <option key={reg.id} value={reg.id}>
+              {reg.name}
+            </option>
+          ))}
+        </select>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}

@@ -524,10 +524,13 @@ export const riskRouter = router({
     }),
 
   // Get risks for workspace kanban board
-  listForWorkspace: protectedProcedure.query(async ({ ctx }) => {
+  listForWorkspace: protectedProcedure
+    .input(z.object({ registerId: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
     const risks = await db.risk.findMany({
       where: {
         register: { orgId: ctx.user.orgId },
+        ...(input?.registerId && { registerId: input.registerId }),
       },
       select: {
         id: true,

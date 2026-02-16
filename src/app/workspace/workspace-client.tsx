@@ -56,12 +56,17 @@ const SOURCE_LABELS: Record<RiskSource, string> = {
 export function WorkspaceClient() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<RiskSource | 'ALL'>('ALL')
+  const [registerFilter, setRegisterFilter] = useState<string>('')
   const [showEmailModal, setShowEmailModal] = useState(false)
 
   const utils = trpc.useUtils()
 
+  const { data: registers } = trpc.risk.registers.useQuery()
+
   // Fetch all risks (workspace shows all, not just non-approved)
-  const { data: risks, isLoading } = trpc.risk.listForWorkspace.useQuery()
+  const { data: risks, isLoading } = trpc.risk.listForWorkspace.useQuery(
+    registerFilter ? { registerId: registerFilter } : undefined
+  )
 
   // Update workflow status mutation
   const updateWorkflow = trpc.risk.updateWorkflowStatus.useMutation({
@@ -178,9 +183,21 @@ export function WorkspaceClient() {
             Forward Email
           </button>
 
-          {/* Source Filter */}
+          {/* Filters */}
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-400" />
+            <select
+              value={registerFilter}
+              onChange={(e) => setRegisterFilter(e.target.value)}
+              className="px-3 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="">All Registers</option>
+              {registers?.map((reg) => (
+                <option key={reg.id} value={reg.id}>
+                  {reg.name}
+                </option>
+              ))}
+            </select>
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value as RiskSource | 'ALL')}
