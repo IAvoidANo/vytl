@@ -362,15 +362,23 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     { id: 'registers', label: 'Registers', adminOnly: true },
   ]
 
+  // Shared input styles
+  const inputClass = 'w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+  const inputDisabledClass = 'w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-slate-400'
+  const labelClass = 'block text-sm font-medium text-teal-400 mb-1'
+  const helperClass = 'mt-1 text-sm text-slate-400'
+  const btnPrimaryClass = 'px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:opacity-50 transition-colors'
+  const btnSmPrimaryClass = 'px-3 py-1.5 text-sm bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:opacity-50 transition-colors'
+
   return (
-    <div className="p-6">
+    <div className="p-6 text-white">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-600">Manage your account and organisation</p>
+        <h1 className="text-2xl font-bold text-white">Settings</h1>
+        <p className="text-slate-400">Manage your account and organisation</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 mb-6">
+      <div className="border-b border-slate-700 mb-6">
         <nav className="flex gap-4">
           {tabs.map((tab) => {
             if (tab.adminOnly && !isAdmin) return null
@@ -380,8 +388,8 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                    ? 'border-teal-400 text-teal-400'
+                    : 'border-transparent text-slate-400 hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -396,52 +404,42 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
         <div className="max-w-lg">
           <form onSubmit={handleProfileSave} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Email
-              </label>
+              <label className={labelClass}>Email</label>
               <input
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500"
+                className={inputDisabledClass}
               />
-              <p className="mt-1 text-sm text-slate-500">Email cannot be changed</p>
+              <p className={helperClass}>Email cannot be changed</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Full Name
-              </label>
+              <label className={labelClass}>Full Name</label>
               <input
                 type="text"
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Role
-              </label>
+              <label className={labelClass}>Role</label>
               <input
                 type="text"
                 value={user?.role || ''}
                 disabled
-                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500"
+                className={inputDisabledClass}
               />
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={updateProfile.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
+              <button type="submit" disabled={updateProfile.isPending} className={btnPrimaryClass}>
                 {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
               </button>
               {profileSaved && (
-                <span className="text-green-600 text-sm">Saved!</span>
+                <span className="text-green-400 text-sm">Saved!</span>
               )}
             </div>
           </form>
@@ -451,64 +449,54 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {/* Security Tab */}
       {activeTab === 'security' && (
         <div className="max-w-lg">
-          <h3 className="text-lg font-medium text-slate-900 mb-4">Change Password</h3>
+          <h3 className="text-lg font-medium text-white mb-4">Change Password</h3>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             {passwordError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-md text-red-400 text-sm">
                 {passwordError}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Current Password
-              </label>
+              <label className={labelClass}>Current Password</label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                New Password
-              </label>
+              <label className={labelClass}>New Password</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Confirm New Password
-              </label>
+              <label className={labelClass}>Confirm New Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={changePassword.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
+              <button type="submit" disabled={changePassword.isPending} className={btnPrimaryClass}>
                 {changePassword.isPending ? 'Changing...' : 'Change Password'}
               </button>
               {passwordSaved && (
-                <span className="text-green-600 text-sm">Password changed!</span>
+                <span className="text-green-400 text-sm">Password changed!</span>
               )}
             </div>
           </form>
@@ -520,26 +508,22 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
         <div className="max-w-lg">
           <form onSubmit={handleOrgSave} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Organisation Name
-              </label>
+              <label className={labelClass}>Organisation Name</label>
               <input
                 type="text"
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Industry
-              </label>
+              <label className={labelClass}>Industry</label>
               <select
                 value={orgIndustry}
                 onChange={(e) => setOrgIndustry(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               >
                 <option value="">Select industry...</option>
                 {INDUSTRIES.map((ind) => (
@@ -549,29 +533,23 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Employees
-              </label>
+              <label className={labelClass}>Number of Employees</label>
               <input
                 type="number"
                 value={orgEmployees}
                 onChange={(e) => setOrgEmployees(e.target.value)}
                 min="1"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="e.g., 50"
               />
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={updateOrg.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
+              <button type="submit" disabled={updateOrg.isPending} className={btnPrimaryClass}>
                 {updateOrg.isPending ? 'Saving...' : 'Save Changes'}
               </button>
               {orgSaved && (
-                <span className="text-green-600 text-sm">Saved!</span>
+                <span className="text-green-400 text-sm">Saved!</span>
               )}
             </div>
           </form>
@@ -581,9 +559,9 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {/* POPIA Tab */}
       {activeTab === 'popia' && isAdmin && (
         <div className="max-w-lg">
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h4 className="font-medium text-blue-900 mb-1">About POPIA Compliance</h4>
-            <p className="text-sm text-blue-700">
+          <div className="mb-6 p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
+            <h4 className="font-medium text-teal-400 mb-1">About POPIA Compliance</h4>
+            <p className="text-sm text-slate-300">
               The Protection of Personal Information Act (POPIA) requires South African
               organisations to handle personal data responsibly. Configure your data
               retention settings and consent management here.
@@ -592,18 +570,16 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
 
           <form onSubmit={handlePopiaSave} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Data Retention Period (days)
-              </label>
+              <label className={labelClass}>Data Retention Period (days)</label>
               <input
                 type="number"
                 value={retentionDays}
                 onChange={(e) => setRetentionDays(e.target.value)}
                 min="365"
                 max="3650"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
-              <p className="mt-1 text-sm text-slate-500">
+              <p className={helperClass}>
                 Minimum 1 year (365 days), maximum 10 years (3650 days). Default is 7 years.
               </p>
             </div>
@@ -614,10 +590,10 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                 id="consent"
                 checked={consentGiven}
                 onChange={(e) => setConsentGiven(e.target.checked)}
-                className="mt-1 h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                className="mt-1 h-4 w-4 text-teal-500 border-slate-600 bg-slate-700 rounded focus:ring-teal-500"
               />
-              <label htmlFor="consent" className="text-sm text-slate-700">
-                <span className="font-medium">Data Processing Consent</span>
+              <label htmlFor="consent" className="text-sm text-slate-300">
+                <span className="font-medium text-teal-400">Data Processing Consent</span>
                 <br />
                 I confirm that this organisation has obtained necessary consent from
                 data subjects for processing their personal information in accordance
@@ -626,21 +602,17 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
             </div>
 
             {org?.consentDate && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-400">
                 Consent recorded on: {new Date(org.consentDate).toLocaleDateString()}
               </p>
             )}
 
             <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={updatePopia.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
+              <button type="submit" disabled={updatePopia.isPending} className={btnPrimaryClass}>
                 {updatePopia.isPending ? 'Saving...' : 'Save POPIA Settings'}
               </button>
               {popiaSaved && (
-                <span className="text-green-600 text-sm">Saved!</span>
+                <span className="text-green-400 text-sm">Saved!</span>
               )}
             </div>
           </form>
@@ -652,19 +624,19 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
         <div className="space-y-8">
           {/* Profile Configuration */}
           <div className="max-w-lg">
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <h4 className="font-medium text-blue-900 mb-1">Scoring Engine Configuration</h4>
-              <p className="text-sm text-blue-700">
+            <div className="mb-4 p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
+              <h4 className="font-medium text-teal-400 mb-1">Scoring Engine Configuration</h4>
+              <p className="text-sm text-slate-300">
                 Configure how composite risk scores are calculated. The five dimension
                 weights must sum to exactly 100.
               </p>
             </div>
 
             <form onSubmit={handleScoringProfileSave} className="space-y-4">
-              <h3 className="text-lg font-medium text-slate-900">Dimension Weights</h3>
+              <h3 className="text-lg font-medium text-white">Dimension Weights</h3>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className={labelClass}>
                   Base Score (L&times;I) &mdash; {scoringWeightBase}%
                 </label>
                 <input
@@ -673,12 +645,12 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   onChange={(e) => setScoringWeightBase(parseInt(e.target.value) || 0)}
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className={labelClass}>
                   Control Quality &mdash; {scoringWeightControlQuality}%
                 </label>
                 <input
@@ -687,12 +659,12 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   onChange={(e) => setScoringWeightControlQuality(parseInt(e.target.value) || 0)}
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className={labelClass}>
                   Velocity &mdash; {scoringWeightVelocity}%
                 </label>
                 <input
@@ -701,12 +673,12 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   onChange={(e) => setScoringWeightVelocity(parseInt(e.target.value) || 0)}
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className={labelClass}>
                   Correlation &mdash; {scoringWeightCorrelation}%
                 </label>
                 <input
@@ -715,12 +687,12 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   onChange={(e) => setScoringWeightCorrelation(parseInt(e.target.value) || 0)}
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className={labelClass}>
                   KRI Alignment &mdash; {scoringWeightKriAlignment}%
                 </label>
                 <input
@@ -729,48 +701,48 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   onChange={(e) => setScoringWeightKriAlignment(parseInt(e.target.value) || 0)}
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
 
-              <div className={`text-sm font-medium ${scoringWeightTotal === 100 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-sm font-medium ${scoringWeightTotal === 100 ? 'text-green-400' : 'text-red-400'}`}>
                 Total: {scoringWeightTotal}% {scoringWeightTotal !== 100 && '(must equal 100)'}
               </div>
 
-              <h3 className="text-lg font-medium text-slate-900 pt-4">Score Thresholds</h3>
+              <h3 className="text-lg font-medium text-white pt-4">Score Thresholds</h3>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Low</label>
+                  <label className={labelClass}>Low</label>
                   <input
                     type="number"
                     value={scoringThresholdLow}
                     onChange={(e) => setScoringThresholdLow(parseInt(e.target.value) || 0)}
                     min="1"
                     max="99"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Medium</label>
+                  <label className={labelClass}>Medium</label>
                   <input
                     type="number"
                     value={scoringThresholdMedium}
                     onChange={(e) => setScoringThresholdMedium(parseInt(e.target.value) || 0)}
                     min="1"
                     max="99"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">High</label>
+                  <label className={labelClass}>High</label>
                   <input
                     type="number"
                     value={scoringThresholdHigh}
                     onChange={(e) => setScoringThresholdHigh(parseInt(e.target.value) || 0)}
                     min="1"
                     max="99"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                   />
                 </div>
               </div>
@@ -779,24 +751,24 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                 <button
                   type="submit"
                   disabled={updateScoringProfile.isPending || scoringWeightTotal !== 100}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className={btnPrimaryClass}
                 >
                   {updateScoringProfile.isPending ? 'Saving...' : 'Save Profile'}
                 </button>
                 {scoringProfileSaved && (
-                  <span className="text-green-600 text-sm">Saved!</span>
+                  <span className="text-green-400 text-sm">Saved!</span>
                 )}
                 {updateScoringProfile.isError && (
-                  <span className="text-red-600 text-sm">{updateScoringProfile.error.message}</span>
+                  <span className="text-red-400 text-sm">{updateScoringProfile.error.message}</span>
                 )}
               </div>
             </form>
           </div>
 
           {/* Industry Presets */}
-          <div className="max-w-lg border-t border-slate-200 pt-6">
-            <h3 className="text-lg font-medium text-slate-900 mb-4">Industry Presets</h3>
-            <p className="text-sm text-slate-600 mb-3">
+          <div className="max-w-lg border-t border-slate-700 pt-6">
+            <h3 className="text-lg font-medium text-white mb-4">Industry Presets</h3>
+            <p className="text-sm text-slate-400 mb-3">
               Apply a pre-configured scoring profile optimised for your industry.
               This will overwrite current weights and thresholds.
             </p>
@@ -804,7 +776,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
               <select
                 value={selectedIndustryId}
                 onChange={(e) => setSelectedIndustryId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 ${inputClass}`}
               >
                 <option value="">Select industry...</option>
                 {industryProfiles?.map((profile) => (
@@ -816,48 +788,48 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
               <button
                 onClick={handleApplyIndustry}
                 disabled={!selectedIndustryId || applyIndustryProfile.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className={btnPrimaryClass}
               >
                 {applyIndustryProfile.isPending ? 'Applying...' : 'Apply'}
               </button>
             </div>
             {industrySaved && (
-              <span className="text-green-600 text-sm mt-2 block">Industry profile applied! Reload to see updated weights.</span>
+              <span className="text-green-400 text-sm mt-2 block">Industry profile applied! Reload to see updated weights.</span>
             )}
           </div>
 
           {/* Custom Rules */}
-          <div className="max-w-lg border-t border-slate-200 pt-6">
+          <div className="max-w-lg border-t border-slate-700 pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-slate-900">Custom Scoring Rules</h3>
+              <h3 className="text-lg font-medium text-white">Custom Scoring Rules</h3>
               <button
                 onClick={() => setShowRuleForm(!showRuleForm)}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className={btnSmPrimaryClass}
               >
                 {showRuleForm ? 'Cancel' : '+ Add Rule'}
               </button>
             </div>
 
             {showRuleForm && (
-              <form onSubmit={handleCreateRule} className="space-y-3 mb-4 p-4 bg-slate-50 border border-slate-200 rounded-md">
+              <form onSubmit={handleCreateRule} className="space-y-3 mb-4 p-4 bg-slate-800 border border-slate-700 rounded-md">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Rule Name</label>
+                  <label className={labelClass}>Rule Name</label>
                   <input
                     type="text"
                     value={newRuleName}
                     onChange={(e) => setNewRuleName(e.target.value)}
                     required
                     placeholder="e.g. Compliance bonus"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Field</label>
+                    <label className={labelClass}>Field</label>
                     <select
                       value={newRuleConditionField}
                       onChange={(e) => setNewRuleConditionField(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     >
                       <option value="category">Category</option>
                       <option value="status">Status</option>
@@ -868,11 +840,11 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Operator</label>
+                    <label className={labelClass}>Operator</label>
                     <select
                       value={newRuleConditionOperator}
                       onChange={(e) => setNewRuleConditionOperator(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     >
                       <option value="equals">Equals</option>
                       <option value="notEquals">Not Equals</option>
@@ -885,33 +857,33 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Value</label>
+                  <label className={labelClass}>Value</label>
                   <input
                     type="text"
                     value={newRuleConditionValue}
                     onChange={(e) => setNewRuleConditionValue(e.target.value)}
                     placeholder="e.g. COMPLIANCE"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Score Modifier</label>
+                    <label className={labelClass}>Score Modifier</label>
                     <input
                       type="number"
                       value={newRuleScoreModifier}
                       onChange={(e) => setNewRuleScoreModifier(parseInt(e.target.value) || 0)}
                       min="-25"
                       max="25"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                    <label className={labelClass}>Type</label>
                     <select
                       value={newRuleModifierType}
                       onChange={(e) => setNewRuleModifierType(e.target.value as 'absolute' | 'percentage')}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     >
                       <option value="absolute">Absolute</option>
                       <option value="percentage">Percentage</option>
@@ -921,7 +893,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                 <button
                   type="submit"
                   disabled={createRule.isPending || !newRuleName}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className={btnPrimaryClass}
                 >
                   {createRule.isPending ? 'Creating...' : 'Create Rule'}
                 </button>
@@ -929,16 +901,16 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
             )}
 
             {ruleSaved && (
-              <p className="text-green-600 text-sm mb-3">Rule created!</p>
+              <p className="text-green-400 text-sm mb-3">Rule created!</p>
             )}
 
             {scoringRules && scoringRules.length > 0 ? (
               <div className="space-y-2">
                 {scoringRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-md">
+                  <div key={rule.id} className="flex items-center justify-between p-3 bg-slate-800 border border-slate-700 rounded-md">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{rule.name}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm font-medium text-white">{rule.name}</p>
+                      <p className="text-xs text-slate-400">
                         {rule.conditionField} {rule.conditionOperator} {rule.conditionValue} &rarr;{' '}
                         {rule.scoreModifier > 0 ? '+' : ''}{rule.scoreModifier}
                         {rule.modifierType === 'percentage' ? '%' : ' pts'}
@@ -951,7 +923,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                         }
                       }}
                       disabled={deleteRule.isPending}
-                      className="text-red-500 hover:text-red-700 text-sm disabled:opacity-50"
+                      className="text-red-400 hover:text-red-300 text-sm disabled:opacity-50"
                     >
                       Delete
                     </button>
@@ -959,42 +931,42 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No custom rules configured.</p>
+              <p className="text-sm text-slate-400">No custom rules configured.</p>
             )}
           </div>
 
           {/* Engine Status */}
-          <div className="max-w-lg border-t border-slate-200 pt-6">
-            <h3 className="text-lg font-medium text-slate-900 mb-4">Engine Status</h3>
+          <div className="max-w-lg border-t border-slate-700 pt-6">
+            <h3 className="text-lg font-medium text-white mb-4">Engine Status</h3>
             {engineStatus ? (
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Profile</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.profileName || 'None'}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Profile</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.profileName || 'None'}</p>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Active Rules</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.activeRules}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Active Rules</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.activeRules}</p>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Total Risks</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.totalRisks}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Total Risks</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.totalRisks}</p>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Score Snapshots</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.scoreSnapshots}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Score Snapshots</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.scoreSnapshots}</p>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Active KRIs</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.activeKris}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Active KRIs</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.activeKris}</p>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <p className="text-xs text-slate-500">Engine Version</p>
-                  <p className="text-sm font-medium text-slate-900">{engineStatus.engineVersion}</p>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                  <p className="text-xs text-slate-400">Engine Version</p>
+                  <p className="text-sm font-medium text-white">{engineStatus.engineVersion}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">Loading engine status...</p>
+              <p className="text-sm text-slate-400">Loading engine status...</p>
             )}
           </div>
         </div>
@@ -1003,9 +975,9 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {/* Registers Tab */}
       {activeTab === 'registers' && isAdmin && (
         <div className="max-w-2xl">
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h4 className="font-medium text-blue-900 mb-1">Risk Registers</h4>
-            <p className="text-sm text-blue-700">
+          <div className="mb-6 p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
+            <h4 className="font-medium text-teal-400 mb-1">Risk Registers</h4>
+            <p className="text-sm text-slate-300">
               Manage separate risk registers for different business units, projects, or
               compliance frameworks. Each register maintains its own set of risks.
             </p>
@@ -1013,49 +985,49 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
 
           {/* Add Register Button */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-900">Your Registers</h3>
+            <h3 className="text-lg font-medium text-white">Your Registers</h3>
             <button
               onClick={() => setShowRegisterForm(!showRegisterForm)}
-              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className={btnSmPrimaryClass}
             >
               {showRegisterForm ? 'Cancel' : '+ Add Register'}
             </button>
           </div>
 
           {registerSaved && (
-            <p className="text-green-600 text-sm mb-3">Saved!</p>
+            <p className="text-green-400 text-sm mb-3">Saved!</p>
           )}
 
           {/* Inline Create Form */}
           {showRegisterForm && (
-            <form onSubmit={handleCreateRegister} className="space-y-3 mb-4 p-4 bg-slate-50 border border-slate-200 rounded-md">
+            <form onSubmit={handleCreateRegister} className="space-y-3 mb-4 p-4 bg-slate-800 border border-slate-700 rounded-md">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <label className={labelClass}>Name</label>
                 <input
                   type="text"
                   value={newRegisterName}
                   onChange={(e) => setNewRegisterName(e.target.value)}
                   required
                   placeholder="e.g. IT Risk Register"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <label className={labelClass}>Description</label>
                 <input
                   type="text"
                   value={newRegisterDescription}
                   onChange={(e) => setNewRegisterDescription(e.target.value)}
                   placeholder="Optional description..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <label className={labelClass}>Status</label>
                 <select
                   value={newRegisterStatus}
                   onChange={(e) => setNewRegisterStatus(e.target.value as 'DRAFT' | 'ACTIVE' | 'ARCHIVED')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 >
                   <option value="DRAFT">Draft</option>
                   <option value="ACTIVE">Active</option>
@@ -1065,12 +1037,12 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
               <button
                 type="submit"
                 disabled={createRegister.isPending || !newRegisterName}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className={btnPrimaryClass}
               >
                 {createRegister.isPending ? 'Creating...' : 'Create Register'}
               </button>
               {createRegister.isError && (
-                <p className="text-red-600 text-sm">{createRegister.error.message}</p>
+                <p className="text-red-400 text-sm">{createRegister.error.message}</p>
               )}
             </form>
           )}
@@ -1079,7 +1051,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
           {registersList && registersList.length > 0 ? (
             <div className="space-y-3">
               {registersList.map((reg) => (
-                <div key={reg.id} className="p-4 bg-white border border-slate-200 rounded-md">
+                <div key={reg.id} className="p-4 bg-slate-800 border border-slate-700 rounded-md">
                   {editingRegisterId === reg.id ? (
                     <form onSubmit={handleUpdateRegister} className="space-y-3">
                       <div>
@@ -1088,7 +1060,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                           value={editRegisterName}
                           onChange={(e) => setEditRegisterName(e.target.value)}
                           required
-                          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                          className={inputClass}
                         />
                       </div>
                       <div>
@@ -1097,14 +1069,14 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                           value={editRegisterDescription}
                           onChange={(e) => setEditRegisterDescription(e.target.value)}
                           placeholder="Description..."
-                          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                          className={inputClass}
                         />
                       </div>
                       <div>
                         <select
                           value={editRegisterStatus}
                           onChange={(e) => setEditRegisterStatus(e.target.value as 'DRAFT' | 'ACTIVE' | 'ARCHIVED')}
-                          className="px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                          className={inputClass}
                         >
                           <option value="DRAFT">Draft</option>
                           <option value="ACTIVE">Active</option>
@@ -1115,55 +1087,55 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
                         <button
                           type="submit"
                           disabled={updateRegister.isPending}
-                          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          className={btnSmPrimaryClass}
                         >
                           Save
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingRegisterId(null)}
-                          className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900"
+                          className="px-3 py-1.5 text-sm text-slate-400 hover:text-white transition-colors"
                         >
                           Cancel
                         </button>
                       </div>
                       {updateRegister.isError && (
-                        <p className="text-red-600 text-sm">{updateRegister.error.message}</p>
+                        <p className="text-red-400 text-sm">{updateRegister.error.message}</p>
                       )}
                     </form>
                   ) : (
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-slate-900">{reg.name}</p>
+                          <p className="font-medium text-white">{reg.name}</p>
                           <span className={`text-xs px-2 py-0.5 rounded ${
                             reg.status === 'ACTIVE'
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-green-500/20 text-green-400'
                               : reg.status === 'DRAFT'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-slate-100 text-slate-600'
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-slate-600/20 text-slate-400'
                           }`}>
                             {reg.status}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-400">
                             {reg._count.risks} risk{reg._count.risks !== 1 ? 's' : ''}
                           </span>
                         </div>
                         {reg.description && (
-                          <p className="text-sm text-slate-500 mt-1">{reg.description}</p>
+                          <p className="text-sm text-slate-400 mt-1">{reg.description}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => startEditRegister(reg)}
-                          className="text-sm text-blue-600 hover:text-blue-800"
+                          className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteRegister(reg.id)}
                           disabled={deleteRegister.isPending}
-                          className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+                          className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
                         >
                           Delete
                         </button>
@@ -1174,11 +1146,11 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">No registers found.</p>
+            <p className="text-sm text-slate-400">No registers found.</p>
           )}
 
           {deleteRegister.isError && (
-            <p className="text-red-600 text-sm mt-3">{deleteRegister.error.message}</p>
+            <p className="text-red-400 text-sm mt-3">{deleteRegister.error.message}</p>
           )}
         </div>
       )}
