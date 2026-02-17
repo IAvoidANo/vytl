@@ -29,6 +29,7 @@ const STATUSES = [
   { value: 'IN_PROGRESS', label: 'In Progress' },
   { value: 'MONITORING', label: 'Monitoring' },
   { value: 'CLOSED', label: 'Closed' },
+  { value: 'ARCHIVED', label: 'Archived' },
 ] as const
 
 type RiskCategory = typeof CATEGORIES[number]['value']

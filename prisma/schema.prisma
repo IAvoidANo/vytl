@@ -238,6 +238,7 @@ enum RiskStatus {
   IN_PROGRESS
   MONITORING
   CLOSED
+  ARCHIVED
 }
 
 enum RiskSource {

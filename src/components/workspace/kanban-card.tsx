@@ -13,6 +13,8 @@ import {
   FileSpreadsheet,
   Pencil,
   Globe,
+  Trash2,
+  Archive,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
@@ -55,6 +57,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCardProps) {
   const [showActions, setShowActions] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const {
     attributes,
@@ -79,13 +82,35 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
     },
   })
 
+  const deleteMutation = trpc.risk.delete.useMutation({
+    onSuccess: () => {
+      utils.risk.listForWorkspace.invalidate()
+      utils.risk.list.invalidate()
+    },
+  })
+
+  const archiveMutation = trpc.risk.update.useMutation({
+    onSuccess: () => {
+      utils.risk.listForWorkspace.invalidate()
+      utils.risk.list.invalidate()
+    },
+  })
+
   const handleApprove = () => {
     updateWorkflow.mutate({ id: risk.id, workflowStatus: 'APPROVED' })
   }
 
   const handleReject = () => {
-    // For now, rejecting moves back to inbox - could also delete
     updateWorkflow.mutate({ id: risk.id, workflowStatus: 'INBOX' })
+  }
+
+  const handleDelete = () => {
+    deleteMutation.mutate({ id: risk.id })
+    setConfirmDelete(false)
+  }
+
+  const handleArchive = () => {
+    archiveMutation.mutate({ id: risk.id, status: 'ARCHIVED' })
   }
 
   const formattedDate = new Date(risk.createdAt).toLocaleDateString('en-ZA', {
@@ -166,20 +191,20 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
       </div>
 
       {/* Quick Actions */}
-      {risk.workflowStatus !== 'APPROVED' && (
-        <div className="mt-3 pt-3 border-t border-slate-700">
-          <button
-            onClick={() => setShowActions(!showActions)}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors"
-          >
-            Quick Actions
-            <ChevronDown
-              className={`w-3 h-3 transition-transform ${showActions ? 'rotate-180' : ''}`}
-            />
-          </button>
+      <div className="mt-3 pt-3 border-t border-slate-700">
+        <button
+          onClick={() => { setShowActions(!showActions); setConfirmDelete(false) }}
+          className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors"
+        >
+          Quick Actions
+          <ChevronDown
+            className={`w-3 h-3 transition-transform ${showActions ? 'rotate-180' : ''}`}
+          />
+        </button>
 
-          {showActions && (
-            <div className="mt-2 flex flex-wrap gap-2">
+        {showActions && (
+          <div className="mt-2 space-y-2">
+            <div className="flex flex-wrap gap-2">
               {onEdit && (
                 <button
                   onClick={() => onEdit(risk.id)}
@@ -189,7 +214,7 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
                   Edit
                 </button>
               )}
-              {risk.workflowStatus !== 'ASSIGNED' && (
+              {risk.workflowStatus !== 'APPROVED' && risk.workflowStatus !== 'ASSIGNED' && (
                 <button
                   onClick={() =>
                     updateWorkflow.mutate({ id: risk.id, workflowStatus: 'ASSIGNED' })
@@ -200,24 +225,67 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
                   Assign
                 </button>
               )}
+              {risk.workflowStatus !== 'APPROVED' && (
+                <>
+                  <button
+                    onClick={handleApprove}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                  >
+                    <CheckCircle className="w-3 h-3" />
+                    Approve
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                  >
+                    <XCircle className="w-3 h-3" />
+                    Reject
+                  </button>
+                </>
+              )}
               <button
-                onClick={handleApprove}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                onClick={handleArchive}
+                disabled={archiveMutation.isPending}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-500/20 text-slate-400 rounded hover:bg-slate-500/30 transition-colors disabled:opacity-50"
               >
-                <CheckCircle className="w-3 h-3" />
-                Approve
+                <Archive className="w-3 h-3" />
+                Archive
               </button>
               <button
-                onClick={handleReject}
+                onClick={() => setConfirmDelete(true)}
                 className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
               >
-                <XCircle className="w-3 h-3" />
-                Reject
+                <Trash2 className="w-3 h-3" />
+                Delete
               </button>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Delete confirmation */}
+            {confirmDelete && (
+              <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-xs text-red-400 mb-2">
+                  Are you sure you want to delete this risk? This action cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

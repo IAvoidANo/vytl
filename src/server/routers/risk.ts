@@ -18,7 +18,7 @@ const riskCategoryEnum = z.enum([
 ])
 
 const riskResponseEnum = z.enum(['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT'])
-const riskStatusEnum = z.enum(['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED'])
+const riskStatusEnum = z.enum(['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED', 'ARCHIVED'])
 
 const createRiskSchema = z.object({
   registerId: z.string(),
@@ -530,6 +530,7 @@ export const riskRouter = router({
     const risks = await db.risk.findMany({
       where: {
         register: { orgId: ctx.user.orgId },
+        status: { not: 'ARCHIVED' },
         ...(input?.registerId && { registerId: input.registerId }),
       },
       select: {
