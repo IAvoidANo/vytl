@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertTriangle, TrendingUp, FileDown } from 'lucide-react'
+import { AlertTriangle, TrendingUp } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { DashboardGrid, GridItem } from '@/components/dashboard/dashboard-grid'
 import {
@@ -16,7 +15,6 @@ import {
   CategoryTrendsWidget,
   ComplianceCoverageWidget,
 } from '@/components/dashboard'
-import { BoardReportModal } from '@/components/board-report-modal'
 
 interface DashboardClientProps {
   userName: string | null | undefined
@@ -25,8 +23,6 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ userName, orgName, initialRiskCount }: DashboardClientProps) {
-  const [showBoardReport, setShowBoardReport] = useState(false)
-
   // Get live risk stats
   const { data: riskStats } = trpc.risk.stats.useQuery(undefined, {
     initialData: {
@@ -54,13 +50,6 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
           </h1>
           <p className="text-slate-400 text-sm mt-1">{orgName}</p>
         </div>
-        <button
-          onClick={() => setShowBoardReport(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-sm"
-        >
-          <FileDown className="w-4 h-4" />
-          Board Report
-        </button>
       </div>
 
       {/* Dashboard Grid */}
@@ -120,11 +109,6 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
         </GridItem>
       </DashboardGrid>
 
-      {/* Board Report Modal */}
-      <BoardReportModal
-        isOpen={showBoardReport}
-        onClose={() => setShowBoardReport(false)}
-      />
     </div>
   )
 }

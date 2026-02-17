@@ -32,6 +32,7 @@ interface KanbanCardProps {
   }
   sourceLabel: string
   isDragging?: boolean
+  onEdit?: (riskId: string) => void
 }
 
 const SOURCE_ICONS: Record<string, React.ReactNode> = {
@@ -52,7 +53,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   PEOPLE: 'bg-orange-500/20 text-orange-400',
 }
 
-export function KanbanCard({ risk, sourceLabel, isDragging }: KanbanCardProps) {
+export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCardProps) {
   const [showActions, setShowActions] = useState(false)
 
   const {
@@ -126,7 +127,18 @@ export function KanbanCard({ risk, sourceLabel, isDragging }: KanbanCardProps) {
           <h4 className="text-sm font-medium text-white truncate">{risk.title}</h4>
         </div>
 
-        <RiskScoreBadge score={risk.residualScore} size="sm" />
+        <div className="flex items-center gap-1">
+          {onEdit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(risk.id) }}
+              className="p-1 text-slate-500 hover:text-teal-400 transition-colors rounded hover:bg-slate-700"
+              title="Edit risk"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <RiskScoreBadge score={risk.residualScore} size="sm" />
+        </div>
       </div>
 
       {/* Description Preview */}
@@ -168,6 +180,15 @@ export function KanbanCard({ risk, sourceLabel, isDragging }: KanbanCardProps) {
 
           {showActions && (
             <div className="mt-2 flex flex-wrap gap-2">
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(risk.id)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-teal-500/20 text-teal-400 rounded hover:bg-teal-500/30 transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                  Edit
+                </button>
+              )}
               {risk.workflowStatus !== 'ASSIGNED' && (
                 <button
                   onClick={() =>

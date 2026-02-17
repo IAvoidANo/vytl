@@ -110,6 +110,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
   const updateMutation = trpc.risk.update.useMutation({
     onSuccess: () => {
       utils.risk.list.invalidate()
+      utils.risk.listForWorkspace.invalidate()
       onSuccess()
     },
     onError: (err) => setError(err.message),

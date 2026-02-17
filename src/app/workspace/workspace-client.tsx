@@ -21,6 +21,7 @@ import { trpc } from '@/lib/trpc-client'
 import { KanbanColumn } from '@/components/workspace/kanban-column'
 import { KanbanCard } from '@/components/workspace/kanban-card'
 import { EmailForwardModal } from '@/components/workspace/email-forward-modal'
+import { RiskForm } from '@/components/risk-form'
 import { Filter, Inbox, ClipboardList, UserCheck, CheckCircle, Mail, Sparkles } from 'lucide-react'
 
 type WorkflowStatus = 'INBOX' | 'TRIAGE' | 'ASSIGNED' | 'APPROVED'
@@ -58,6 +59,7 @@ export function WorkspaceClient() {
   const [sourceFilter, setSourceFilter] = useState<RiskSource | 'ALL'>('ALL')
   const [registerFilter, setRegisterFilter] = useState<string>('')
   const [showEmailModal, setShowEmailModal] = useState(false)
+  const [editingRiskId, setEditingRiskId] = useState<string | null>(null)
 
   const utils = trpc.useUtils()
 
@@ -66,6 +68,12 @@ export function WorkspaceClient() {
   // Fetch all risks (workspace shows all, not just non-approved)
   const { data: risks, isLoading } = trpc.risk.listForWorkspace.useQuery(
     registerFilter ? { registerId: registerFilter } : undefined
+  )
+
+  // Fetch full risk data for editing
+  const { data: editingRisk } = trpc.risk.get.useQuery(
+    { id: editingRiskId! },
+    { enabled: !!editingRiskId }
   )
 
   // Update workflow status mutation
@@ -253,6 +261,7 @@ export function WorkspaceClient() {
                     key={risk.id}
                     risk={risk}
                     sourceLabel={SOURCE_LABELS[risk.source]}
+                    onEdit={(riskId) => setEditingRiskId(riskId)}
                   />
                 ))}
               </SortableContext>
@@ -278,6 +287,18 @@ export function WorkspaceClient() {
         onClose={() => setShowEmailModal(false)}
         onSuccess={handleEmailSuccess}
       />
+
+      {/* Risk Edit Modal */}
+      {editingRiskId && editingRisk && (
+        <RiskForm
+          risk={editingRisk}
+          onClose={() => setEditingRiskId(null)}
+          onSuccess={() => {
+            setEditingRiskId(null)
+            utils.risk.listForWorkspace.invalidate()
+          }}
+        />
+      )}
     </div>
   )
 }

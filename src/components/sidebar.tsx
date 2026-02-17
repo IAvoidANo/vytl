@@ -8,6 +8,7 @@ import {
   Columns3,
   AlertTriangle,
   Activity,
+  FileBarChart,
   Users,
   Settings,
   Shield,
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/workspace', label: 'Workspace', icon: Columns3 },
   { href: '/risks', label: 'Risks', icon: AlertTriangle },
   { href: '/kris', label: 'KRIs', icon: Activity },
+  { href: '/reports', label: 'Reports', icon: FileBarChart },
   { href: '/users', label: 'Team', icon: Users, adminOnly: true },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
