@@ -6,6 +6,7 @@ import { RiskTable } from '@/components/risk-table'
 import { RiskForm } from '@/components/risk-form'
 import { RiskHeatmap } from '@/components/risk-heatmap'
 import { ExcelImportModal } from '@/components/excel-import-modal'
+import { CreateRegisterModal } from '@/components/create-register-modal'
 import { trpc } from '@/lib/trpc-client'
 import type { RiskCategory, RiskStatus } from '@prisma/client'
 
@@ -14,6 +15,7 @@ type ViewMode = 'table' | 'heatmap'
 export function RisksClient() {
   const [showForm, setShowForm] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showCreateRegister, setShowCreateRegister] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [categoryFilter, setCategoryFilter] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -77,6 +79,13 @@ export function RisksClient() {
               Heatmap
             </button>
           </div>
+          <button
+            onClick={() => setShowCreateRegister(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            New Register
+          </button>
           <button
             onClick={() => setShowImportModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
@@ -176,6 +185,14 @@ export function RisksClient() {
         <RiskForm
           onClose={() => setShowForm(false)}
           onSuccess={() => setShowForm(false)}
+        />
+      )}
+
+      {/* Create Register Modal */}
+      {showCreateRegister && (
+        <CreateRegisterModal
+          onClose={() => setShowCreateRegister(false)}
+          onSuccess={() => setShowCreateRegister(false)}
         />
       )}
 

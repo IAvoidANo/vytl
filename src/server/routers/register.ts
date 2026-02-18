@@ -26,9 +26,22 @@ export const registerRouter = router({
   create: adminProcedure
     .input(createRegisterSchema)
     .mutation(async ({ ctx, input }) => {
+      // Verify orgId from session exists in DB
+      const org = await db.organisation.findUnique({
+        where: { id: ctx.user.orgId },
+        select: { id: true },
+      })
+
+      if (!org) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Your organisation could not be found. Please log out and log back in.',
+        })
+      }
+
       // Check unique name within org
       const existing = await db.riskRegister.findFirst({
-        where: { orgId: ctx.user.orgId, name: input.name },
+        where: { orgId: org.id, name: input.name },
       })
 
       if (existing) {
@@ -43,7 +56,7 @@ export const registerRouter = router({
           name: input.name,
           description: input.description,
           status: input.status,
-          orgId: ctx.user.orgId,
+          orgId: org.id,
         },
         include: {
           _count: { select: { risks: true } },

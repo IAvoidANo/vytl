@@ -5,9 +5,11 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create test organisation
-  const org = await prisma.organisation.create({
-    data: {
+  // Create or update test organisation
+  const org = await prisma.organisation.upsert({
+    where: { slug: 'acme-corp' },
+    update: {},
+    create: {
       name: 'Acme Corporation',
       slug: 'acme-corp',
       industry: 'Technology',
@@ -17,13 +19,15 @@ async function main() {
     },
   })
 
-  console.log('Created organisation:', org.name)
+  console.log('Organisation ready:', org.name)
 
-  // Create test user (OWNER)
+  // Create or update test user (OWNER)
   const passwordHash = await bcrypt.hash('Password123!', 12)
-  
-  const user = await prisma.user.create({
-    data: {
+
+  const user = await prisma.user.upsert({
+    where: { email: 'admin@acme.com' },
+    update: {},
+    create: {
       email: 'admin@acme.com',
       name: 'Avi Admin',
       passwordHash,
@@ -32,10 +36,14 @@ async function main() {
     },
   })
 
-  console.log('Created user:', user.email)
+  console.log('User ready:', user.email)
 
-  // Create a risk register
-  const register = await prisma.riskRegister.create({
+  // Create or update a risk register
+  const existingRegister = await prisma.riskRegister.findFirst({
+    where: { orgId: org.id, name: 'Strategic Risk Register' },
+  })
+
+  const register = existingRegister ?? await prisma.riskRegister.create({
     data: {
       name: 'Strategic Risk Register',
       description: 'Primary register for strategic risks',
@@ -44,10 +52,14 @@ async function main() {
     },
   })
 
-  console.log('Created risk register:', register.name)
+  console.log('Risk register ready:', register.name)
 
-  // Create a sample risk
-  const risk = await prisma.risk.create({
+  // Create or update a sample risk
+  const existingRisk = await prisma.risk.findFirst({
+    where: { refCode: 'STR-001', createdById: user.id },
+  })
+
+  const risk = existingRisk ?? await prisma.risk.create({
     data: {
       refCode: 'STR-001',
       title: 'Market Share Erosion',
@@ -68,7 +80,7 @@ async function main() {
     },
   })
 
-  console.log('Created sample risk:', risk.refCode, '-', risk.title)
+  console.log('Sample risk ready:', risk.refCode, '-', risk.title)
 
   console.log('\n✅ Seed completed successfully!')
   console.log('\nYou can now log in with:')

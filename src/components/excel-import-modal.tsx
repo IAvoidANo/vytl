@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import {
   X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, ArrowRight, ArrowLeft,
@@ -410,11 +410,19 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
   const [importedCount, setImportedCount] = useState(0)
   const [error, setError] = useState('')
   const [extractionProgress, setExtractionProgress] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const utils = trpc.useUtils()
   const { data: registers } = trpc.risk.registers.useQuery()
   const [selectedRegisterId, setSelectedRegisterId] = useState<string>('')
+
+  // Auto-select first register when data loads
+  useEffect(() => {
+    if (registers?.length && !selectedRegisterId) {
+      setSelectedRegisterId(registers[0].id)
+    }
+  }, [registers, selectedRegisterId])
 
   const extractMutation = trpc.import.extractFromDocument.useMutation()
 
@@ -430,10 +438,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     },
   })
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
+  const processFile = async (selectedFile: File) => {
     setFile(selectedFile)
     setError('')
 
@@ -459,6 +464,39 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       setFileType('excel')
       await handleExcelParse(selectedFile)
     }
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
+    await processFile(selectedFile)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const droppedFile = e.dataTransfer.files?.[0]
+    if (droppedFile) {
+      await processFile(droppedFile)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
   }
 
   const handleDocumentExtraction = async (selectedFile: File) => {
@@ -842,7 +880,15 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-600 rounded-lg p-12 cursor-pointer hover:border-teal-500 transition-colors"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                className={`border-2 border-dashed rounded-lg p-12 cursor-pointer transition-colors ${
+                  isDragging
+                    ? 'border-teal-400 bg-teal-500/10'
+                    : 'border-slate-600 hover:border-teal-500'
+                }`}
               >
                 <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                 <p className="text-white mb-2">Click to upload or drag and drop</p>
