@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc-client'
+import { AppetiteSettings } from '@/components/appetite-settings'
 
 interface SettingsClientProps {
   isAdmin: boolean
 }
 
-type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers'
+type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers' | 'appetite'
 
 const INDUSTRIES = [
   'Financial Services',
@@ -360,6 +361,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     { id: 'popia', label: 'POPIA Compliance', adminOnly: true },
     { id: 'scoring', label: 'Scoring', adminOnly: true },
     { id: 'registers', label: 'Registers', adminOnly: true },
+    { id: 'appetite', label: 'Risk Appetite', adminOnly: true },
   ]
 
   // Shared input styles
@@ -1152,6 +1154,13 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
           {deleteRegister.isError && (
             <p className="text-red-400 text-sm mt-3">{deleteRegister.error.message}</p>
           )}
+        </div>
+      )}
+
+      {/* Risk Appetite Tab */}
+      {activeTab === 'appetite' && isAdmin && (
+        <div className="max-w-2xl">
+          <AppetiteSettings />
         </div>
       )}
     </div>

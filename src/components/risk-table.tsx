@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Pencil, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react'
+import { Pencil, Trash2, ChevronDown, ChevronUp, Eye, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
 import { RiskForm } from './risk-form'
 import { Sparkline } from './sparkline'
+import { useAppetite } from '@/lib/use-appetite'
 import type { RiskCategory, RiskResponse, RiskStatus } from '@prisma/client'
 
 type SortField = 'title' | 'category' | 'inherentScore' | 'residualScore' | 'status' | 'createdAt'
@@ -68,6 +69,7 @@ export function RiskTable({ filters }: RiskTableProps) {
   const [editingRisk, setEditingRisk] = useState<RiskData | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const appetite = useAppetite()
   const utils = trpc.useUtils()
   const queryInput = filters?.category || filters?.status ? {
     category: filters.category as RiskCategory | undefined,
@@ -255,10 +257,21 @@ export function RiskTable({ filters }: RiskTableProps) {
                     <span className="text-sm text-slate-300">{CATEGORY_LABELS[risk.category]}</span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <RiskScoreBadge score={risk.inherentScore} size="sm" />
+                    <RiskScoreBadge score={risk.inherentScore} size="sm" thresholds={appetite.thresholds} />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <RiskScoreBadge score={risk.residualScore} size="sm" />
+                    <span className="inline-flex items-center gap-1">
+                      <RiskScoreBadge
+                        score={risk.residualScore}
+                        size="sm"
+                        thresholds={appetite.thresholds}
+                        category={risk.category}
+                        categoryConfig={appetite.categoryConfig}
+                      />
+                      {appetite.getBand(risk.residualScore, risk.category) === 'CRITICAL' && (
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-400" title="Exceeds risk appetite" />
+                      )}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Sparkline

@@ -11,6 +11,7 @@ import { scoringRouter } from './scoring'
 import { treatmentRouter } from './treatment'
 import { registerRouter } from './register'
 import { regulatoryRouter } from './regulatory'
+import { appetiteRouter } from './appetite'
 
 export const appRouter = router({
   risk: riskRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   treatment: treatmentRouter,
   register: registerRouter,
   regulatory: regulatoryRouter,
+  appetite: appetiteRouter,
 })
 
 export type AppRouter = typeof appRouter

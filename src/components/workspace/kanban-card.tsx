@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
+import { useAppetite } from '@/lib/use-appetite'
 
 interface KanbanCardProps {
   risk: {
@@ -58,6 +59,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCardProps) {
   const [showActions, setShowActions] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const appetite = useAppetite()
 
   const {
     attributes,
@@ -162,7 +164,13 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
               <Pencil className="w-3.5 h-3.5" />
             </button>
           )}
-          <RiskScoreBadge score={risk.residualScore} size="sm" />
+          <RiskScoreBadge
+              score={risk.residualScore}
+              size="sm"
+              thresholds={appetite.thresholds}
+              category={risk.category}
+              categoryConfig={appetite.categoryConfig}
+            />
         </div>
       </div>
 

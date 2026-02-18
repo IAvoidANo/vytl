@@ -332,7 +332,29 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - [x] **tRPC Router** - 7 endpoints: list, create, bulkCreate, update, delete, coverage, riskCoverage
 - [x] **Compliance Tab** - 7th tab in risk detail with coverage bars, status cycling, bulk add panel
 - [x] **Dashboard Widget** - ComplianceCoverageWidget with per-framework progress bars
-- [x] **Tests** - 50 new tests (676 total across 19 files, all passing)
+- [x] **Tests** - 50 new tests (676 total across 19 files, all passing) [Sprint 12]
+
+### Post-Sprint 12 - COMPLETE (Reports Page, Workspace Enhancements)
+- [x] **Dedicated Reports Page** (`/reports`)
+  - 7-tab interactive report viewer: Executive Summary, Risk Overview, Top 10, Heatmap, Trends, Recommendations, KRI Status
+  - Print Report button with print-friendly CSS
+  - Fetches org, risk stats, top risks, KRIs, assessment, category trends, recommendations
+- [x] **Workspace Kanban Enhancements**
+  - Inline edit button on kanban cards
+  - Quick Actions panel: Edit, Assign, Approve, Reject, Archive, Delete
+  - Delete confirmation dialog with warning
+  - Cache invalidation on workspace and risk list queries
+
+### Sprint 13 - COMPLETE (Risk Appetite Configuration)
+- [x] **Risk Appetite** - Configurable L×I threshold bands replacing hardcoded 4/9/14
+  - Organisation model fields: appetiteStatement, appetiteLow/Medium/High, appetiteCategoryConfig
+  - appetite.ts router: get, update (audit logged), breachSummary
+  - useAppetite hook: shared React Query cache across all UI components
+  - Settings > Risk Appetite tab: statement, thresholds, per-category overrides
+  - Updated: RiskScoreBadge, RiskHeatmap, TopRisksWidget, KanbanCard, RiskTable
+  - AppetiteBreachWidget on dashboard
+  - Fixed TopRisksWidget inconsistent 6/12/20 breakpoints
+  - 50 new tests (726 total across 20 files, all passing)
 
 ### Pages
 | Route | Status | Description |
@@ -342,7 +364,8 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | `/dashboard` | ✅ | Bento grid dashboard with draggable widgets + Board Report |
 | `/risks` | ✅ | Risk register (table/heatmap) with sparklines + register filter |
 | `/risks/[id]` | ✅ | Risk detail (7 tabs: Overview, AI, Treatment, Compliance, Scoring, History, Docs) |
-| `/workspace` | ✅ | Kanban board for risk workflow + register filter |
+| `/workspace` | ✅ | Kanban board with quick actions (edit, assign, approve, reject, archive, delete) |
+| `/reports` | ✅ | Interactive board governance reports with 7 tabs + print support |
 | `/users` | ✅ | Team management (ADMIN+) |
 | `/settings` | ✅ | Profile, Security, Org, POPIA, Scoring, Registers |
 | `/forgot-password` | ✅ | Password reset request |
@@ -371,7 +394,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `CategoryChart` - SVG donut chart showing risk distribution by category
 - `ThemeToggle` - Dark/light mode toggle button (Sprint 8)
 - `WorkspaceClient` - Kanban board with drag-and-drop (Sprint 8)
-- `KanbanColumn` / `KanbanCard` - Workspace drag-and-drop components (Sprint 8)
+- `KanbanColumn` / `KanbanCard` - Workspace drag-and-drop with quick actions (Sprint 8, enhanced post-Sprint 12)
 - `WidgetWrapper` - Consistent dashboard widget container (Sprint 8)
 - Dashboard Widgets - Modular widgets: StatWidget, TopRisksWidget, etc. (Sprint 8)
 - `ScoringRecommendationsWidget` - Top scoring recommendations with severity (Sprint 10)
@@ -404,6 +427,8 @@ src/
 │   │   └── page.tsx, kris-client.tsx
 │   ├── workspace/                        # Risk workflow kanban (Sprint 8)
 │   │   └── page.tsx, workspace-client.tsx
+│   ├── reports/                          # Board governance reports (Post-Sprint 12)
+│   │   └── page.tsx, reports-client.tsx
 │   ├── users/
 │   │   └── page.tsx, users-client.tsx    # Team management (Sprint 6)
 │   ├── settings/
@@ -440,6 +465,7 @@ src/
 │   │   │   ├── scoring-recommendations-widget.tsx  # Sprint 10
 │   │   │   ├── category-trends-widget.tsx           # Sprint 10
 │   │   │   ├── compliance-coverage-widget.tsx       # Sprint 12
+│   │   │   ├── appetite-breach-widget.tsx          # Sprint 13
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── workspace/                       # Kanban components (Sprint 8)
@@ -467,11 +493,14 @@ src/
 │   ├── treatment-validation.ts  # Treatment action Zod schemas (Sprint 11)
 │   ├── register-validation.ts   # Register Zod schemas + delete guards (Sprint 11)
 │   ├── regulatory-frameworks.ts  # Static King V + ISO 31000 framework data (Sprint 12)
-│   └── regulatory-validation.ts  # Regulatory mapping schemas + coverage calc (Sprint 12)
+│   ├── regulatory-validation.ts  # Regulatory mapping schemas + coverage calc (Sprint 12)
+│   ├── appetite-validation.ts   # Risk appetite schemas + threshold classification (Sprint 13)
+│   └── use-appetite.ts          # Shared appetite hook for UI components (Sprint 13)
 ├── components/
 │   ├── board-report-modal.tsx   # PDF report generation modal (Sprint 11)
 │   ├── treatment-actions.tsx    # Treatment action list + form (Sprint 11)
-│   └── regulatory-mappings.tsx  # Compliance tab component (Sprint 12)
+│   ├── regulatory-mappings.tsx  # Compliance tab component (Sprint 12)
+│   └── appetite-settings.tsx   # Risk appetite config component (Sprint 13)
 └── server/routers/
     ├── index.ts         # Root router
     ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace + registers
@@ -485,7 +514,8 @@ src/
     ├── scoring.ts       # Scoring engine API (14 endpoints) (Sprint 9)
     ├── treatment.ts     # Treatment action CRUD (Sprint 11)
     ├── register.ts      # Risk register CRUD (Sprint 11)
-    └── regulatory.ts    # Regulatory mapping CRUD + coverage (Sprint 12)
+    ├── regulatory.ts    # Regulatory mapping CRUD + coverage (Sprint 12)
+    └── appetite.ts      # Risk appetite config + breach summary (Sprint 13)
 
 tests/                                   # Vitest tests (Sprint 8-11)
 ├── setup.ts
@@ -499,7 +529,8 @@ tests/                                   # Vitest tests (Sprint 8-11)
     ├── treatment-actions.test.ts    # Treatment action tests (Sprint 11)
     ├── register-validation.test.ts  # Register validation tests (Sprint 11)
     ├── regulatory-frameworks.test.ts  # Framework data integrity tests (Sprint 12)
-    └── regulatory-validation.test.ts  # Validation + coverage tests (Sprint 12)
+    ├── regulatory-validation.test.ts  # Validation + coverage tests (Sprint 12)
+    └── appetite-validation.test.ts    # Appetite schemas + threshold tests (Sprint 13)
 
 .session-templates/                      # Dev documentation (Sprint 8)
 ├── api-routes.md

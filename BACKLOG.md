@@ -205,8 +205,71 @@
 
 ---
 
+## Post-Sprint 12 - COMPLETE ✅
+
+### Dedicated Reports Page - COMPLETE ✅
+- [x] `/reports` route with server-side auth and AppLayout
+- [x] 7-tab interactive report viewer (Executive Summary, Risk Overview, Top 10, Heatmap, Trends, Recommendations, KRI Status)
+- [x] Executive Summary tab: Vytl Score card with grade, total risks, high risks, KRIs in red
+- [x] Risk Overview tab: by-status and by-category tables with percentages
+- [x] Top 10 Risks tab: sortable table with ref, title, category, score, status, owner
+- [x] Heatmap tab: interactive 5×5 risk heatmap with colour-coded cells
+- [x] Category Trends tab: category scores with direction indicators (improving/stable/worsening)
+- [x] Recommendations tab: top 10 scoring recommendations with severity badges
+- [x] KRI Status tab: full KRI dashboard with thresholds and status badges
+- [x] Print Report button using `window.print()` with print-friendly CSS classes
+- [x] Sidebar navigation link to `/reports`
+
+### Workspace Kanban Enhancements - COMPLETE ✅
+- [x] Inline edit button on kanban cards (pencil icon in card header)
+- [x] Quick Actions panel with expandable action bar per card
+  - Edit, Assign, Approve, Reject workflow actions
+  - Archive action (sets status to ARCHIVED via risk.update mutation)
+  - Delete action with confirmation dialog ("Are you sure?" prompt)
+- [x] Delete confirmation UI with red warning panel and Confirm/Cancel buttons
+- [x] Loading states on Archive and Delete buttons (disabled while pending)
+- [x] Cache invalidation on both `listForWorkspace` and `list` queries after delete/archive
+
+---
+
+## Sprint 13 - COMPLETE ✅
+
+### Risk Appetite Configuration - COMPLETE ✅
+- [x] **Prisma Schema** - 5 new fields on Organisation model
+  - appetiteStatement (Text), appetiteLow/Medium/High (Int, defaults 4/9/14), appetiteCategoryConfig (Json)
+- [x] **Validation Library** (`appetite-validation.ts`)
+  - Zod schemas: thresholdBandSchema, updateAppetiteSchema, appetiteCategoryConfigSchema
+  - Pure functions: resolveThresholds, classifyAppetiteBand, exceedsAppetite, bandToColorClasses, bandToHeatmapClasses, bandToLabel, buildHeatmapLegend, countBreaches
+  - Category-aware threshold resolution (org-level fallback + per-category overrides)
+- [x] **tRPC Router** (`appetite.ts`) with 3 endpoints
+  - get (protectedProcedure): fetch org appetite config
+  - update (adminProcedure): update thresholds + statement, audit logged
+  - breachSummary (protectedProcedure): count risks exceeding appetite by category
+- [x] **Shared Hook** (`use-appetite.ts`)
+  - React Query cached hook wrapping appetite.get query
+  - Helper methods: getBand, getColorClasses, getHeatmapClasses, getLegend, getLabel
+  - Falls back to DEFAULT_APPETITE_THRESHOLDS while loading
+- [x] **Settings > Risk Appetite Tab** (ADMIN+)
+  - Board appetite statement textarea (max 2000 chars)
+  - L×I threshold band configuration (3 number inputs) with live preview strip
+  - Per-category tolerance overrides (8 categories, each toggleable with own thresholds)
+  - Breach summary card showing risks exceeding appetite
+- [x] **UI Components Updated** to use dynamic appetite thresholds
+  - RiskScoreBadge: optional thresholds + category props (backward compatible)
+  - RiskHeatmap: dynamic cell colours and legend from useAppetite hook
+  - TopRisksWidget: fixed inconsistent 6/12/20 breakpoints, now uses appetite thresholds
+  - KanbanCard: passes appetite thresholds to RiskScoreBadge
+  - RiskTable: appetite-aware badges + AlertTriangle icon for CRITICAL risks
+- [x] **Dashboard Widget** (AppetiteBreachWidget)
+  - Total breach count with green/red colour coding
+  - Per-category breach breakdown
+  - Link to appetite settings
+- [x] **Testing** - 50 new tests (726 total across 20 files, all passing)
+  - appetite-validation.test.ts: schemas, classification, breach counting, legend, category overrides
+
+---
+
 ## Future Backlog
-- [ ] Risk appetite configuration
 - [ ] Incident linking
 - [ ] Action item tracking
 - [ ] Custom fields per organisation
@@ -360,6 +423,9 @@ The Vytl Risk Management platform is feature-complete for beta release with:
 - Board report PDF export for governance meetings (Sprint 11)
 - Risk treatment plans with progress tracking (Sprint 11)
 - Multi-register support with filtering (Sprint 11)
+- Regulatory mapping: King V + ISO 31000 compliance tracking (Sprint 12)
+- Dedicated reports page with 7-tab interactive viewer + print support (Post-Sprint 12)
+- Workspace kanban with quick actions: edit, assign, approve, reject, archive, delete (Post-Sprint 12)
 - Role-based access control (5 roles)
 - User management with invite system
 - Password reset functionality
@@ -369,4 +435,4 @@ The Vytl Risk Management platform is feature-complete for beta release with:
 - Customizable bento grid dashboard
 - Command palette for power users
 - POPIA compliance settings
-- 626 tests across 17 test files (all passing)
+- 726 tests across 20 test files (all passing)

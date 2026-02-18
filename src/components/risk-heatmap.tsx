@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
+import { useAppetite } from '@/lib/use-appetite'
+import { bandToColorClasses } from '@/lib/appetite-validation'
 
 interface Risk {
   id: string
@@ -16,25 +18,10 @@ interface Risk {
 const LIKELIHOOD_LABELS = ['Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain']
 const IMPACT_LABELS = ['Insignificant', 'Minor', 'Moderate', 'Major', 'Catastrophic']
 
-function getCellColor(likelihood: number, impact: number): string {
-  const score = likelihood * impact
-  if (score <= 4) return 'bg-green-500/30 hover:bg-green-500/50 border-green-500/50'
-  if (score <= 9) return 'bg-yellow-500/30 hover:bg-yellow-500/50 border-yellow-500/50'
-  if (score <= 14) return 'bg-orange-500/30 hover:bg-orange-500/50 border-orange-500/50'
-  return 'bg-red-500/30 hover:bg-red-500/50 border-red-500/50'
-}
-
-function getCellTextColor(likelihood: number, impact: number): string {
-  const score = likelihood * impact
-  if (score <= 4) return 'text-green-400'
-  if (score <= 9) return 'text-yellow-400'
-  if (score <= 14) return 'text-orange-400'
-  return 'text-red-400'
-}
-
 export function RiskHeatmap() {
   const [hoveredCell, setHoveredCell] = useState<{ l: number; i: number } | null>(null)
   const { data: risks, isLoading } = trpc.risk.list.useQuery()
+  const appetite = useAppetite()
 
   // Group risks by likelihood and impact
   const riskMatrix: Record<string, Risk[]> = {}
@@ -93,11 +80,12 @@ export function RiskHeatmap() {
                   const key = `${likelihood}-${impact}`
                   const cellRisks = riskMatrix[key] || []
                   const isHovered = hoveredCell?.l === likelihood && hoveredCell?.i === impact
+                  const score = likelihood * impact
 
                   return (
                     <div
                       key={key}
-                      className={`relative min-h-[80px] rounded border transition-all ${getCellColor(likelihood, impact)} ${
+                      className={`relative min-h-[80px] rounded border transition-all ${appetite.getHeatmapClasses(score)} ${
                         isHovered ? 'ring-2 ring-white/50 z-10' : ''
                       }`}
                       onMouseEnter={() => setHoveredCell({ l: likelihood, i: impact })}
@@ -105,8 +93,8 @@ export function RiskHeatmap() {
                     >
                       {/* Score */}
                       <div className="absolute top-1 right-1">
-                        <span className={`text-xs font-bold ${getCellTextColor(likelihood, impact)}`}>
-                          {likelihood * impact}
+                        <span className={`text-xs font-bold ${appetite.getHeatmapTextClass(score)}`}>
+                          {score}
                         </span>
                       </div>
 
@@ -148,24 +136,17 @@ export function RiskHeatmap() {
         </div>
       </div>
 
-      {/* Legend */}
+      {/* Legend - dynamic from appetite thresholds */}
       <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-slate-700">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500/30 border border-green-500/50"></div>
-          <span className="text-xs text-slate-400">Low (1-4)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-500/30 border border-yellow-500/50"></div>
-          <span className="text-xs text-slate-400">Medium (5-9)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-orange-500/30 border border-orange-500/50"></div>
-          <span className="text-xs text-slate-400">High (10-14)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-500/30 border border-red-500/50"></div>
-          <span className="text-xs text-slate-400">Critical (15-25)</span>
-        </div>
+        {appetite.getLegend().map(({ band, label, range }) => {
+          const { bg, border } = bandToColorClasses(band)
+          return (
+            <div key={band} className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded ${bg} border ${border}`}></div>
+              <span className="text-xs text-slate-400">{label} ({range})</span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
