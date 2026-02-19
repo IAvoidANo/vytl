@@ -112,20 +112,31 @@ export const importRouter = router({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No response from AI' })
         }
 
-        let jsonText = textContent.text.trim()
+        const rawText = textContent.text.trim()
+        let jsonText = rawText
 
-        // Handle markdown code blocks
-        if (jsonText.startsWith('```')) {
-          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+        // 1. Strip markdown code fences wherever they appear (handles preamble before the fence)
+        const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]+?)\s*```/)
+        if (fenceMatch) {
+          jsonText = fenceMatch[1].trim()
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+        }
+
+        // 2. Seek the first '[' in case the model added preamble text before the array
+        const arrayStart = jsonText.indexOf('[')
+        if (arrayStart > 0) {
+          jsonText = jsonText.substring(arrayStart)
         }
 
         let parsed: unknown
         try {
           parsed = JSON.parse(jsonText)
         } catch {
+          console.error('[AI Extract] JSON parse failed. Raw response (first 400 chars):', rawText.slice(0, 400))
           throw new TRPCError({
             code: 'PARSE_ERROR',
-            message: 'Failed to parse AI response as JSON'
+            message: 'AI could not return structured data from this document. The file may be too short, unclear, or in an unsupported format. Try the Excel/CSV import instead.',
           })
         }
 

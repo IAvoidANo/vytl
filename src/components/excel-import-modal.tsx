@@ -81,36 +81,35 @@ const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
 const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED', 'ARCHIVED']
 
 // Human-friendly status label → canonical enum mapping (case-insensitive key lookup)
-// Values carry { status? (RiskStatus) } and/or { workflowStatus? (WorkflowStatus) }
-// so a single "Status" import column can hydrate both fields appropriately.
+// Each entry sets BOTH status (RiskStatus) and workflowStatus (WorkflowStatus) where applicable.
+// Unrecognised values fall through to defaults: status=OPEN, workflowStatus=INBOX (set by bulkCreate).
 const STATUS_ALIASES: Record<string, { status?: string; workflowStatus?: string }> = {
-  // Direct RiskStatus pass-through
-  'open':        { status: 'OPEN' },
-  'in_progress': { status: 'IN_PROGRESS' },
-  'monitoring':  { status: 'MONITORING' },
-  'closed':      { status: 'CLOSED' },
-  'archived':    { status: 'ARCHIVED' },
-  // Direct WorkflowStatus pass-through
-  'inbox':    { workflowStatus: 'INBOX' },
-  'triage':   { workflowStatus: 'TRIAGE' },
-  'assigned': { workflowStatus: 'ASSIGNED' },
-  'approved': { workflowStatus: 'APPROVED' },
-  // Human-friendly aliases (per spec)
-  'active':         { workflowStatus: 'APPROVED' },
-  'in progression': { status: 'IN_PROGRESS' },
-  'in progress':    { status: 'IN_PROGRESS' },
-  'archive':        { status: 'ARCHIVED' },
-  'under review':   { workflowStatus: 'TRIAGE' },   // no REVIEW enum; TRIAGE is the review stage
-  'review':         { workflowStatus: 'TRIAGE' },
-  'draft':          { workflowStatus: 'INBOX' },
-  // Additional common aliases
-  'new':       { status: 'OPEN' },
-  'pending':   { workflowStatus: 'INBOX' },
-  'complete':  { status: 'CLOSED' },
-  'completed': { status: 'CLOSED' },
-  'done':      { status: 'CLOSED' },
-  'monitor':   { status: 'MONITORING' },
-  'watch':     { status: 'MONITORING' },
+  // ── Human-friendly labels (from bug report mapping table) ────────────────
+  'active':         { status: 'OPEN',        workflowStatus: 'APPROVED'  }, // active risks are approved+open
+  'in progression': { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  }, // being actively treated
+  'in progress':    { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
+  'archive':        { status: 'CLOSED',      workflowStatus: 'APPROVED'  }, // completed lifecycle
+  'archived':       { status: 'CLOSED',      workflowStatus: 'APPROVED'  },
+  'inbox':          { status: 'OPEN',        workflowStatus: 'INBOX'     }, // newly received
+  'triage':         { status: 'OPEN',        workflowStatus: 'TRIAGE'    }, // under initial assessment
+  'draft':          { status: 'OPEN',        workflowStatus: 'INBOX'     }, // same as inbox
+  'under review':   { status: 'OPEN',        workflowStatus: 'TRIAGE'    }, // no REVIEW enum; TRIAGE is the review stage
+  'review':         { status: 'OPEN',        workflowStatus: 'TRIAGE'    },
+  'closed':         { status: 'CLOSED',      workflowStatus: 'APPROVED'  },
+  'monitoring':     { status: 'MONITORING',  workflowStatus: 'APPROVED'  },
+  // ── Direct enum pass-through ─────────────────────────────────────────────
+  'open':        { status: 'OPEN',        workflowStatus: 'INBOX'     },
+  'in_progress': { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
+  'assigned':    { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
+  'approved':    { status: 'OPEN',        workflowStatus: 'APPROVED'  },
+  // ── Additional common labels ──────────────────────────────────────────────
+  'new':       { status: 'OPEN',   workflowStatus: 'INBOX'    },
+  'pending':   { status: 'OPEN',   workflowStatus: 'INBOX'    },
+  'complete':  { status: 'CLOSED', workflowStatus: 'APPROVED' },
+  'completed': { status: 'CLOSED', workflowStatus: 'APPROVED' },
+  'done':      { status: 'CLOSED', workflowStatus: 'APPROVED' },
+  'monitor':   { status: 'MONITORING', workflowStatus: 'APPROVED' },
+  'watch':     { status: 'MONITORING', workflowStatus: 'APPROVED' },
 }
 
 // Human-friendly category label → canonical RiskCategory enum (case-insensitive key lookup)
@@ -686,7 +685,36 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       const debug: string[] = []
       debug.push(`📊 Workbook has ${workbook.SheetNames.length} sheet(s): ${workbook.SheetNames.join(', ')}`)
 
-      const sheetName = workbook.SheetNames[0]
+      // Smart sheet selection:
+      // 1. Prefer a sheet explicitly named "Risk Register" (or just "Risks")
+      // 2. Fall back to the sheet with the most non-empty columns in its first 5 rows
+      // 3. Last resort: first sheet
+      let sheetName = workbook.SheetNames[0]
+      const riskSheetName = workbook.SheetNames.find(n =>
+        /risk\s*register/i.test(n) || /^risks?$/i.test(n)
+      )
+      if (riskSheetName) {
+        sheetName = riskSheetName
+        debug.push(`📋 Selected sheet "${sheetName}" (matched risk register pattern)`)
+      } else if (workbook.SheetNames.length > 1) {
+        let bestSheet = workbook.SheetNames[0]
+        let bestCols = 0
+        for (const name of workbook.SheetNames) {
+          const s = workbook.Sheets[name]
+          const rows = XLSX.utils.sheet_to_json<string[]>(s, { header: 1, defval: '' })
+          const maxCols = Math.max(
+            ...rows.slice(0, 5).map(r => r.filter((c: string) => c !== '' && c !== undefined && c !== null).length),
+            0
+          )
+          debug.push(`  Sheet "${name}": max ${maxCols} cols in first 5 rows`)
+          if (maxCols > bestCols) { bestCols = maxCols; bestSheet = name }
+        }
+        if (bestSheet !== sheetName) {
+          sheetName = bestSheet
+          debug.push(`📋 Auto-selected sheet "${sheetName}" (most data: ${bestCols} cols)`)
+        }
+      }
+
       const sheet = workbook.Sheets[sheetName]
       debug.push(`📄 Reading sheet: "${sheetName}"`)
 
