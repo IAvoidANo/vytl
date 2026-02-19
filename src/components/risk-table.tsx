@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
 import { RiskForm } from './risk-form'
 import { Sparkline } from './sparkline'
+import { ControlEffectivenessBadge } from './control-effectiveness-badge'
 import { useAppetite } from '@/lib/use-appetite'
 import type { RiskCategory, RiskResponse, RiskStatus } from '@prisma/client'
 
@@ -26,7 +27,10 @@ interface RiskData {
   residualScore: number
   response: RiskResponse
   controls: string | null
+  controlEffectiveness: string
   rootCause: string | null
+  financialExposure: unknown
+  varValue: string | null
   status: RiskStatus
   registerId: string
   ownerId: string | null
@@ -223,6 +227,12 @@ export function RiskTable({ filters }: RiskTableProps) {
                   </span>
                 </th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  Controls
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  VaR
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Trend
                 </th>
                 <th
@@ -269,9 +279,21 @@ export function RiskTable({ filters }: RiskTableProps) {
                         categoryConfig={appetite.categoryConfig}
                       />
                       {appetite.getBand(risk.residualScore, risk.category) === 'CRITICAL' && (
-                        <AlertTriangle className="w-3.5 h-3.5 text-red-400" title="Exceeds risk appetite" />
+                        <span title="Exceeds risk appetite"><AlertTriangle className="w-3.5 h-3.5 text-red-400" /></span>
                       )}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <ControlEffectivenessBadge value={risk.controlEffectiveness} compact />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {risk.varValue ? (
+                      <span className="text-xs text-slate-300 font-mono">
+                        R {Number(risk.varValue).toLocaleString('en-ZA', { maximumFractionDigits: 0 })}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-600">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Sparkline

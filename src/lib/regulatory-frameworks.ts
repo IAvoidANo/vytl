@@ -180,7 +180,7 @@ export function getRequirementsByFramework(id: FrameworkId): RegulatoryRequireme
 
 export function getRequirementsForCategory(category: string): RegulatoryRequirement[] {
   const results: RegulatoryRequirement[] = []
-  for (const req of requirementMap.values()) {
+  for (const req of Array.from(requirementMap.values())) {
     if (req.riskCategories.includes(category)) {
       results.push(req)
     }

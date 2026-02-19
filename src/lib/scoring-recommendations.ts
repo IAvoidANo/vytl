@@ -252,7 +252,7 @@ function detectInconsistencies(risks: RiskItem[]): ScoringRecommendation[] {
     categoryGroups.set(risk.category, group)
   }
 
-  for (const [category, group] of categoryGroups) {
+  for (const [category, group] of Array.from(categoryGroups)) {
     if (group.length < 3) continue
 
     const scores = group.map(r => r.residualScore)

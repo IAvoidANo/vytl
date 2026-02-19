@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useVisibleRows, useWidgetSize } from '../widget-wrapper'
 import { useAppetite } from '@/lib/use-appetite'
 import { bandToColorClasses } from '@/lib/appetite-validation'
+import { ControlEffectivenessBadge } from '@/components/control-effectiveness-badge'
 
 export function TopRisksWidget() {
   const visibleRows = useVisibleRows(44, 3)
@@ -92,20 +93,26 @@ export function TopRisksWidget() {
                     {risk.category.slice(0, 3)}
                   </span>
                   <span>{risk.refCode}</span>
+                  {risk.controlEffectiveness && risk.controlEffectiveness !== 'NOT_TESTED' && (
+                    <ControlEffectivenessBadge value={risk.controlEffectiveness} compact />
+                  )}
                 </div>
               </div>
 
-              {/* Score Bar (hidden on compact) */}
+              {/* Score Bar + VaR (hidden on compact) */}
               {!isCompact && (
-                <div className="w-12 flex-shrink-0">
-                  <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
+                <div className="w-16 flex-shrink-0 text-right">
+                  <div className="h-1 bg-slate-700 rounded-full overflow-hidden mb-0.5">
                     <div
                       className={`h-full rounded-full ${barBg}`}
                       style={{ width: `${(risk.residualScore / 25) * 100}%` }}
                     />
                   </div>
-                  <p className="text-[9px] text-slate-500 text-center mt-0.5">
-                    {risk.residualLikelihood}×{risk.residualImpact}
+                  <p className="text-[9px] text-slate-500">
+                    {risk.varValue
+                      ? `R ${Number(risk.varValue).toLocaleString('en-ZA', { maximumFractionDigits: 0 })}`
+                      : `${risk.residualLikelihood}×${risk.residualImpact}`
+                    }
                   </p>
                 </div>
               )}

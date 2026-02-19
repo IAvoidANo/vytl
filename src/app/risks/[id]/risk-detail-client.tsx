@@ -26,9 +26,7 @@ import {
   X,
   Gauge,
   ClipboardCheck,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
+  AlertOctagon,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
@@ -36,17 +34,20 @@ import { RiskForm } from '@/components/risk-form'
 import { AuditTimeline } from '@/components/audit-timeline'
 import { TreatmentActions } from '@/components/treatment-actions'
 import { RegulatoryMappings } from '@/components/regulatory-mappings'
+import { IncidentLinks } from '@/components/incident-links'
+import { ControlEffectivenessBadge } from '@/components/control-effectiveness-badge'
 import { addRecentItem } from '@/lib/recent-items'
 import { format } from 'date-fns'
 
-type TabId = 'overview' | 'analysis' | 'controls' | 'compliance' | 'history' | 'documents' | 'scoring'
+type TabId = 'overview' | 'analysis' | 'controls' | 'compliance' | 'incidents' | 'scoring' | 'history' | 'documents'
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview', label: 'Overview', icon: FileText },
   { id: 'analysis', label: 'AI Analysis', icon: Brain },
   { id: 'controls', label: 'Treatment', icon: Shield },
   { id: 'compliance', label: 'Compliance', icon: ClipboardCheck },
-  { id: 'scoring', label: 'Scoring', icon: Gauge },
+  { id: 'incidents', label: 'Incidents', icon: AlertOctagon },
+  { id: 'scoring', label: 'Risk Intelligence', icon: Gauge },
   { id: 'history', label: 'History', icon: Clock },
   { id: 'documents', label: 'Documents', icon: Paperclip },
 ]
@@ -228,6 +229,23 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
               </div>
             </div>
 
+            {/* Value at Risk */}
+            {risk.varValue && (
+              <div className="mb-6 bg-slate-900 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-slate-400 mb-2">Value at Risk (VaR)</h3>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl font-bold text-white">
+                    R {Number(risk.varValue).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {risk.financialExposure && (
+                    <span className="text-sm text-slate-500">
+                      of R {Number(risk.financialExposure).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} exposure
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Description */}
             <div className="mb-6">
               <h3 className="text-sm font-medium text-slate-400 mb-2">Description</h3>
@@ -246,6 +264,12 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
                   {RESPONSE_LABELS[risk.response].desc}
                 </span>
               </div>
+            </div>
+
+            {/* Control Effectiveness */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-slate-400 mb-2">Control Effectiveness</h3>
+              <ControlEffectivenessBadge value={risk.controlEffectiveness} />
             </div>
 
             {/* Meta Info */}
@@ -304,6 +328,12 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
           <RegulatoryMappings riskId={riskId} />
         )}
 
+        {activeTab === 'incidents' && (
+          <div className="p-6">
+            <IncidentLinks riskId={riskId} />
+          </div>
+        )}
+
         {activeTab === 'history' && (
           <div className="p-6">
             <AuditTimeline entityType="RISK" entityId={riskId} />
@@ -342,7 +372,9 @@ export function RiskDetailClient({ riskId }: RiskDetailClientProps) {
             residualImpact: risk.residualImpact,
             response: risk.response,
             controls: risk.controls,
+            controlEffectiveness: risk.controlEffectiveness as 'EFFECTIVE' | 'PARTIALLY_EFFECTIVE' | 'INEFFECTIVE' | 'NOT_TESTED' | 'NOT_APPLICABLE',
             rootCause: risk.rootCause,
+            financialExposure: risk.financialExposure ? Number(risk.financialExposure) : null,
             status: risk.status,
             registerId: risk.register.id,
             ownerId: risk.ownerId,
@@ -695,9 +727,11 @@ function AIAnalysisTab({ riskId, existingAnalysis }: AIAnalysisTabProps) {
   )
 }
 
-// Scoring Tab Component
+// Risk Intelligence Tab Component (formerly Scoring)
 function ScoringTab({ riskId }: { riskId: string }) {
   const utils = trpc.useUtils()
+  const { data: risk } = trpc.risk.get.useQuery({ id: riskId })
+
   const [scoreResult, setScoreResult] = useState<{
     compositeScore: number
     grade: string
@@ -721,49 +755,34 @@ function ScoringTab({ riskId }: { riskId: string }) {
 
   const { data: historyData } = trpc.scoring.getHistory.useQuery(
     { riskId, limit: 10 },
-  )
+  ) as { data: { items: { id: string; createdAt: string; compositeScore: number; baseScore: number; controlQualityScore: number; velocityScore: number; correlationScore: number; kriAlignmentScore: number }[]; nextCursor: string | null } | undefined }
 
   const handleCalculate = () => {
     calculateMutation.mutate({ riskId, saveHistory: true })
   }
 
-  const GRADE_COLORS: Record<string, string> = {
-    green: 'bg-green-500/20 text-green-400 border-green-500/30',
-    yellow: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    red: 'bg-red-500/20 text-red-400 border-red-500/30',
-  }
-
-  const DIMENSION_LABELS: { key: string; label: string; color: string }[] = [
-    { key: 'base', label: 'Base (L×I)', color: 'bg-blue-500' },
-    { key: 'controlQuality', label: 'Control Quality', color: 'bg-teal-500' },
-    { key: 'velocity', label: 'Velocity', color: 'bg-purple-500' },
-    { key: 'correlation', label: 'Correlation', color: 'bg-orange-500' },
-    { key: 'kriAlignment', label: 'KRI Alignment', color: 'bg-pink-500' },
-  ]
-
   return (
     <div className="p-6">
-      {/* Header / Calculate */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Gauge className="w-5 h-5 text-teal-400" />
-          <h3 className="font-semibold text-white">Composite Risk Score</h3>
+          <h3 className="font-semibold text-white">Risk Intelligence</h3>
         </div>
         <button
           onClick={handleCalculate}
           disabled={calculateMutation.isPending}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 text-sm"
         >
           {calculateMutation.isPending ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" />
-              Calculating...
+              Analysing...
             </>
           ) : (
             <>
               <Activity className="w-4 h-4" />
-              Calculate Score
+              Run Analysis
             </>
           )}
         </button>
@@ -775,88 +794,134 @@ function ScoringTab({ riskId }: { riskId: string }) {
         </div>
       )}
 
-      {scoreResult ? (
-        <>
-          {/* Composite Score Display */}
-          <div className="flex items-center gap-6 mb-8">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-white tabular-nums">
-                {scoreResult.compositeScore}
-              </div>
-              <div className="text-sm text-slate-400 mt-1">out of 100</div>
+      {/* ISO 31000 Risk Summary */}
+      {risk && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-900 rounded-lg p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Inherent Risk</h4>
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-bold text-white">{risk.inherentScore}</span>
+              <span className="text-sm text-slate-400">{risk.inherentLikelihood} × {risk.inherentImpact}</span>
             </div>
-            <span className={`text-sm px-3 py-1.5 rounded border ${GRADE_COLORS[scoreResult.gradeColor] || GRADE_COLORS.yellow}`}>
-              {scoreResult.grade}
-            </span>
           </div>
+          <div className="bg-slate-900 rounded-lg p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Residual Risk</h4>
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-bold text-white">{risk.residualScore}</span>
+              <span className="text-sm text-slate-400">{risk.residualLikelihood} × {risk.residualImpact}</span>
+            </div>
+          </div>
+          <div className="bg-slate-900 rounded-lg p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Control Effectiveness</h4>
+            <ControlEffectivenessBadge value={risk.controlEffectiveness} />
+          </div>
+          <div className="bg-slate-900 rounded-lg p-4">
+            <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Value at Risk</h4>
+            {risk.varValue ? (
+              <span className="text-lg font-bold text-white">
+                R {Number(risk.varValue).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            ) : (
+              <span className="text-sm text-slate-500">Not set — add Financial Exposure to calculate</span>
+            )}
+          </div>
+        </div>
+      )}
 
-          {/* Dimension Breakdown */}
-          <div className="mb-8">
-            <h4 className="text-sm font-medium text-slate-400 mb-4">Dimension Breakdown</h4>
-            <div className="space-y-3">
-              {DIMENSION_LABELS.map(({ key, label, color }) => {
-                const dimScore = scoreResult.dimensions[key as keyof typeof scoreResult.dimensions].score
-                return (
-                  <div key={key}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-slate-300">{label}</span>
-                      <span className="text-sm font-medium text-white tabular-nums">{dimScore}/100</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2.5">
-                      <div
-                        className={`${color} h-2.5 rounded-full transition-all duration-500`}
-                        style={{ width: `${dimScore}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
+      {/* Velocity & KRI Overlays */}
+      {scoreResult && (
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-slate-400 mb-3">Intelligence Overlays</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-900 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Velocity</p>
+                <p className="text-sm font-medium text-white">{scoreResult.dimensions.velocity.score}/100</p>
+              </div>
+            </div>
+            <div className="bg-slate-900 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-pink-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">KRI Alignment</p>
+                <p className="text-sm font-medium text-white">{scoreResult.dimensions.kriAlignment.score}/100</p>
+              </div>
+            </div>
+            <div className="bg-slate-900 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                <Target className="w-5 h-5 text-orange-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Correlation</p>
+                <p className="text-sm font-medium text-white">{scoreResult.dimensions.correlation.score}/100</p>
+              </div>
+            </div>
+            <div className="bg-slate-900 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-teal-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Control Quality</p>
+                <p className="text-sm font-medium text-white">{scoreResult.dimensions.controlQuality.score}/100</p>
+              </div>
             </div>
           </div>
 
           {/* Rules Applied */}
           {scoreResult.rulesApplied.length > 0 && (
-            <div className="mb-8">
-              <h4 className="text-sm font-medium text-slate-400 mb-3">Rules Applied</h4>
-              <div className="space-y-2">
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-slate-400 mb-2">Active Rules</h4>
+              <div className="space-y-1">
                 {scoreResult.rulesApplied.map((rule, i) => (
-                  <div key={i} className="flex items-center justify-between bg-slate-900 rounded-lg px-3 py-2">
-                    <span className="text-sm text-slate-300">{rule.ruleName}</span>
-                    <span className={`text-sm font-medium ${rule.modifier > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                      {rule.modifier > 0 ? '+' : ''}{rule.modifier} pts
+                  <div key={i} className="flex items-center justify-between bg-slate-900 rounded px-3 py-1.5">
+                    <span className="text-xs text-slate-300">{rule.ruleName}</span>
+                    <span className={`text-xs font-medium ${rule.modifier > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      {rule.modifier > 0 ? '+' : ''}{rule.modifier}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-        </>
-      ) : (
-        <div className="text-center py-8">
-          <Gauge className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 mb-2">No score calculated yet</p>
-          <p className="text-slate-500 text-sm">Click &ldquo;Calculate Score&rdquo; to generate a composite risk score.</p>
+        </div>
+      )}
+
+      {!scoreResult && (
+        <div className="text-center py-6 mb-6">
+          <Gauge className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">Click &ldquo;Run Analysis&rdquo; for velocity, KRI, and correlation overlays.</p>
         </div>
       )}
 
       {/* Score History */}
       {historyData && historyData.items.length > 0 && (
-        <div className="border-t border-slate-700 pt-6">
-          <h4 className="text-sm font-medium text-slate-400 mb-3">Score History (Last 10)</h4>
+        <div className="border-t border-slate-700 pt-6 mb-6">
+          <h4 className="text-sm font-medium text-slate-400 mb-3">Analysis History</h4>
           <div className="space-y-2">
             {historyData.items.map((entry) => (
               <div key={entry.id} className="flex items-center justify-between bg-slate-900 rounded-lg px-3 py-2">
                 <span className="text-sm text-slate-400">
                   {format(new Date(entry.createdAt), 'dd MMM yyyy HH:mm')}
                 </span>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-white tabular-nums">{entry.compositeScore}</span>
-                </div>
+                <span className="text-sm font-medium text-white tabular-nums">{entry.compositeScore}</span>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* Methodology Footer */}
+      <div className="border-t border-slate-700 pt-4">
+        <p className="text-xs text-slate-500">
+          Risk scoring follows ISO 31000:2018 — Inherent Risk (L×I before controls), Residual Risk (L×I after controls),
+          and Value at Risk (financial exposure × probability). Intelligence overlays (velocity, KRI alignment, correlation,
+          control quality) provide additional context for risk-informed decision-making.
+        </p>
+      </div>
     </div>
   )
 }

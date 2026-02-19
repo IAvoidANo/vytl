@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { router, protectedProcedure, editorProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { createAuditLog, pickAuditFields, hasChanges } from '@/lib/audit'
 import Anthropic from '@anthropic-ai/sdk'
@@ -19,6 +20,21 @@ const riskCategoryEnum = z.enum([
 
 const riskResponseEnum = z.enum(['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT'])
 const riskStatusEnum = z.enum(['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED', 'ARCHIVED'])
+const controlEffectivenessEnum = z.enum(['EFFECTIVE', 'PARTIALLY_EFFECTIVE', 'INEFFECTIVE', 'NOT_TESTED', 'NOT_APPLICABLE'])
+
+/** Canonical sort order: residualScore DESC, varValue DESC, inherentScore DESC, createdAt DESC */
+const CANONICAL_SORT = [
+  { residualScore: 'desc' as const },
+  { varValue: { sort: 'desc' as const, nulls: 'last' as const } },
+  { inherentScore: 'desc' as const },
+  { createdAt: 'desc' as const },
+]
+
+/** Calculate VaR: financialExposure × (residualLikelihood / 5) */
+function calculateVarValue(financialExposure: number | null | undefined, residualLikelihood: number): Prisma.Decimal | null {
+  if (financialExposure == null) return null
+  return new Prisma.Decimal(financialExposure).mul(new Prisma.Decimal(residualLikelihood).div(5))
+}
 
 const createRiskSchema = z.object({
   registerId: z.string(),
@@ -31,7 +47,9 @@ const createRiskSchema = z.object({
   residualImpact: z.number().min(1).max(5),
   response: riskResponseEnum,
   controls: z.string().optional(),
+  controlEffectiveness: controlEffectivenessEnum.optional(),
   rootCause: z.string().optional(),
+  financialExposure: z.number().positive().optional().nullable(),
   ownerId: z.string().optional(),
   dueDate: z.string().optional(),
   isOngoing: z.boolean().optional(),
@@ -48,7 +66,9 @@ const updateRiskSchema = z.object({
   residualImpact: z.number().min(1).max(5).optional(),
   response: riskResponseEnum.optional(),
   controls: z.string().nullable().optional(),
+  controlEffectiveness: controlEffectivenessEnum.optional(),
   rootCause: z.string().nullable().optional(),
+  financialExposure: z.number().positive().nullable().optional(),
   status: riskStatusEnum.optional(),
   ownerId: z.string().nullable().optional(),
   dueDate: z.string().nullable().optional(),
@@ -80,7 +100,7 @@ export const riskRouter = router({
           owner: { select: { id: true, name: true, email: true } },
           createdBy: { select: { id: true, name: true } },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: CANONICAL_SORT,
       })
       return risks
     }),
@@ -123,14 +143,15 @@ export const riskRouter = router({
     const total = risks.length
 
     // Count by status
-    const byStatus = {
+    const byStatus: Record<string, number> = {
       OPEN: 0,
       IN_PROGRESS: 0,
       MONITORING: 0,
       CLOSED: 0,
+      ARCHIVED: 0,
     }
     for (const risk of risks) {
-      byStatus[risk.status]++
+      byStatus[risk.status] = (byStatus[risk.status] || 0) + 1
     }
 
     // Count by category
@@ -168,13 +189,18 @@ export const riskRouter = router({
           residualScore: true,
           residualLikelihood: true,
           residualImpact: true,
+          controlEffectiveness: true,
+          varValue: true,
           status: true,
           owner: { select: { name: true } },
         },
-        orderBy: { residualScore: 'desc' },
+        orderBy: CANONICAL_SORT,
         take: input.limit,
       })
-      return risks
+      return risks.map(r => ({
+        ...r,
+        varValue: r.varValue?.toString() ?? null,
+      }))
     }),
 
   // Create a new risk (EDITOR+)
@@ -195,6 +221,8 @@ export const riskRouter = router({
       const categoryPrefix = input.category.substring(0, 3).toUpperCase()
       const refCode = `${categoryPrefix}-${String(riskCount + 1).padStart(3, '0')}`
 
+      const varValue = calculateVarValue(input.financialExposure, input.residualLikelihood)
+
       const risk = await db.risk.create({
         data: {
           refCode,
@@ -209,7 +237,10 @@ export const riskRouter = router({
           residualScore: input.residualLikelihood * input.residualImpact,
           response: input.response,
           controls: input.controls,
+          controlEffectiveness: input.controlEffectiveness ?? 'NOT_TESTED',
           rootCause: input.rootCause,
+          financialExposure: input.financialExposure != null ? new Prisma.Decimal(input.financialExposure) : null,
+          varValue,
           registerId: input.registerId,
           createdById: ctx.user.id,
           ownerId: input.ownerId,
@@ -236,6 +267,9 @@ export const riskRouter = router({
           category: risk.category,
           inherentScore: risk.inherentScore,
           residualScore: risk.residualScore,
+          controlEffectiveness: risk.controlEffectiveness,
+          financialExposure: risk.financialExposure?.toString() ?? null,
+          varValue: risk.varValue?.toString() ?? null,
           status: risk.status,
           response: risk.response,
         },
@@ -260,11 +294,12 @@ export const riskRouter = router({
       const auditFields = [
         'title', 'description', 'category', 'inherentLikelihood',
         'inherentImpact', 'residualLikelihood', 'residualImpact',
-        'response', 'controls', 'status', 'ownerId',
+        'response', 'controls', 'controlEffectiveness', 'status', 'ownerId',
+        'financialExposure', 'varValue',
       ] as const
       const oldValues = pickAuditFields(existing as Record<string, unknown>, [...auditFields])
 
-      const { id, ...updateData } = input
+      const { id, financialExposure: feInput, ...updateData } = input
 
       // Calculate scores if likelihood/impact changed
       const inherentLikelihood = updateData.inherentLikelihood ?? existing.inherentLikelihood
@@ -272,12 +307,23 @@ export const riskRouter = router({
       const residualLikelihood = updateData.residualLikelihood ?? existing.residualLikelihood
       const residualImpact = updateData.residualImpact ?? existing.residualImpact
 
+      // Determine financialExposure: use input if provided, else keep existing
+      const effectiveFE = feInput !== undefined
+        ? feInput
+        : existing.financialExposure != null ? Number(existing.financialExposure) : null
+
+      const varValue = calculateVarValue(effectiveFE, residualLikelihood)
+
       const risk = await db.risk.update({
         where: { id },
         data: {
           ...updateData,
           inherentScore: inherentLikelihood * inherentImpact,
           residualScore: residualLikelihood * residualImpact,
+          financialExposure: feInput !== undefined
+            ? (feInput != null ? new Prisma.Decimal(feInput) : null)
+            : undefined,
+          varValue,
           dueDate: updateData.dueDate === null ? null : updateData.dueDate ? new Date(updateData.dueDate) : undefined,
         },
         include: {
@@ -542,10 +588,11 @@ export const riskRouter = router({
         source: true,
         workflowStatus: true,
         residualScore: true,
+        controlEffectiveness: true,
         createdAt: true,
         owner: { select: { name: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: CANONICAL_SORT,
     })
     return risks
   }),

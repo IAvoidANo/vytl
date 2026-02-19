@@ -32,6 +32,16 @@ const STATUSES = [
   { value: 'ARCHIVED', label: 'Archived' },
 ] as const
 
+const CONTROL_EFFECTIVENESS = [
+  { value: 'EFFECTIVE', label: 'Effective' },
+  { value: 'PARTIALLY_EFFECTIVE', label: 'Partially Effective' },
+  { value: 'INEFFECTIVE', label: 'Ineffective' },
+  { value: 'NOT_TESTED', label: 'Not Tested' },
+  { value: 'NOT_APPLICABLE', label: 'Not Applicable' },
+] as const
+
+type ControlEffectiveness = typeof CONTROL_EFFECTIVENESS[number]['value']
+
 type RiskCategory = typeof CATEGORIES[number]['value']
 type RiskResponse = typeof RESPONSES[number]['value']
 type RiskStatus = typeof STATUSES[number]['value']
@@ -48,11 +58,13 @@ interface RiskFormProps {
     residualImpact: number
     response: RiskResponse
     controls: string | null
+    controlEffectiveness: string
     rootCause: string | null
+    financialExposure: unknown
     status: RiskStatus
     registerId: string
     ownerId: string | null
-    dueDate: Date | null
+    dueDate: Date | string | null
     isOngoing: boolean
   }
   onClose: () => void
@@ -72,7 +84,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
     residualImpact: risk?.residualImpact ?? 2,
     response: risk?.response ?? 'MITIGATE' as RiskResponse,
     controls: risk?.controls ?? '',
+    controlEffectiveness: (risk?.controlEffectiveness ?? 'NOT_TESTED') as ControlEffectiveness,
     rootCause: risk?.rootCause ?? '',
+    financialExposure: risk?.financialExposure != null ? String(risk.financialExposure) : '',
     status: risk?.status ?? 'OPEN' as RiskStatus,
     registerId: risk?.registerId ?? '',
     ownerId: risk?.ownerId ?? '',
@@ -194,7 +208,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
         residualImpact: formData.residualImpact,
         response: formData.response,
         controls: formData.controls || null,
+        controlEffectiveness: formData.controlEffectiveness,
         rootCause: formData.rootCause || null,
+        financialExposure: formData.financialExposure ? parseFloat(String(formData.financialExposure)) : null,
         status: formData.status,
         ownerId: formData.ownerId || null,
         dueDate: formData.isOngoing ? null : (formData.dueDate || null),
@@ -212,7 +228,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
         residualImpact: formData.residualImpact,
         response: formData.response,
         controls: formData.controls || undefined,
+        controlEffectiveness: formData.controlEffectiveness,
         rootCause: formData.rootCause || undefined,
+        financialExposure: formData.financialExposure ? parseFloat(String(formData.financialExposure)) : undefined,
         ownerId: formData.ownerId || undefined,
         dueDate: formData.isOngoing ? undefined : (formData.dueDate || undefined),
         isOngoing: formData.isOngoing,
@@ -436,6 +454,28 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
             </div>
           </div>
 
+          {/* Financial Exposure */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Estimated Financial Exposure (ZAR)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">R</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.financialExposure}
+                onChange={(e) => setFormData({ ...formData, financialExposure: e.target.value })}
+                placeholder="0.00"
+                className="w-full pl-8 pr-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Optional. Used to calculate Value at Risk (VaR).
+            </p>
+          </div>
+
           {/* Response & Controls */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">Risk Response *</label>
@@ -467,7 +507,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Controls</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Control Description</label>
             <textarea
               value={formData.controls}
               onChange={(e) => setFormData({ ...formData, controls: e.target.value })}
@@ -475,6 +515,19 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
               placeholder="Describe mitigation controls..."
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Control Effectiveness</label>
+            <select
+              value={formData.controlEffectiveness}
+              onChange={(e) => setFormData({ ...formData, controlEffectiveness: e.target.value as ControlEffectiveness })}
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              {CONTROL_EFFECTIVENESS.map((ce) => (
+                <option key={ce.value} value={ce.value}>{ce.label}</option>
+              ))}
+            </select>
           </div>
 
           <div>

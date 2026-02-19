@@ -120,7 +120,7 @@ export async function analyzeCategoryTrends(orgId: string): Promise<CategoryTren
 
   const results: CategoryTrend[] = []
 
-  for (const [category, group] of categoryGroups) {
+  for (const [category, group] of Array.from(categoryGroups)) {
     const avgScore = group.scores.length > 0
       ? Math.round(group.scores.reduce((a, b) => a + b, 0) / group.scores.length)
       : 0

@@ -66,7 +66,7 @@ export function ReportsClient() {
   const { data: kris } = trpc.kri.list.useQuery()
   const { data: assessment } = trpc.assessment.current.useQuery()
   const { data: categoryTrends } = trpc.scoring.getCategoryTrends.useQuery(
-    { daysBack: 90 },
+    undefined,
     { retry: false }
   )
   const { data: recommendations } = trpc.scoring.getRecommendations.useQuery(
@@ -266,6 +266,7 @@ export function ReportsClient() {
                         <th className={thClass}>Title</th>
                         <th className={thClass}>Category</th>
                         <th className={thClass}>Score</th>
+                        <th className={thClass}>VaR</th>
                         <th className={thClass}>Status</th>
                         <th className={thClass}>Owner</th>
                       </tr>
@@ -285,6 +286,12 @@ export function ReportsClient() {
                             }`}>
                               {risk.residualScore}
                             </span>
+                          </td>
+                          <td className={tdClass}>
+                            {risk.varValue
+                              ? <span className="text-xs font-mono">R {Number(risk.varValue).toLocaleString('en-ZA', { maximumFractionDigits: 0 })}</span>
+                              : <span className="text-slate-600">—</span>
+                            }
                           </td>
                           <td className={tdClass}>{STATUS_LABELS[risk.status] || risk.status}</td>
                           <td className={tdClass}>{risk.owner?.name || 'Unassigned'}</td>
@@ -330,8 +337,8 @@ export function ReportsClient() {
                       {(categoryTrends || []).map((t) => (
                         <tr key={t.category}>
                           <td className={tdClass}>{CATEGORY_LABELS[t.category] || t.category}</td>
-                          <td className={tdClass}>{t.count}</td>
-                          <td className={tdClass}>{t.avgScore}</td>
+                          <td className={tdClass}>{t.riskCount}</td>
+                          <td className={tdClass}>{t.averageScore}</td>
                           <td className={tdClass}>
                             <span className={`inline-flex items-center gap-1 ${
                               t.direction === 'improving' ? 'text-green-400' :
@@ -364,13 +371,13 @@ export function ReportsClient() {
                   {(recommendations || []).slice(0, 10).map((r, i) => (
                     <div key={i} className="bg-slate-800 border border-slate-700 rounded-lg p-4 flex items-start gap-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                        r.severity === 'high' ? 'bg-red-500/20 text-red-400' :
-                        r.severity === 'medium' ? 'bg-amber-500/20 text-amber-400' :
+                        r.severity === 'critical' ? 'bg-red-500/20 text-red-400' :
+                        r.severity === 'warning' ? 'bg-amber-500/20 text-amber-400' :
                         'bg-blue-500/20 text-blue-400'
                       }`}>
                         {r.severity.charAt(0).toUpperCase() + r.severity.slice(1)}
                       </span>
-                      <p className="text-sm text-slate-300">{r.message}</p>
+                      <p className="text-sm text-slate-300">{r.description}</p>
                     </div>
                   ))}
                 </div>

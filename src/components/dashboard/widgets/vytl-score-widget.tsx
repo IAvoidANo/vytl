@@ -75,6 +75,13 @@ export function VytlScoreWidget() {
 
   const { score, grade, gradeColor, breakdown, riskCount } = scoreData
 
+  // Stale indicator: assessment older than 30 days
+  const calculatedAt = scoreData.calculatedAt ? new Date(scoreData.calculatedAt) : null
+  const daysSinceAssessment = calculatedAt
+    ? Math.floor((Date.now() - calculatedAt.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+  const isStale = daysSinceAssessment !== null && daysSinceAssessment > 30
+
   // Color configurations
   const gradeConfig = {
     green: {
@@ -127,7 +134,14 @@ export function VytlScoreWidget() {
     <div className={`h-full bg-gradient-to-br ${colors.gradient} flex flex-col`}>
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30 flex-shrink-0">
-        <h3 className="text-sm font-semibold text-white">Vytl Score</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white">Vytl Score</h3>
+          {isStale && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              {daysSinceAssessment}d ago
+            </span>
+          )}
+        </div>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing || saveMutation.isPending}

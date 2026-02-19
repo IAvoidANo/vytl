@@ -17,7 +17,6 @@ import {
   getEngineStatus,
 } from '@/lib/scoring-engine'
 import {
-  scoringProfileSchema,
   updateScoringProfileSchema,
   scoringRuleSchema,
   updateScoringRuleSchema,

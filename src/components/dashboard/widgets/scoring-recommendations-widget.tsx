@@ -26,7 +26,7 @@ export function ScoringRecommendationsWidget() {
     return (
       <div className="h-full flex flex-col">
         <div className="px-4 py-2.5 border-b border-slate-700/50 bg-slate-900/30 flex-shrink-0">
-          <h3 className="text-sm font-semibold text-white">Scoring Recommendations</h3>
+          <h3 className="text-sm font-semibold text-white">Risk Intelligence Alerts</h3>
         </div>
         <div className="flex-1 p-3 space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -43,13 +43,13 @@ export function ScoringRecommendationsWidget() {
     return (
       <div className="h-full flex flex-col">
         <div className="px-4 py-2.5 border-b border-slate-700/50 bg-slate-900/30 flex-shrink-0">
-          <h3 className="text-sm font-semibold text-white">Scoring Recommendations</h3>
+          <h3 className="text-sm font-semibold text-white">Risk Intelligence Alerts</h3>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-4">
             <Lightbulb className="w-6 h-6 text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-400 text-xs">No recommendations</p>
-            <p className="text-slate-500 text-[10px] mt-1">Score some risks to get insights</p>
+            <p className="text-slate-400 text-xs">No alerts</p>
+            <p className="text-slate-500 text-[10px] mt-1">Risk intelligence alerts will appear here</p>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@ export function ScoringRecommendationsWidget() {
   return (
     <div className="h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-slate-700/50 bg-slate-900/30 flex-shrink-0">
-        <h3 className="text-sm font-semibold text-white">Scoring Recommendations</h3>
+        <h3 className="text-sm font-semibold text-white">Risk Intelligence Alerts</h3>
       </div>
       <div className="flex-1 min-h-0 overflow-auto divide-y divide-slate-700/50">
         {displayItems.map((rec, i) => {

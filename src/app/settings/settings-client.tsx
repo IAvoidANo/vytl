@@ -52,21 +52,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
   const [consentGiven, setConsentGiven] = useState(false)
   const [popiaSaved, setPopiaSaved] = useState(false)
 
-  // Scoring state
-  const [scoringWeightBase, setScoringWeightBase] = useState(40)
-  const [scoringWeightControlQuality, setScoringWeightControlQuality] = useState(20)
-  const [scoringWeightVelocity, setScoringWeightVelocity] = useState(15)
-  const [scoringWeightCorrelation, setScoringWeightCorrelation] = useState(15)
-  const [scoringWeightKriAlignment, setScoringWeightKriAlignment] = useState(10)
-  const [scoringThresholdLow, setScoringThresholdLow] = useState(25)
-  const [scoringThresholdMedium, setScoringThresholdMedium] = useState(50)
-  const [scoringThresholdHigh, setScoringThresholdHigh] = useState(75)
-  const [scoringProfileSaved, setScoringProfileSaved] = useState(false)
-  const [scoringProfileInitialized, setScoringProfileInitialized] = useState(false)
-
-  // Industry preset state
-  const [selectedIndustryId, setSelectedIndustryId] = useState('')
-  const [industrySaved, setIndustrySaved] = useState(false)
+  // (Scoring profile/rules/industry UI removed — now read-only methodology panel)
 
   // Register state
   const [showRegisterForm, setShowRegisterForm] = useState(false)
@@ -79,15 +65,6 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
   const [editRegisterStatus, setEditRegisterStatus] = useState<'DRAFT' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE')
   const [registerSaved, setRegisterSaved] = useState(false)
 
-  // Custom rules state
-  const [showRuleForm, setShowRuleForm] = useState(false)
-  const [newRuleName, setNewRuleName] = useState('')
-  const [newRuleConditionField, setNewRuleConditionField] = useState('category')
-  const [newRuleConditionOperator, setNewRuleConditionOperator] = useState('equals')
-  const [newRuleConditionValue, setNewRuleConditionValue] = useState('')
-  const [newRuleScoreModifier, setNewRuleScoreModifier] = useState(0)
-  const [newRuleModifierType, setNewRuleModifierType] = useState<'absolute' | 'percentage'>('absolute')
-  const [ruleSaved, setRuleSaved] = useState(false)
 
   // Initialize state when data loads
   const initProfile = () => {
@@ -147,57 +124,11 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     },
   })
 
-  // Scoring queries & mutations
-  const { data: scoringProfile, refetch: refetchProfile } = trpc.scoring.getProfile.useQuery(
-    undefined,
-    { enabled: activeTab === 'scoring' }
-  )
-  const { data: industryProfiles } = trpc.scoring.listIndustryProfiles.useQuery(
-    undefined,
-    { enabled: activeTab === 'scoring' }
-  )
-  const { data: scoringRules, refetch: refetchRules } = trpc.scoring.getRules.useQuery(
-    undefined,
-    { enabled: activeTab === 'scoring' }
-  )
+  // Scoring query (read-only engine status for methodology panel)
   const { data: engineStatus } = trpc.scoring.getEngineStatus.useQuery(
     undefined,
     { enabled: activeTab === 'scoring' }
   )
-
-  const updateScoringProfile = trpc.scoring.updateProfile.useMutation({
-    onSuccess: () => {
-      setScoringProfileSaved(true)
-      refetchProfile()
-      setTimeout(() => setScoringProfileSaved(false), 3000)
-    },
-  })
-
-  const applyIndustryProfile = trpc.scoring.applyIndustryProfile.useMutation({
-    onSuccess: () => {
-      setIndustrySaved(true)
-      refetchProfile()
-      setTimeout(() => setIndustrySaved(false), 3000)
-    },
-  })
-
-  const createRule = trpc.scoring.createRule.useMutation({
-    onSuccess: () => {
-      setRuleSaved(true)
-      setShowRuleForm(false)
-      setNewRuleName('')
-      setNewRuleConditionValue('')
-      setNewRuleScoreModifier(0)
-      refetchRules()
-      setTimeout(() => setRuleSaved(false), 3000)
-    },
-  })
-
-  const deleteRule = trpc.scoring.deleteRule.useMutation({
-    onSuccess: () => {
-      refetchRules()
-    },
-  })
 
   // Register queries & mutations
   const { data: registersList, refetch: refetchRegisters } = trpc.register.list.useQuery(
@@ -232,38 +163,6 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     },
   })
 
-  // Initialize scoring profile state when data loads
-  if (scoringProfile && !scoringProfileInitialized) {
-    setScoringWeightBase(scoringProfile.weightBase)
-    setScoringWeightControlQuality(scoringProfile.weightControlQuality)
-    setScoringWeightVelocity(scoringProfile.weightVelocity)
-    setScoringWeightCorrelation(scoringProfile.weightCorrelation)
-    setScoringWeightKriAlignment(scoringProfile.weightKriAlignment)
-    setScoringThresholdLow(scoringProfile.thresholdLow)
-    setScoringThresholdMedium(scoringProfile.thresholdMedium)
-    setScoringThresholdHigh(scoringProfile.thresholdHigh)
-    setScoringProfileInitialized(true)
-  }
-
-  const scoringWeightTotal = scoringWeightBase + scoringWeightControlQuality + scoringWeightVelocity + scoringWeightCorrelation + scoringWeightKriAlignment
-
-  const handleScoringProfileSave = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!scoringProfile) return
-    updateScoringProfile.mutate({
-      profileId: scoringProfile.id,
-      data: {
-        weightBase: scoringWeightBase,
-        weightControlQuality: scoringWeightControlQuality,
-        weightVelocity: scoringWeightVelocity,
-        weightCorrelation: scoringWeightCorrelation,
-        weightKriAlignment: scoringWeightKriAlignment,
-        thresholdLow: scoringThresholdLow,
-        thresholdMedium: scoringThresholdMedium,
-        thresholdHigh: scoringThresholdHigh,
-      },
-    })
-  }
 
   const handleCreateRegister = (e: React.FormEvent) => {
     e.preventDefault()
@@ -296,23 +195,6 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     setEditRegisterName(reg.name)
     setEditRegisterDescription(reg.description || '')
     setEditRegisterStatus(reg.status as 'DRAFT' | 'ACTIVE' | 'ARCHIVED')
-  }
-
-  const handleApplyIndustry = () => {
-    if (!selectedIndustryId) return
-    applyIndustryProfile.mutate({ industryId: selectedIndustryId })
-  }
-
-  const handleCreateRule = (e: React.FormEvent) => {
-    e.preventDefault()
-    createRule.mutate({
-      name: newRuleName,
-      conditionField: newRuleConditionField,
-      conditionOperator: newRuleConditionOperator,
-      conditionValue: newRuleConditionValue,
-      scoreModifier: newRuleScoreModifier,
-      modifierType: newRuleModifierType,
-    })
   }
 
   const handleProfileSave = (e: React.FormEvent) => {
@@ -359,7 +241,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     { id: 'security', label: 'Security' },
     { id: 'organisation', label: 'Organisation', adminOnly: true },
     { id: 'popia', label: 'POPIA Compliance', adminOnly: true },
-    { id: 'scoring', label: 'Scoring', adminOnly: true },
+    { id: 'scoring', label: 'Methodology', adminOnly: true },
     { id: 'registers', label: 'Registers', adminOnly: true },
     { id: 'appetite', label: 'Risk Appetite', adminOnly: true },
   ]
@@ -621,356 +503,119 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
         </div>
       )}
 
-      {/* Scoring Tab */}
+      {/* Scoring Methodology Tab (read-only) */}
       {activeTab === 'scoring' && isAdmin && (
-        <div className="space-y-8">
-          {/* Profile Configuration */}
-          <div className="max-w-lg">
-            <div className="mb-4 p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
-              <h4 className="font-medium text-teal-400 mb-1">Scoring Engine Configuration</h4>
-              <p className="text-sm text-slate-300">
-                Configure how composite risk scores are calculated. The five dimension
-                weights must sum to exactly 100.
+        <div className="max-w-2xl space-y-6">
+          <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
+            <h4 className="font-medium text-teal-400 mb-1">Risk Scoring Methodology</h4>
+            <p className="text-sm text-slate-300">
+              Vytl follows an ISO 31000-aligned, three-tier scoring framework. The methodology
+              below is applied consistently across all risks in your organisation.
+            </p>
+          </div>
+
+          {/* Tier 1: Risk-Level Scoring */}
+          <div>
+            <h3 className="text-lg font-medium text-white mb-3">Tier 1 — Risk-Level Scoring</h3>
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-800 border border-slate-700 rounded-md">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-white">1A. Inherent Risk</span>
+                  <span className="text-xs text-slate-500 font-mono">Likelihood × Impact (1–25)</span>
+                </div>
+                <p className="text-xs text-slate-400">Raw risk before any controls are applied.</p>
+              </div>
+              <div className="p-4 bg-slate-800 border border-slate-700 rounded-md">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-white">1B. Control Effectiveness</span>
+                  <span className="text-xs text-slate-500 font-mono">5-point enum</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Effective, Partially Effective, Ineffective, Not Tested, Not Applicable.
+                </p>
+              </div>
+              <div className="p-4 bg-teal-500/5 border border-teal-500/20 rounded-md">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-teal-400">1C. Residual Risk (Primary)</span>
+                  <span className="text-xs text-teal-500 font-mono">Likelihood × Impact (1–25)</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Risk after controls. This is the primary ranking score used across all views.
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800 border border-slate-700 rounded-md">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-white">1D. Value at Risk (VaR)</span>
+                  <span className="text-xs text-slate-500 font-mono">Financial Exposure × (L/5)</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Monetary impact estimate. Calculated server-side from financial exposure and residual likelihood.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tier 2: Intelligence Overlays */}
+          <div>
+            <h3 className="text-lg font-medium text-white mb-3">Tier 2 — Intelligence Overlays</h3>
+            <p className="text-sm text-slate-400 mb-3">
+              Available per-risk via the Risk Intelligence tab. These provide additional context
+              but do not affect the primary ranking.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                <p className="text-sm font-medium text-white">Velocity</p>
+                <p className="text-xs text-slate-400">Rate of score change over time</p>
+              </div>
+              <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                <p className="text-sm font-medium text-white">KRI Alignment</p>
+                <p className="text-xs text-slate-400">Status of linked monitoring indicators</p>
+              </div>
+              <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                <p className="text-sm font-medium text-white">Correlation</p>
+                <p className="text-xs text-slate-400">Connectedness to other high-scoring risks</p>
+              </div>
+              <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
+                <p className="text-sm font-medium text-white">Control Quality</p>
+                <p className="text-xs text-slate-400">Depth and specificity of documented controls</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tier 3: Vytl Score */}
+          <div>
+            <h3 className="text-lg font-medium text-white mb-3">Tier 3 — Vytl Score</h3>
+            <div className="p-4 bg-slate-800 border border-slate-700 rounded-md">
+              <p className="text-sm text-slate-300 mb-2">
+                Organisation-level score (0–100) summarising overall risk posture. Graded A–F.
+              </p>
+              <p className="text-xs text-slate-400">
+                Dimensions: Coverage (25), Control Effectiveness (25), Maturity (25), Trend (25).
+                Recalculate from the dashboard Vytl Score widget.
               </p>
             </div>
-
-            <form onSubmit={handleScoringProfileSave} className="space-y-4">
-              <h3 className="text-lg font-medium text-white">Dimension Weights</h3>
-
-              <div>
-                <label className={labelClass}>
-                  Base Score (L&times;I) &mdash; {scoringWeightBase}%
-                </label>
-                <input
-                  type="number"
-                  value={scoringWeightBase}
-                  onChange={(e) => setScoringWeightBase(parseInt(e.target.value) || 0)}
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>
-                  Control Quality &mdash; {scoringWeightControlQuality}%
-                </label>
-                <input
-                  type="number"
-                  value={scoringWeightControlQuality}
-                  onChange={(e) => setScoringWeightControlQuality(parseInt(e.target.value) || 0)}
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>
-                  Velocity &mdash; {scoringWeightVelocity}%
-                </label>
-                <input
-                  type="number"
-                  value={scoringWeightVelocity}
-                  onChange={(e) => setScoringWeightVelocity(parseInt(e.target.value) || 0)}
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>
-                  Correlation &mdash; {scoringWeightCorrelation}%
-                </label>
-                <input
-                  type="number"
-                  value={scoringWeightCorrelation}
-                  onChange={(e) => setScoringWeightCorrelation(parseInt(e.target.value) || 0)}
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>
-                  KRI Alignment &mdash; {scoringWeightKriAlignment}%
-                </label>
-                <input
-                  type="number"
-                  value={scoringWeightKriAlignment}
-                  onChange={(e) => setScoringWeightKriAlignment(parseInt(e.target.value) || 0)}
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
-
-              <div className={`text-sm font-medium ${scoringWeightTotal === 100 ? 'text-green-400' : 'text-red-400'}`}>
-                Total: {scoringWeightTotal}% {scoringWeightTotal !== 100 && '(must equal 100)'}
-              </div>
-
-              <h3 className="text-lg font-medium text-white pt-4">Score Thresholds</h3>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className={labelClass}>Low</label>
-                  <input
-                    type="number"
-                    value={scoringThresholdLow}
-                    onChange={(e) => setScoringThresholdLow(parseInt(e.target.value) || 0)}
-                    min="1"
-                    max="99"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Medium</label>
-                  <input
-                    type="number"
-                    value={scoringThresholdMedium}
-                    onChange={(e) => setScoringThresholdMedium(parseInt(e.target.value) || 0)}
-                    min="1"
-                    max="99"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>High</label>
-                  <input
-                    type="number"
-                    value={scoringThresholdHigh}
-                    onChange={(e) => setScoringThresholdHigh(parseInt(e.target.value) || 0)}
-                    min="1"
-                    max="99"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={updateScoringProfile.isPending || scoringWeightTotal !== 100}
-                  className={btnPrimaryClass}
-                >
-                  {updateScoringProfile.isPending ? 'Saving...' : 'Save Profile'}
-                </button>
-                {scoringProfileSaved && (
-                  <span className="text-green-400 text-sm">Saved!</span>
-                )}
-                {updateScoringProfile.isError && (
-                  <span className="text-red-400 text-sm">{updateScoringProfile.error.message}</span>
-                )}
-              </div>
-            </form>
-          </div>
-
-          {/* Industry Presets */}
-          <div className="max-w-lg border-t border-slate-700 pt-6">
-            <h3 className="text-lg font-medium text-white mb-4">Industry Presets</h3>
-            <p className="text-sm text-slate-400 mb-3">
-              Apply a pre-configured scoring profile optimised for your industry.
-              This will overwrite current weights and thresholds.
-            </p>
-            <div className="flex gap-3">
-              <select
-                value={selectedIndustryId}
-                onChange={(e) => setSelectedIndustryId(e.target.value)}
-                className={`flex-1 ${inputClass}`}
-              >
-                <option value="">Select industry...</option>
-                {industryProfiles?.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleApplyIndustry}
-                disabled={!selectedIndustryId || applyIndustryProfile.isPending}
-                className={btnPrimaryClass}
-              >
-                {applyIndustryProfile.isPending ? 'Applying...' : 'Apply'}
-              </button>
-            </div>
-            {industrySaved && (
-              <span className="text-green-400 text-sm mt-2 block">Industry profile applied! Reload to see updated weights.</span>
-            )}
-          </div>
-
-          {/* Custom Rules */}
-          <div className="max-w-lg border-t border-slate-700 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-white">Custom Scoring Rules</h3>
-              <button
-                onClick={() => setShowRuleForm(!showRuleForm)}
-                className={btnSmPrimaryClass}
-              >
-                {showRuleForm ? 'Cancel' : '+ Add Rule'}
-              </button>
-            </div>
-
-            {showRuleForm && (
-              <form onSubmit={handleCreateRule} className="space-y-3 mb-4 p-4 bg-slate-800 border border-slate-700 rounded-md">
-                <div>
-                  <label className={labelClass}>Rule Name</label>
-                  <input
-                    type="text"
-                    value={newRuleName}
-                    onChange={(e) => setNewRuleName(e.target.value)}
-                    required
-                    placeholder="e.g. Compliance bonus"
-                    className={inputClass}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelClass}>Field</label>
-                    <select
-                      value={newRuleConditionField}
-                      onChange={(e) => setNewRuleConditionField(e.target.value)}
-                      className={inputClass}
-                    >
-                      <option value="category">Category</option>
-                      <option value="status">Status</option>
-                      <option value="residualScore">Residual Score</option>
-                      <option value="inherentScore">Inherent Score</option>
-                      <option value="controls">Controls</option>
-                      <option value="rootCause">Root Cause</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Operator</label>
-                    <select
-                      value={newRuleConditionOperator}
-                      onChange={(e) => setNewRuleConditionOperator(e.target.value)}
-                      className={inputClass}
-                    >
-                      <option value="equals">Equals</option>
-                      <option value="notEquals">Not Equals</option>
-                      <option value="greaterThan">Greater Than</option>
-                      <option value="lessThan">Less Than</option>
-                      <option value="contains">Contains</option>
-                      <option value="isEmpty">Is Empty</option>
-                      <option value="isNotEmpty">Is Not Empty</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className={labelClass}>Value</label>
-                  <input
-                    type="text"
-                    value={newRuleConditionValue}
-                    onChange={(e) => setNewRuleConditionValue(e.target.value)}
-                    placeholder="e.g. COMPLIANCE"
-                    className={inputClass}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelClass}>Score Modifier</label>
-                    <input
-                      type="number"
-                      value={newRuleScoreModifier}
-                      onChange={(e) => setNewRuleScoreModifier(parseInt(e.target.value) || 0)}
-                      min="-25"
-                      max="25"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Type</label>
-                    <select
-                      value={newRuleModifierType}
-                      onChange={(e) => setNewRuleModifierType(e.target.value as 'absolute' | 'percentage')}
-                      className={inputClass}
-                    >
-                      <option value="absolute">Absolute</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={createRule.isPending || !newRuleName}
-                  className={btnPrimaryClass}
-                >
-                  {createRule.isPending ? 'Creating...' : 'Create Rule'}
-                </button>
-              </form>
-            )}
-
-            {ruleSaved && (
-              <p className="text-green-400 text-sm mb-3">Rule created!</p>
-            )}
-
-            {scoringRules && scoringRules.length > 0 ? (
-              <div className="space-y-2">
-                {scoringRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center justify-between p-3 bg-slate-800 border border-slate-700 rounded-md">
-                    <div>
-                      <p className="text-sm font-medium text-white">{rule.name}</p>
-                      <p className="text-xs text-slate-400">
-                        {rule.conditionField} {rule.conditionOperator} {rule.conditionValue} &rarr;{' '}
-                        {rule.scoreModifier > 0 ? '+' : ''}{rule.scoreModifier}
-                        {rule.modifierType === 'percentage' ? '%' : ' pts'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (confirm('Delete this rule?')) {
-                          deleteRule.mutate({ ruleId: rule.id })
-                        }
-                      }}
-                      disabled={deleteRule.isPending}
-                      className="text-red-400 hover:text-red-300 text-sm disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">No custom rules configured.</p>
-            )}
           </div>
 
           {/* Engine Status */}
-          <div className="max-w-lg border-t border-slate-700 pt-6">
-            <h3 className="text-lg font-medium text-white mb-4">Engine Status</h3>
-            {engineStatus ? (
-              <div className="grid grid-cols-2 gap-4">
+          {engineStatus && (
+            <div className="border-t border-slate-700 pt-6">
+              <h3 className="text-sm font-medium text-slate-400 mb-3">System Status</h3>
+              <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Profile</p>
-                  <p className="text-sm font-medium text-white">{engineStatus.profileName || 'None'}</p>
-                </div>
-                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Active Rules</p>
-                  <p className="text-sm font-medium text-white">{engineStatus.activeRules}</p>
-                </div>
-                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Total Risks</p>
+                  <p className="text-xs text-slate-500">Total Risks</p>
                   <p className="text-sm font-medium text-white">{engineStatus.totalRisks}</p>
                 </div>
                 <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Score Snapshots</p>
+                  <p className="text-xs text-slate-500">Score Snapshots</p>
                   <p className="text-sm font-medium text-white">{engineStatus.scoreSnapshots}</p>
                 </div>
                 <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Active KRIs</p>
+                  <p className="text-xs text-slate-500">Active KRIs</p>
                   <p className="text-sm font-medium text-white">{engineStatus.activeKris}</p>
                 </div>
-                <div className="p-3 bg-slate-800 border border-slate-700 rounded-md">
-                  <p className="text-xs text-slate-400">Engine Version</p>
-                  <p className="text-sm font-medium text-white">{engineStatus.engineVersion}</p>
-                </div>
               </div>
-            ) : (
-              <p className="text-sm text-slate-400">Loading engine status...</p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -27,6 +27,7 @@ export interface BoardReportData {
     title: string
     category: string
     residualScore: number
+    varValue?: string | null
     status: string
     owner: { name: string | null } | null
   }[]
@@ -328,16 +329,17 @@ export function generateBoardReport(data: BoardReportData): jsPDF {
       risk.title,
       CATEGORY_LABELS[risk.category] || risk.category,
       String(risk.residualScore),
+      risk.varValue ? `R ${Number(risk.varValue).toLocaleString('en-ZA', { maximumFractionDigits: 0 })}` : '—',
       STATUS_LABELS[risk.status] || risk.status,
       risk.owner?.name || 'Unassigned',
     ])
 
     y = addTable(
       doc,
-      ['Ref', 'Title', 'Category', 'Score', 'Status', 'Owner'],
+      ['Ref', 'Title', 'Category', 'Score', 'VaR', 'Status', 'Owner'],
       topRiskRows,
       y,
-      [22, 48, 28, 20, 26, 26]
+      [18, 40, 24, 16, 22, 22, 28]
     )
   } else {
     doc.setFontSize(10)

@@ -13,6 +13,7 @@ interface Risk {
   residualLikelihood: number
   residualImpact: number
   residualScore: number
+  controlEffectiveness?: string
 }
 
 const LIKELIHOOD_LABELS = ['Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain']
@@ -102,16 +103,21 @@ export function RiskHeatmap() {
                       <div className="p-2 pt-5">
                         {cellRisks.length > 0 ? (
                           <div className="space-y-1">
-                            {cellRisks.slice(0, 3).map((risk) => (
-                              <Link
-                                key={risk.id}
-                                href={`/risks/${risk.id}`}
-                                className="block text-xs bg-slate-900/50 rounded px-1.5 py-0.5 truncate hover:bg-slate-900 transition-colors text-white"
-                                title={risk.title}
-                              >
-                                {risk.refCode}
-                              </Link>
-                            ))}
+                            {cellRisks.slice(0, 3).map((risk) => {
+                              const ceLabel = risk.controlEffectiveness && risk.controlEffectiveness !== 'NOT_TESTED'
+                                ? ` [${risk.controlEffectiveness.replace('_', ' ')}]`
+                                : ''
+                              return (
+                                <Link
+                                  key={risk.id}
+                                  href={`/risks/${risk.id}`}
+                                  className="block text-xs bg-slate-900/50 rounded px-1.5 py-0.5 truncate hover:bg-slate-900 transition-colors text-white"
+                                  title={`${risk.title}${ceLabel}`}
+                                >
+                                  {risk.refCode}
+                                </Link>
+                              )
+                            })}
                             {cellRisks.length > 3 && (
                               <span className="text-xs text-slate-400">
                                 +{cellRisks.length - 3} more

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from '@/components/risk-score-badge'
+import { ControlEffectivenessBadge } from '@/components/control-effectiveness-badge'
 import { useAppetite } from '@/lib/use-appetite'
 
 interface KanbanCardProps {
@@ -32,6 +33,7 @@ interface KanbanCardProps {
     createdAt: string | Date
     owner: { name: string | null } | null
     residualScore: number
+    controlEffectiveness?: string
   }
   sourceLabel: string
   isDragging?: boolean
@@ -173,6 +175,13 @@ export function KanbanCard({ risk, sourceLabel, isDragging, onEdit }: KanbanCard
             />
         </div>
       </div>
+
+      {/* Control Effectiveness */}
+      {risk.controlEffectiveness && risk.controlEffectiveness !== 'NOT_TESTED' && (
+        <div className="mb-2 ml-6">
+          <ControlEffectivenessBadge value={risk.controlEffectiveness} compact />
+        </div>
+      )}
 
       {/* Description Preview */}
       <p className="text-xs text-slate-400 line-clamp-2 mb-3">{risk.description}</p>

@@ -54,7 +54,7 @@ export function CategoryTrendsWidget() {
           <div className="text-center p-4">
             <TrendingUp className="w-6 h-6 text-slate-600 mx-auto mb-2" />
             <p className="text-slate-400 text-xs">No trend data</p>
-            <p className="text-slate-500 text-[10px] mt-1">Calculate scores to see category trends</p>
+            <p className="text-slate-500 text-[10px] mt-1">Add risks to see category trends</p>
           </div>
         </div>
       </div>

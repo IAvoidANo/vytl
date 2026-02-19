@@ -15,9 +15,9 @@ import {
 
 export function AppetiteSettings() {
   const [statement, setStatement] = useState('')
-  const [low, setLow] = useState(DEFAULT_APPETITE_THRESHOLDS.low)
-  const [medium, setMedium] = useState(DEFAULT_APPETITE_THRESHOLDS.medium)
-  const [high, setHigh] = useState(DEFAULT_APPETITE_THRESHOLDS.high)
+  const [low, setLow] = useState<number>(DEFAULT_APPETITE_THRESHOLDS.low)
+  const [medium, setMedium] = useState<number>(DEFAULT_APPETITE_THRESHOLDS.medium)
+  const [high, setHigh] = useState<number>(DEFAULT_APPETITE_THRESHOLDS.high)
   const [categoryOverrides, setCategoryOverrides] = useState<
     Record<string, { enabled: boolean; low: number; medium: number; high: number }>
   >({})
@@ -25,7 +25,8 @@ export function AppetiteSettings() {
   const [saved, setSaved] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
-  const { data: appetite, refetch } = trpc.appetite.get.useQuery()
+  const { data: rawAppetite, refetch } = trpc.appetite.get.useQuery()
+  const appetite = rawAppetite as { appetiteStatement: string | null; appetiteLow: number; appetiteMedium: number; appetiteHigh: number; appetiteCategoryConfig: Record<string, AppetiteThresholds> | null } | undefined
   const { data: breachSummary } = trpc.appetite.breachSummary.useQuery()
 
   const updateAppetite = trpc.appetite.update.useMutation({

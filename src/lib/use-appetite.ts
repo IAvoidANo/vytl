@@ -15,8 +15,17 @@ import {
   type RiskCategory,
 } from './appetite-validation'
 
+interface AppetiteData {
+  appetiteLow: number
+  appetiteMedium: number
+  appetiteHigh: number
+  appetiteCategoryConfig: Record<string, AppetiteThresholds> | null
+  appetiteStatement: string | null
+}
+
 export function useAppetite() {
-  const { data: appetite, isLoading } = trpc.appetite.get.useQuery()
+  const { data, isLoading } = trpc.appetite.get.useQuery()
+  const appetite = data as AppetiteData | undefined
 
   const thresholds: AppetiteThresholds = {
     low: appetite?.appetiteLow ?? DEFAULT_APPETITE_THRESHOLDS.low,

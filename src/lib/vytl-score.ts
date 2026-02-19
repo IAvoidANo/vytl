@@ -366,7 +366,8 @@ export async function calculateVytlScore(orgId: string): Promise<VytlScoreResult
 export async function saveAssessment(
   orgId: string,
   result: VytlScoreResult,
-  type: 'INITIAL' | 'QUARTERLY' | 'ANNUAL' | 'AD_HOC' = 'AD_HOC'
+  type: 'INITIAL' | 'QUARTERLY' | 'ANNUAL' | 'AD_HOC' = 'AD_HOC',
+  triggeredById?: string
 ) {
   return db.assessment.create({
     data: {
@@ -377,6 +378,7 @@ export async function saveAssessment(
       vytlScore: result.score,
       vytlGrade: result.grade,
       scoreBreakdown: result.breakdown as object,
+      ...(triggeredById && { triggeredById }),
     },
   })
 }
