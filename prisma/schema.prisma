@@ -89,6 +89,9 @@ model User {
   assignedActions  TreatmentAction[] @relation("ActionAssignee")
   createdActions   TreatmentAction[] @relation("ActionCreatedBy")
   createdMappings  RegulatoryMapping[] @relation("MappingCreatedBy")
+  reportedIncidents    Incident[]    @relation("IncidentReportedBy")
+  assignedIncidents    Incident[]    @relation("IncidentAssignee")
+  triggeredAssessments Assessment[]  @relation("AssessmentTriggeredBy")
 
   @@map("users")
 }
@@ -187,9 +190,14 @@ model Risk {
   residualScore      Int
 
   // Risk response
-  response  RiskResponse @default(MITIGATE)
-  controls  String?      @db.Text
-  rootCause String?      @db.Text
+  response             RiskResponse         @default(MITIGATE)
+  controls             String?              @db.Text
+  controlEffectiveness ControlEffectiveness @default(NOT_TESTED)
+  rootCause            String?              @db.Text
+
+  // Financial exposure & VaR
+  financialExposure Decimal? @db.Decimal(15, 2)
+  varValue          Decimal? @db.Decimal(15, 2)
 
   // Metadata
   status         RiskStatus     @default(OPEN)
@@ -217,6 +225,9 @@ model Risk {
 
   // Regulatory mappings
   regulatoryMappings RegulatoryMapping[]
+
+  // Incidents
+  incidents Incident[]
 
   @@unique([registerId, refCode])
   @@map("risks")
@@ -260,6 +271,14 @@ enum WorkflowStatus {
   TRIAGE
   ASSIGNED
   APPROVED
+}
+
+enum ControlEffectiveness {
+  EFFECTIVE
+  PARTIALLY_EFFECTIVE
+  INEFFECTIVE
+  NOT_TESTED
+  NOT_APPLICABLE
 }
 
 // ============================================
@@ -306,6 +325,8 @@ model Assessment {
   organisation Organisation  @relation(fields: [orgId], references: [id])
   registerId   String?
   register     RiskRegister? @relation(fields: [registerId], references: [id])
+  triggeredById String?
+  triggeredBy   User?         @relation("AssessmentTriggeredBy", fields: [triggeredById], references: [id])
 
   @@map("assessments")
 }
@@ -601,4 +622,45 @@ enum ComplianceStatus {
   NON_COMPLIANT
   NOT_ASSESSED
   NOT_APPLICABLE
+}
+
+// ============================================
+// INCIDENTS
+// ============================================
+
+model Incident {
+  id           String           @id @default(cuid())
+  title        String
+  description  String?          @db.Text
+  severity     IncidentSeverity @default(MEDIUM)
+  status       IncidentStatus   @default(OPEN)
+  occurredAt   DateTime
+  resolvedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  riskId       String
+  risk         Risk             @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  reportedById String
+  reportedBy   User             @relation("IncidentReportedBy", fields: [reportedById], references: [id])
+  assigneeId   String?
+  assignee     User?            @relation("IncidentAssignee", fields: [assigneeId], references: [id])
+
+  @@index([riskId])
+  @@map("incidents")
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  CONTAINED
+  RESOLVED
+  CLOSED
 }

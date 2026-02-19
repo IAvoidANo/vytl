@@ -269,8 +269,77 @@
 
 ---
 
+## Sprint 14 - COMPLETE ✅
+
+### Incident Linking - COMPLETE ✅
+- [x] **Prisma Schema** - Incident model with enums
+  - IncidentSeverity enum (LOW, MEDIUM, HIGH, CRITICAL)
+  - IncidentStatus enum (OPEN, INVESTIGATING, CONTAINED, RESOLVED, CLOSED)
+  - Incident model: title, description, severity, status, occurredAt, resolvedAt
+  - Relations: Risk (cascade delete), User (reportedBy + assignee)
+  - @@index on riskId, @@map("incidents")
+- [x] **Validation Library** (`incident-validation.ts`)
+  - Zod schemas: createIncidentSchema, updateIncidentSchema
+  - Enums: incidentSeverityEnum, incidentStatusEnum
+  - Pure functions: getResolvedAtForStatus, sortBySeverity, getNextStatus
+  - Constants: SEVERITY_LABELS, STATUS_LABELS, SEVERITY_COLORS, STATUS_COLORS, STATUS_CYCLE
+- [x] **tRPC Router** (`incident.ts`) with 5 endpoints
+  - list (protectedProcedure): incidents for a risk, with reportedBy + assignee
+  - create (editorProcedure): log new incident, audit logged
+  - update (editorProcedure): update fields, auto-set resolvedAt on RESOLVED/CLOSED
+  - delete (riskManagerProcedure): remove incident, audit logged
+  - stats (protectedProcedure): count breakdown by status
+  - All mutations org-scoped via risk → register → orgId chain
+- [x] **Incidents Tab** in Risk Detail (8th tab with AlertOctagon icon)
+  - Stats bar with status breakdown badges
+  - Inline add form: title, description, severity dropdown, occurredAt datetime, assignee
+  - Incident cards with severity icon, clickable status cycling, date, assignee, reporter
+  - Delete button with confirmation
+- [x] **Testing** - 41 new tests (767 total across 21 files, all passing)
+  - incident-validation.test.ts: schemas, enums, labels, colors, status cycle, severity sort
+
+---
+
+## Scoring Architecture Refactor - Phase A COMPLETE ✅
+
+### Schema & Server-Side Changes (ISO 31000 Alignment)
+- [x] **ControlEffectiveness enum** - EFFECTIVE, PARTIALLY_EFFECTIVE, INEFFECTIVE, NOT_TESTED (default), NOT_APPLICABLE
+- [x] **financialExposure field** - Decimal(15,2), optional, user-editable in risk form (labelled "Estimated Financial Exposure (ZAR)")
+- [x] **varValue field** - Decimal(15,2), server-calculated only (financialExposure × residualLikelihood/5), never client-editable
+- [x] **triggeredById on Assessment** - Tracks who triggered Vytl Score calculation
+- [x] **VaR calculation** in risk.ts create/update/bulk mutations with automatic recalculation
+- [x] **Canonical sort order** - residualScore DESC → varValue DESC (nulls last) → inherentScore DESC → createdAt DESC
+  - Applied to: risk.list, risk.topRisks, risk.listForWorkspace
+- [x] **Stored assessment pattern** - assessment.current reads stored record, never recalculates live
+  - Only assessment.create triggers recalculation (RISK_MANAGER+ only)
+- [x] **Risk form new fields** - financialExposure currency input, controlEffectiveness dropdown, "Controls" relabelled to "Control Description"
+- [x] **Build fixes** - Fixed ~15 pre-existing type errors surfaced by stricter type checking
+- [x] **Testing** - 27 new Phase A tests (794 total across 22 files, all passing)
+  - VaR calculation, ControlEffectiveness enum, canonical sort order, financial exposure validation, varValue immutability
+
+---
+
+## Scoring Architecture Refactor - Phase B COMPLETE ✅
+
+### UI, Copy & Engine Demotion
+- [x] **B1: ControlEffectivenessBadge** - New component with 5-value colour-coded badge (compact + full modes)
+  - Applied in: risk detail overview, risk table, heatmap (tooltip), kanban card, top risks widget
+- [x] **B2: VaR display** - Value at Risk shown in 5 locations
+  - Risk detail overview (large format with exposure context), risk table column, top risks widget, board report PDF, reports page
+- [x] **B3: Risk Intelligence panel** - Transformed Risk Detail Scoring tab
+  - Renamed to "Risk Intelligence", ISO 31000 summary (inherent/residual/CE/VaR), velocity/KRI/correlation/control quality overlays, methodology footer
+- [x] **B4: Settings > Methodology** - Retired interactive Scoring tab
+  - Replaced with read-only three-tier methodology panel (Tier 1: Risk-Level, Tier 2: Overlays, Tier 3: Vytl Score), engine status preserved
+  - Removed all scoring profile/rules/industry preset editing UI (engine files preserved)
+- [x] **B5: Vytl Score UI** - Added staleness indicator (>30 days badge) to dashboard widget
+- [x] **B6: Dashboard widget rename** - "Scoring Recommendations" → "Risk Intelligence Alerts"
+- [x] **B7: Copy audit** - Removed "Composite Score", "Scoring Engine Configuration", "Calculate Score" from user-facing strings
+  - Replacements: "Risk Intelligence", "Run Analysis", "Methodology"
+- [x] **B8: Regression tests** - 19 new Phase B tests (813 total across 23 files, all passing) + clean build
+
+---
+
 ## Future Backlog
-- [ ] Incident linking
 - [ ] Action item tracking
 - [ ] Custom fields per organisation
 - [ ] Bulk risk updates
@@ -435,4 +504,6 @@ The Vytl Risk Management platform is feature-complete for beta release with:
 - Customizable bento grid dashboard
 - Command palette for power users
 - POPIA compliance settings
-- 726 tests across 20 test files (all passing)
+- Incident linking for risk-event tracking (Sprint 14)
+- Scoring Architecture Refactor Phase A: ControlEffectiveness enum, financialExposure/VaR fields, canonical sort order, stored assessment pattern
+- 794 tests across 22 test files (all passing)
