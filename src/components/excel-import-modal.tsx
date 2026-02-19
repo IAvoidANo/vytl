@@ -44,6 +44,7 @@ interface RiskPreview {
   response?: string
   controls?: string
   status?: string
+  workflowStatus?: string
   errors: string[]
   warnings: string[]
   confidence?: number
@@ -77,7 +78,87 @@ const CATEGORIES = [
 ]
 
 const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
-const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED']
+const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED', 'ARCHIVED']
+
+// Human-friendly status label → canonical enum mapping (case-insensitive key lookup)
+// Values carry { status? (RiskStatus) } and/or { workflowStatus? (WorkflowStatus) }
+// so a single "Status" import column can hydrate both fields appropriately.
+const STATUS_ALIASES: Record<string, { status?: string; workflowStatus?: string }> = {
+  // Direct RiskStatus pass-through
+  'open':        { status: 'OPEN' },
+  'in_progress': { status: 'IN_PROGRESS' },
+  'monitoring':  { status: 'MONITORING' },
+  'closed':      { status: 'CLOSED' },
+  'archived':    { status: 'ARCHIVED' },
+  // Direct WorkflowStatus pass-through
+  'inbox':    { workflowStatus: 'INBOX' },
+  'triage':   { workflowStatus: 'TRIAGE' },
+  'assigned': { workflowStatus: 'ASSIGNED' },
+  'approved': { workflowStatus: 'APPROVED' },
+  // Human-friendly aliases (per spec)
+  'active':         { workflowStatus: 'APPROVED' },
+  'in progression': { status: 'IN_PROGRESS' },
+  'in progress':    { status: 'IN_PROGRESS' },
+  'archive':        { status: 'ARCHIVED' },
+  'under review':   { workflowStatus: 'TRIAGE' },   // no REVIEW enum; TRIAGE is the review stage
+  'review':         { workflowStatus: 'TRIAGE' },
+  'draft':          { workflowStatus: 'INBOX' },
+  // Additional common aliases
+  'new':       { status: 'OPEN' },
+  'pending':   { workflowStatus: 'INBOX' },
+  'complete':  { status: 'CLOSED' },
+  'completed': { status: 'CLOSED' },
+  'done':      { status: 'CLOSED' },
+  'monitor':   { status: 'MONITORING' },
+  'watch':     { status: 'MONITORING' },
+}
+
+// Human-friendly category label → canonical RiskCategory enum (case-insensitive key lookup)
+const CATEGORY_ALIASES: Record<string, string> = {
+  // TECHNOLOGY
+  'cyb':                    'TECHNOLOGY',
+  'cyber':                  'TECHNOLOGY',
+  'cyber security':         'TECHNOLOGY',
+  'cybersecurity':          'TECHNOLOGY',
+  'it':                     'TECHNOLOGY',
+  'information technology': 'TECHNOLOGY',
+  'tech':                   'TECHNOLOGY',
+  // COMPLIANCE
+  'com':        'COMPLIANCE',
+  'compliance': 'COMPLIANCE',
+  'regulatory': 'COMPLIANCE',
+  'legal':      'COMPLIANCE',
+  // PEOPLE
+  'hrm':             'PEOPLE',
+  'human resources': 'PEOPLE',
+  'hr':              'PEOPLE',
+  'people':          'PEOPLE',
+  'human capital':   'PEOPLE',
+  'workforce':       'PEOPLE',
+  // STRATEGIC
+  'str':      'STRATEGIC',
+  'strategic': 'STRATEGIC',
+  'strategy':  'STRATEGIC',
+  // OPERATIONAL
+  'ops':         'OPERATIONAL',
+  'operational': 'OPERATIONAL',
+  'operations':  'OPERATIONAL',
+  'process':     'OPERATIONAL',
+  // FINANCIAL
+  'fin':       'FINANCIAL',
+  'financial': 'FINANCIAL',
+  'finance':   'FINANCIAL',
+  // REPUTATIONAL
+  'rep':           'REPUTATIONAL',
+  'reputational':  'REPUTATIONAL',
+  'reputation':    'REPUTATIONAL',
+  'brand':         'REPUTATIONAL',
+  // ENVIRONMENTAL
+  'env':           'ENVIRONMENTAL',
+  'environmental': 'ENVIRONMENTAL',
+  'environment':   'ENVIRONMENTAL',
+  'esg':           'ENVIRONMENTAL',
+}
 
 // Patterns for combined Likelihood/Impact columns (e.g., "3,4" or "3x4")
 const COMBINED_PATTERNS: { pattern: RegExp; confidence: number; type: 'inherent' | 'residual' }[] = [
@@ -327,11 +408,21 @@ function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: 
   return { mapping, confidence, debug }
 }
 
-function parseCategory(value: string): string {
-  const upper = value?.toString().toUpperCase().trim()
-  if (CATEGORIES.includes(upper)) return upper
-  const partial = CATEGORIES.find(c => c.startsWith(upper?.substring(0, 3) || ''))
-  return partial || 'OPERATIONAL'
+function parseCategory(value: string): { value: string; warning?: string } {
+  if (!value?.toString().trim()) return { value: 'OPERATIONAL' }
+  const normalized = value.toString().toLowerCase().trim()
+  const upper = normalized.toUpperCase()
+  // Direct enum match (case-insensitive)
+  if (CATEGORIES.includes(upper)) return { value: upper }
+  // Alias table lookup
+  if (CATEGORY_ALIASES[normalized]) return { value: CATEGORY_ALIASES[normalized] }
+  // Legacy 3-char prefix fallback
+  const partial = CATEGORIES.find(c => c.startsWith(upper.substring(0, 3)))
+  if (partial) return { value: partial }
+  return {
+    value: 'OPERATIONAL',
+    warning: `Unknown category "${value}" — defaulted to OPERATIONAL`,
+  }
 }
 
 function parseResponse(value: string | undefined): string | undefined {
@@ -345,15 +436,27 @@ function parseResponse(value: string | undefined): string | undefined {
   return undefined
 }
 
-function parseStatus(value: string | undefined): string | undefined {
-  if (!value) return undefined
-  const upper = value.toString().toUpperCase().trim().replace(/\s+/g, '_')
-  if (STATUSES.includes(upper)) return upper
-  if (upper.includes('OPEN') || upper.includes('NEW')) return 'OPEN'
-  if (upper.includes('PROGRESS') || upper.includes('ACTIVE')) return 'IN_PROGRESS'
-  if (upper.includes('MONITOR') || upper.includes('WATCH')) return 'MONITORING'
-  if (upper.includes('CLOSE') || upper.includes('DONE')) return 'CLOSED'
-  return undefined
+function parseStatus(value: string | undefined): {
+  status?: string
+  workflowStatus?: string
+  warning?: string
+} {
+  if (!value?.toString().trim()) return {}
+  const normalized = value.toString().toLowerCase().trim()
+  // Direct alias table lookup
+  const match = STATUS_ALIASES[normalized]
+  if (match) return match
+  // Normalise spaces to underscores and try again ("in progress" → "in_progress")
+  const withUnderscore = normalized.replace(/\s+/g, '_')
+  const matchUs = STATUS_ALIASES[withUnderscore]
+  if (matchUs) return matchUs
+  // Partial substring fallback
+  if (normalized.includes('progress'))                        return { status: 'IN_PROGRESS' }
+  if (normalized.includes('monitor') || normalized.includes('watch')) return { status: 'MONITORING' }
+  if (normalized.includes('close')   || normalized.includes('done'))  return { status: 'CLOSED' }
+  if (normalized.includes('archive'))                         return { status: 'ARCHIVED' }
+  if (normalized.includes('open')    || normalized.includes('new'))   return { status: 'OPEN' }
+  return { warning: `Unknown status "${value}" — will use defaults` }
 }
 
 function parseNumber(value: unknown, min: number, max: number, defaultVal: number): number {
@@ -725,7 +828,9 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
       const title = String(getValue(mapping.title) || '').trim()
       const description = String(getValue(mapping.description) || '').trim()
-      const category = parseCategory(String(getValue(mapping.category) || ''))
+      const categoryResult = parseCategory(String(getValue(mapping.category) || ''))
+      if (categoryResult.warning) warnings.push(categoryResult.warning)
+      const category = categoryResult.value
 
       if (!title) errors.push('Missing title')
       if (!description) errors.push('Missing description')
@@ -771,6 +876,9 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       if (residualLikelihood > inherentLikelihood) warnings.push('Residual L > Inherent L')
       if (residualImpact > inherentImpact) warnings.push('Residual I > Inherent I')
 
+      const statusResult = parseStatus(getValue(mapping.status) as string | undefined)
+      if (statusResult.warning) warnings.push(statusResult.warning)
+
       return {
         rowNum: idx + 2,
         title,
@@ -782,7 +890,8 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
         residualImpact,
         response: parseResponse(getValue(mapping.response) as string),
         controls: getValue(mapping.controls) as string,
-        status: parseStatus(getValue(mapping.status) as string),
+        status: statusResult.status,
+        workflowStatus: statusResult.workflowStatus,
         errors,
         warnings,
       }
@@ -814,7 +923,8 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
         residualImpact: r.residualImpact,
         response: r.response as 'AVOID' | 'MITIGATE' | 'TRANSFER' | 'ACCEPT' | undefined,
         controls: r.controls,
-        status: r.status as 'OPEN' | 'IN_PROGRESS' | 'MONITORING' | 'CLOSED' | undefined,
+        status: r.status as 'OPEN' | 'IN_PROGRESS' | 'MONITORING' | 'CLOSED' | 'ARCHIVED' | undefined,
+        workflowStatus: r.workflowStatus as 'INBOX' | 'TRIAGE' | 'ASSIGNED' | 'APPROVED' | undefined,
       })),
     })
   }

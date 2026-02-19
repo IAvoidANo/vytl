@@ -401,6 +401,7 @@ export const riskRouter = router({
             response: riskResponseEnum.optional(),
             controls: z.string().optional(),
             status: riskStatusEnum.optional(),
+            workflowStatus: z.enum(['INBOX', 'TRIAGE', 'ASSIGNED', 'APPROVED']).optional(),
             dueDate: z.string().optional(),
           })
         ),
@@ -437,6 +438,7 @@ export const riskRouter = router({
               response: risk.response ?? 'MITIGATE',
               controls: risk.controls,
               status: risk.status ?? 'OPEN',
+              workflowStatus: risk.workflowStatus ?? 'INBOX',
               source: 'EXCEL',
               registerId: input.registerId,
               createdById: ctx.user.id,
