@@ -2,6 +2,8 @@
 
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { AppLayoutV2 } from './app-layout-v2'
+import { USE_TOP_NAV } from '@/lib/feature-flags'
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -10,6 +12,10 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, userName, userRole }: AppLayoutProps) {
+  if (USE_TOP_NAV) {
+    return <AppLayoutV2>{children}</AppLayoutV2>
+  }
+
   return (
     <div className="flex h-screen bg-slate-900 overflow-hidden">
       <Sidebar />

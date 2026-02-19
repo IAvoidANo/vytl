@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-plus-jakarta)', 'system-ui', 'sans-serif'],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -49,12 +52,42 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			// Phase 1 semantic tokens
+  			surface: 'hsl(var(--surface))',
+  			'surface-hover': 'hsl(var(--surface-hover))',
+  			'text-primary': 'hsl(var(--text-primary))',
+  			'text-secondary': 'hsl(var(--text-secondary))',
+  			'text-muted': 'hsl(var(--text-muted))',
+  			'border-soft': 'hsl(var(--border-soft))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			// Phase 1 — new semantic radii (non-conflicting keys)
+  			card: 'var(--radius-card)',
+  			panel: 'var(--radius-panel)',
+  			hero: 'var(--radius-hero)',
+  		},
+  		boxShadow: {
+  			// Phase 1 — new semantic shadows (non-conflicting keys)
+  			card: 'var(--shadow-card)',
+  			panel: 'var(--shadow-panel)',
+  			modal: 'var(--shadow-modal)',
+  			overlay: 'var(--shadow-overlay)',
+  		},
+  		spacing: {
+  			// Phase 1 — layout spacing tokens
+  			card: 'var(--spacing-card)',
+  			section: 'var(--spacing-section)',
+  			page: 'var(--spacing-page)',
+  		},
+  		maxWidth: {
+  			content: 'var(--max-content-width)',
+  		},
+  		height: {
+  			nav: 'var(--nav-height)',
   		},
   		animation: {
   			'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
