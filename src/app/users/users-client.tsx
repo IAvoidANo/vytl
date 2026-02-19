@@ -293,7 +293,7 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
                       placeholder="colleague@company.com"
                     />
                   </div>
@@ -306,7 +306,7 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
                       type="text"
                       value={inviteName}
                       onChange={(e) => setInviteName(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white text-slate-900 placeholder:text-slate-400"
                       placeholder="John Smith"
                     />
                   </div>
@@ -318,7 +318,7 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
                     <select
                       value={inviteRole}
                       onChange={(e) => setInviteRole(e.target.value as typeof inviteRole)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white text-slate-900"
                     >
                       <option value="VIEWER">Viewer - Can view risks and reports</option>
                       <option value="EDITOR">Editor - Can create and edit risks</option>
