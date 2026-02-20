@@ -20,9 +20,10 @@ import { getRecentItems, RecentItem } from '@/lib/recent-items'
 
 interface CommandPaletteProps {
   isAdmin?: boolean
+  hideTrigger?: boolean
 }
 
-export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
+export function CommandPalette({ isAdmin = false, hideTrigger = false }: CommandPaletteProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [recentItems, setRecentItems] = useState<RecentItem[]>([])
@@ -67,17 +68,19 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
 
   return (
     <>
-      {/* Trigger button for mobile/discoverability */}
-      <button
-        onClick={() => setOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-slate-400 bg-slate-700/50 border border-slate-600 rounded-lg hover:bg-slate-700 hover:text-slate-300 transition-colors"
-      >
-        <Search className="w-4 h-4" />
-        <span>Search...</span>
-        <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-slate-800 border border-slate-600 rounded">
-          ⌘K
-        </kbd>
-      </button>
+      {/* Trigger button — hidden when TopNav already provides search */}
+      {!hideTrigger && (
+        <button
+          onClick={() => setOpen(true)}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-slate-400 bg-slate-700/50 border border-slate-600 rounded-lg hover:bg-slate-700 hover:text-slate-300 transition-colors"
+        >
+          <Search className="w-4 h-4" />
+          <span>Search...</span>
+          <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-slate-800 border border-slate-600 rounded">
+            ⌘K
+          </kbd>
+        </button>
+      )}
 
       <Command.Dialog
         open={open}

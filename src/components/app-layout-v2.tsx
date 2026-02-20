@@ -19,7 +19,7 @@ export function AppLayoutV2({ children }: AppLayoutV2Props) {
       <main className="mx-auto max-w-content px-6 py-5">
         {children}
       </main>
-      <CommandPalette isAdmin={isAdmin} />
+      <CommandPalette isAdmin={isAdmin} hideTrigger />
     </div>
   )
 }

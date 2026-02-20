@@ -191,11 +191,11 @@ export function RiskTable({ filters }: RiskTableProps) {
           <table className="w-full">
             <thead className="bg-slate-900">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   Ref
                 </th>
                 <th
-                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-white"
                   onClick={() => handleSort('title')}
                 >
                   <span className="flex items-center gap-1">
@@ -203,7 +203,7 @@ export function RiskTable({ filters }: RiskTableProps) {
                   </span>
                 </th>
                 <th
-                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-white"
                   onClick={() => handleSort('category')}
                 >
                   <span className="flex items-center gap-1">
@@ -211,7 +211,7 @@ export function RiskTable({ filters }: RiskTableProps) {
                   </span>
                 </th>
                 <th
-                  className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                  className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-white"
                   onClick={() => handleSort('inherentScore')}
                 >
                   <span className="flex items-center justify-center gap-1">
@@ -219,34 +219,34 @@ export function RiskTable({ filters }: RiskTableProps) {
                   </span>
                 </th>
                 <th
-                  className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                  className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-white"
                   onClick={() => handleSort('residualScore')}
                 >
                   <span className="flex items-center justify-center gap-1">
                     Residual <SortIcon field="residualScore" />
                   </span>
                 </th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   Controls
                 </th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   VaR
                 </th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-center px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   Trend
                 </th>
                 <th
-                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                  className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-white"
                   onClick={() => handleSort('status')}
                 >
                   <span className="flex items-center gap-1">
                     Status <SortIcon field="status" />
                   </span>
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   Owner
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <th className="text-right px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   Actions
                 </th>
               </tr>

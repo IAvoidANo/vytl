@@ -43,9 +43,9 @@ export function RiskHeatmap() {
 
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-      <div className="flex items-start gap-6">
+      <div className="flex items-stretch gap-6">
         {/* Y-axis label */}
-        <div className="flex flex-col items-center justify-center h-full">
+        <div className="flex flex-col items-center justify-center">
           <span className="text-sm font-medium text-slate-400 -rotate-90 whitespace-nowrap tracking-wider">
             LIKELIHOOD →
           </span>
