@@ -1,20 +1,12 @@
 'use client'
 
-import { AlertTriangle, TrendingUp } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { AlertTriangle, Activity, CheckSquare, BarChart2 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
-import { DashboardGrid, GridItem } from '@/components/dashboard/dashboard-grid'
-import {
-  VytlScoreWidget,
-  RiskPulseWidget,
-  StatWidget,
-  StatusBreakdownWidget,
-  TopRisksWidget,
-  CategoryChartWidget,
-  ActivityFeedWidget,
-  ScoringRecommendationsWidget,
-  CategoryTrendsWidget,
-  ComplianceCoverageWidget,
-} from '@/components/dashboard'
+import { HeroMetric } from '@/components/dashboard/hero-metric'
+import { StatCard } from '@/components/dashboard/stat-card'
+import { TopRisksPanel } from '@/components/dashboard/top-risks-panel'
+import { ActivityPanel } from '@/components/dashboard/activity-panel'
 
 interface DashboardClientProps {
   userName: string | null | undefined
@@ -23,8 +15,13 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ userName, orgName, initialRiskCount }: DashboardClientProps) {
-  // Get live risk stats
-  const { data: riskStats } = trpc.risk.stats.useQuery(undefined, {
+  const { data: session } = useSession()
+  const userRole = (session?.user as { role?: string })?.role
+  const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
+  const firstName = userName?.split(' ')[0] || 'there'
+
+  // Dashboard stats queries
+  const { data: riskStats, isLoading: riskLoading } = trpc.risk.stats.useQuery(undefined, {
     initialData: {
       total: initialRiskCount,
       byStatus: { OPEN: 0, IN_PROGRESS: 0, MONITORING: 0, CLOSED: 0 },
@@ -32,82 +29,75 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
       highRisks: 0,
     },
   })
-
-  const stats = riskStats || {
-    total: initialRiskCount,
-    byStatus: {} as Record<string, number>,
-    byCategory: {},
-    highRisks: 0
-  }
+  const { data: breachData, isLoading: breachLoading } = trpc.appetite.breachSummary.useQuery()
+  const { data: kriStats, isLoading: kriLoading } = trpc.kri.stats.useQuery()
+  const { data: treatmentStats, isLoading: treatmentLoading } = trpc.treatment.orgStats.useQuery()
 
   return (
-    <div className="text-white h-full flex flex-col">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between flex-shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Welcome back, {userName?.split(' ')[0] || 'User'}!
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">{orgName}</p>
-        </div>
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">
+          Good morning, {firstName}
+        </h1>
+        <p className="text-sm text-slate-500 mt-0.5">{orgName} · Risk Intelligence Dashboard</p>
       </div>
 
-      {/* Dashboard Grid */}
-      <DashboardGrid>
-        {/* Row 1: Vytl Score & Risk Pulse */}
-        <GridItem id="vytl-score" className="lg:col-span-2">
-          <VytlScoreWidget />
-        </GridItem>
-        <GridItem id="risk-pulse" className="lg:col-span-2">
-          <RiskPulseWidget />
-        </GridItem>
+      {/* Hero: Vytl Score */}
+      <HeroMetric />
 
-        {/* Row 2: Stats Cards */}
-        <GridItem id="total-risks" className="lg:col-span-1">
-          <StatWidget
-            title="Total Risks"
-            value={stats.total}
-            icon={<TrendingUp className="w-5 h-5 text-teal-400" />}
-            iconBg="bg-slate-700"
-          />
-        </GridItem>
-        <GridItem id="high-risk" className="lg:col-span-1">
-          <StatWidget
-            title="High Risk Items"
-            value={stats.highRisks || 0}
-            icon={<AlertTriangle className="w-5 h-5 text-red-400" />}
-            iconBg="bg-red-500/20"
-            valueColor="text-red-400"
-          />
-        </GridItem>
-        <GridItem id="status-breakdown" className="lg:col-span-2">
-          <StatusBreakdownWidget byStatus={stats.byStatus} total={stats.total} />
-        </GridItem>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Risks"
+          value={riskStats?.total ?? 0}
+          sublabel="Across all registers"
+          href="/risks"
+          icon={<BarChart2 className="w-4 h-4" />}
+          loading={riskLoading}
+        />
+        <StatCard
+          title="Above Appetite"
+          value={breachData?.total ?? 0}
+          sublabel="Exceeding thresholds"
+          href="/risks"
+          variant={breachData?.total ? 'warning' : 'default'}
+          icon={<AlertTriangle className="w-4 h-4" />}
+          loading={breachLoading}
+        />
+        <StatCard
+          title="KRIs in Red"
+          value={kriStats?.red ?? 0}
+          sublabel="Breached indicators"
+          href="/kris"
+          variant={kriStats?.red ? 'danger' : 'default'}
+          icon={<Activity className="w-4 h-4" />}
+          loading={kriLoading}
+        />
+        <StatCard
+          title="Open Actions"
+          value={treatmentStats?.openCount ?? 0}
+          sublabel={treatmentStats?.overdue ? `${treatmentStats.overdue} overdue` : 'Treatment tasks'}
+          href="/risks"
+          variant={treatmentStats?.overdue ? 'warning' : 'default'}
+          icon={<CheckSquare className="w-4 h-4" />}
+          loading={treatmentLoading}
+        />
+      </div>
 
-        {/* Row 3: Charts & Lists */}
-        <GridItem id="top-risks" title="Top Risks" className="lg:col-span-2">
-          <TopRisksWidget />
-        </GridItem>
-        <GridItem id="category-chart" title="Risks by Category" className="lg:col-span-1">
-          <CategoryChartWidget />
-        </GridItem>
-        <GridItem id="recent-activity" title="Recent Activity" className="lg:col-span-1">
-          <ActivityFeedWidget />
-        </GridItem>
+      {/* Content: Two-column */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Top Risks — 60% */}
+        <div className="lg:col-span-3">
+          <TopRisksPanel />
+        </div>
 
-        {/* Row 4: Scoring Widgets */}
-        <GridItem id="scoring-recommendations" className="lg:col-span-2">
-          <ScoringRecommendationsWidget />
-        </GridItem>
-        <GridItem id="category-trends" className="lg:col-span-2">
-          <CategoryTrendsWidget />
-        </GridItem>
-
-        {/* Row 5: Compliance */}
-        <GridItem id="compliance-coverage" className="lg:col-span-2">
-          <ComplianceCoverageWidget />
-        </GridItem>
-      </DashboardGrid>
+        {/* Activity + Quick Actions — 40% */}
+        <div className="lg:col-span-2">
+          <ActivityPanel isAdmin={isAdmin} />
+        </div>
+      </div>
 
     </div>
   )

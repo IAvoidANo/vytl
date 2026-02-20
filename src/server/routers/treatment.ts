@@ -201,4 +201,21 @@ export const treatmentRouter = router({
         byStatus,
       }
     }),
+
+  // Org-wide treatment action stats for dashboard
+  orgStats: protectedProcedure.query(async ({ ctx }) => {
+    const actions = await db.treatmentAction.findMany({
+      where: {
+        risk: { register: { orgId: ctx.user.orgId } },
+        status: { notIn: ['COMPLETED', 'CANCELLED'] },
+      },
+      select: { status: true, dueDate: true },
+    })
+
+    const now = new Date()
+    const overdue = actions.filter((a) => a.dueDate && new Date(a.dueDate) < now).length
+    const openCount = actions.length
+
+    return { openCount, overdue }
+  }),
 })
