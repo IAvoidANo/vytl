@@ -90,13 +90,13 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
         />
       </div>
 
-      {/* Bottom row: Top Risks (left) + Heatmap (right) — fills remaining height */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 flex-1 min-h-0">
-        <div className="lg:col-span-3 min-h-0">
-          <TopRisksPanel />
-        </div>
-        <div className="lg:col-span-2 min-h-0">
+      {/* Bottom row: Heatmap (left) + Top Risks (right) — 50/50, fills remaining height */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+        <div className="min-h-0">
           <DashboardHeatmap />
+        </div>
+        <div className="min-h-0">
+          <TopRisksPanel />
         </div>
       </div>
 
