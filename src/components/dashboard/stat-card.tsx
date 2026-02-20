@@ -63,7 +63,7 @@ export function StatCard({
 
   const inner = (
     <div className={cn(
-      'rounded-card shadow-card border border-slate-100 border-l-4 p-5 transition-all duration-200',
+      'rounded-card shadow-card border border-slate-100 border-l-4 p-4 transition-all duration-200',
       s.border,
       s.cardBg,
       href && 'hover:shadow-panel hover:-translate-y-0.5 cursor-pointer',

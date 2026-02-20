@@ -20,7 +20,7 @@ export function TopRisksPanel() {
         </div>
         <div className="divide-y divide-slate-50">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="px-5 py-4 flex items-center gap-4 animate-pulse">
+            <div key={i} className="px-5 py-3 flex items-center gap-4 animate-pulse">
               <div className="w-10 h-10 bg-slate-100 rounded-lg flex-shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="h-3.5 bg-slate-100 rounded w-2/3" />
@@ -83,7 +83,7 @@ export function TopRisksPanel() {
             <Link
               key={risk.id}
               href={`/risks/${risk.id}`}
-              className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/80 transition-colors group"
+              className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50/80 transition-colors group"
             >
               {/* Rank + score badge */}
               <div className="flex items-center gap-2.5 flex-shrink-0">

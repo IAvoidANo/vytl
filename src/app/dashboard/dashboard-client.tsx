@@ -6,7 +6,7 @@ import { trpc } from '@/lib/trpc-client'
 import { HeroMetric } from '@/components/dashboard/hero-metric'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { TopRisksPanel } from '@/components/dashboard/top-risks-panel'
-import { ActivityPanel } from '@/components/dashboard/activity-panel'
+import { DashboardHeatmap } from '@/components/dashboard/dashboard-heatmap'
 
 interface DashboardClientProps {
   userName: string | null | undefined
@@ -20,7 +20,6 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
   const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
   const firstName = userName?.split(' ')[0] || 'there'
 
-  // Dashboard stats queries
   const { data: riskStats, isLoading: riskLoading } = trpc.risk.stats.useQuery(undefined, {
     initialData: {
       total: initialRiskCount,
@@ -30,25 +29,30 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
     },
   })
   const { data: breachData, isLoading: breachLoading } = trpc.appetite.breachSummary.useQuery()
-  const { data: kriStats, isLoading: kriLoading } = trpc.kri.stats.useQuery()
+  const { data: kriStats,   isLoading: kriLoading     } = trpc.kri.stats.useQuery()
   const { data: treatmentStats, isLoading: treatmentLoading } = trpc.treatment.orgStats.useQuery()
 
-  return (
-    <div className="space-y-6">
+  // Silence unused warning — isAdmin used for future role-based visibility
+  void isAdmin
 
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
+  return (
+    <div className="flex flex-col gap-4 h-full">
+
+      {/* Page header — compact single line */}
+      <div className="flex items-baseline justify-between flex-shrink-0">
+        <h1 className="text-xl font-bold text-slate-900">
           Good morning, {firstName}
         </h1>
-        <p className="text-sm text-slate-500 mt-0.5">{orgName} · Risk Intelligence Dashboard</p>
+        <p className="text-xs text-slate-400 hidden sm:block">{orgName}</p>
       </div>
 
       {/* Hero: Vytl Score */}
-      <HeroMetric />
+      <div className="flex-shrink-0">
+        <HeroMetric />
+      </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Stat Cards — 4 in a row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-shrink-0">
         <StatCard
           title="Total Risks"
           value={riskStats?.total ?? 0}
@@ -86,16 +90,13 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
         />
       </div>
 
-      {/* Content: Two-column */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Top Risks — 60% */}
-        <div className="lg:col-span-3">
+      {/* Bottom row: Top Risks (left) + Heatmap (right) — fills remaining height */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 flex-1 min-h-0">
+        <div className="lg:col-span-3 min-h-0">
           <TopRisksPanel />
         </div>
-
-        {/* Activity + Quick Actions — 40% */}
-        <div className="lg:col-span-2">
-          <ActivityPanel isAdmin={isAdmin} />
+        <div className="lg:col-span-2 min-h-0">
+          <DashboardHeatmap />
         </div>
       </div>
 

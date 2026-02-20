@@ -16,7 +16,7 @@ export function AppLayoutV2({ children }: AppLayoutV2Props) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <TopNav />
-      <main className="mx-auto max-w-content px-6 py-8">
+      <main className="mx-auto max-w-content px-6 py-5">
         {children}
       </main>
       <CommandPalette isAdmin={isAdmin} />

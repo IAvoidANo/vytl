@@ -94,7 +94,7 @@ export function HeroMetric() {
 
   return (
     <div className="rounded-panel overflow-hidden shadow-panel bg-gradient-to-br from-teal-600 via-teal-600 to-teal-700">
-      <div className="p-6 sm:p-8">
+      <div className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-12">
 
           {/* Left: Score + trend */}
