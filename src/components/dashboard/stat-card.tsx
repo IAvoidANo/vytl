@@ -13,11 +13,41 @@ interface StatCardProps {
   loading?: boolean
 }
 
-const variantStyles: Record<Variant, { value: string; badge: string }> = {
-  default:  { value: 'text-slate-900',  badge: '' },
-  success:  { value: 'text-green-600',  badge: 'text-green-600 bg-green-50 border-green-200' },
-  warning:  { value: 'text-amber-600',  badge: 'text-amber-600 bg-amber-50 border-amber-200' },
-  danger:   { value: 'text-red-600',    badge: 'text-red-600 bg-red-50 border-red-200' },
+const variantStyles: Record<Variant, {
+  border: string
+  iconBg: string
+  iconText: string
+  value: string
+  cardBg: string
+}> = {
+  default: {
+    border:   'border-l-teal-500',
+    iconBg:   'bg-teal-50',
+    iconText: 'text-teal-600',
+    value:    'text-slate-900',
+    cardBg:   'bg-white',
+  },
+  success: {
+    border:   'border-l-green-500',
+    iconBg:   'bg-green-50',
+    iconText: 'text-green-600',
+    value:    'text-green-700',
+    cardBg:   'bg-white',
+  },
+  warning: {
+    border:   'border-l-amber-500',
+    iconBg:   'bg-amber-50',
+    iconText: 'text-amber-600',
+    value:    'text-amber-700',
+    cardBg:   'bg-amber-50/40',
+  },
+  danger: {
+    border:   'border-l-red-500',
+    iconBg:   'bg-red-50',
+    iconText: 'text-red-600',
+    value:    'text-red-700',
+    cardBg:   'bg-red-50/40',
+  },
 }
 
 export function StatCard({
@@ -29,11 +59,13 @@ export function StatCard({
   icon,
   loading = false,
 }: StatCardProps) {
-  const styles = variantStyles[variant]
+  const s = variantStyles[variant]
 
   const inner = (
     <div className={cn(
-      'bg-white rounded-card shadow-card border border-slate-100 p-5 transition-all duration-200',
+      'rounded-card shadow-card border border-slate-100 border-l-4 p-5 transition-all duration-200',
+      s.border,
+      s.cardBg,
       href && 'hover:shadow-panel hover:-translate-y-0.5 cursor-pointer',
     )}>
       {loading ? (
@@ -43,33 +75,30 @@ export function StatCard({
         </div>
       ) : (
         <>
-          <div className="flex items-start justify-between">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider leading-none mt-0.5">
+              {title}
+            </p>
             {icon && (
               <span className={cn(
-                'flex items-center justify-center w-7 h-7 rounded-lg text-sm',
-                variant === 'default' ? 'bg-teal-50 text-teal-600' :
-                variant === 'success' ? 'bg-green-50 text-green-600' :
-                variant === 'warning' ? 'bg-amber-50 text-amber-600' :
-                'bg-red-50 text-red-600',
+                'flex items-center justify-center w-9 h-9 rounded-xl text-sm flex-shrink-0',
+                s.iconBg, s.iconText,
               )}>
                 {icon}
               </span>
             )}
           </div>
-          <p className={cn('text-4xl font-bold mt-2 tabular-nums leading-none', styles.value)}>
+          <p className={cn('text-4xl font-bold tabular-nums leading-none', s.value)}>
             {value}
           </p>
           {sublabel && (
-            <p className="text-xs text-slate-400 mt-1.5">{sublabel}</p>
+            <p className="text-xs text-slate-400 mt-2">{sublabel}</p>
           )}
         </>
       )}
     </div>
   )
 
-  if (href) {
-    return <Link href={href}>{inner}</Link>
-  }
+  if (href) return <Link href={href}>{inner}</Link>
   return inner
 }
