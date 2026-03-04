@@ -4,30 +4,10 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
 import { useAppetite } from '@/lib/use-appetite'
-import { bandToColorClasses } from '@/lib/appetite-validation'
+import { bandToHeatmapClasses } from '@/lib/appetite-validation'
+import { BAND_PRINT_COLOURS } from '@/lib/risk-colour-mapping'
 import { cn } from '@/lib/utils'
 
-// Cell colors for light theme (more saturated than the dark-theme helpers)
-function cellClasses(band: string): string {
-  switch (band) {
-    case 'LOW':      return 'bg-green-100  hover:bg-green-200  border-green-300'
-    case 'MEDIUM':   return 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300'
-    case 'HIGH':     return 'bg-orange-100 hover:bg-orange-200 border-orange-300'
-    case 'CRITICAL': return 'bg-red-100    hover:bg-red-200    border-red-300'
-    default:         return 'bg-slate-50   hover:bg-slate-100  border-slate-200'
-  }
-}
-
-function countTextClass(band: string, count: number): string {
-  if (count === 0) return 'text-slate-300'
-  switch (band) {
-    case 'LOW':      return 'text-green-700'
-    case 'MEDIUM':   return 'text-yellow-700'
-    case 'HIGH':     return 'text-orange-700'
-    case 'CRITICAL': return 'text-red-700'
-    default:         return 'text-slate-500'
-  }
-}
 
 export function DashboardHeatmap() {
   const [hovered, setHovered] = useState<string | null>(null)
@@ -116,16 +96,13 @@ export function DashboardHeatmap() {
                         title={`L${l} × I${i} (score ${score}) — ${count} risk${count !== 1 ? 's' : ''}`}
                         className={cn(
                           'flex items-center justify-center rounded border transition-all duration-150 h-10',
-                          cellClasses(band),
+                          bandToHeatmapClasses(band as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'),
                           isHovered && 'ring-2 ring-offset-1 ring-slate-400',
                         )}
                         onMouseEnter={() => setHovered(key)}
                         onMouseLeave={() => setHovered(null)}
                       >
-                        <span className={cn(
-                          'text-sm font-bold tabular-nums',
-                          countTextClass(band, count),
-                        )}>
+                        <span className="text-sm font-bold tabular-nums text-white">
                           {count > 0 ? count : ''}
                         </span>
                       </Link>
@@ -138,7 +115,7 @@ export function DashboardHeatmap() {
             {/* X-axis label */}
             <div className="text-center mt-2">
               <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">
-                Impact →
+                Impact
               </span>
             </div>
           </div>
@@ -146,17 +123,17 @@ export function DashboardHeatmap() {
 
         {/* Legend */}
         <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-slate-100 flex-wrap flex-shrink-0">
-          {appetite.getLegend().map(({ band, label, range }) => {
-            const { bg, border } = bandToColorClasses(band)
-            return (
-              <div key={band} className="flex items-center gap-1.5">
-                <div className={cn('w-3 h-3 rounded-sm border', bg, border)} />
-                <span className="text-[10px] text-slate-500">
-                  {label} <span className="text-slate-400">{range}</span>
-                </span>
-              </div>
-            )
-          })}
+          {appetite.getLegend().map(({ band, label, range }) => (
+            <div key={band} className="flex items-center gap-1.5">
+              <div
+                className="w-3 h-3 rounded-sm"
+                style={{ backgroundColor: BAND_PRINT_COLOURS[band as keyof typeof BAND_PRINT_COLOURS] }}
+              />
+              <span className="text-[10px] text-slate-500">
+                {label} <span className="text-slate-400">{range}</span>
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

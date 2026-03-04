@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
 import { useAppetite } from '@/lib/use-appetite'
-import { bandToColorClasses } from '@/lib/appetite-validation'
+import { BAND_PRINT_COLOURS } from '@/lib/risk-colour-mapping'
 
 interface Risk {
   id: string
@@ -47,7 +47,7 @@ export function RiskHeatmap() {
         {/* Y-axis label */}
         <div className="flex flex-col items-center justify-center">
           <span className="text-sm font-medium text-slate-400 -rotate-90 whitespace-nowrap tracking-wider">
-            LIKELIHOOD →
+            LIKELIHOOD
           </span>
         </div>
 
@@ -137,22 +137,22 @@ export function RiskHeatmap() {
 
           {/* X-axis label */}
           <div className="text-center mt-4">
-            <span className="text-sm font-medium text-slate-400 tracking-wider">IMPACT →</span>
+            <span className="text-sm font-medium text-slate-400 tracking-wider">IMPACT</span>
           </div>
         </div>
       </div>
 
       {/* Legend - dynamic from appetite thresholds */}
       <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-slate-700">
-        {appetite.getLegend().map(({ band, label, range }) => {
-          const { bg, border } = bandToColorClasses(band)
-          return (
-            <div key={band} className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded ${bg} border ${border}`}></div>
-              <span className="text-xs text-slate-400">{label} ({range})</span>
-            </div>
-          )
-        })}
+        {appetite.getLegend().map(({ band, label, range }) => (
+          <div key={band} className="flex items-center gap-2">
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: BAND_PRINT_COLOURS[band as keyof typeof BAND_PRINT_COLOURS] }}
+            />
+            <span className="text-xs text-slate-400">{label} ({range})</span>
+          </div>
+        ))}
       </div>
     </div>
   )

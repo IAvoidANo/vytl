@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { Printer, Loader2 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
+import { useAppetite } from '@/lib/use-appetite'
+import { getRiskBand, BAND_PRINT_COLOURS } from '@/lib/risk-colour-mapping'
+import { bandToHeatmapClasses } from '@/lib/appetite-validation'
 
 type Tab = 'executive' | 'overview' | 'top10' | 'heatmap' | 'trends' | 'recommendations' | 'kri'
 
@@ -34,26 +37,6 @@ const STATUS_LABELS: Record<string, string> = {
   CLOSED: 'Closed',
 }
 
-function getRiskLevel(score: number): string {
-  if (score >= 20) return 'critical'
-  if (score >= 15) return 'high'
-  if (score >= 8) return 'medium'
-  return 'low'
-}
-
-const HEATMAP_COLORS: Record<string, string> = {
-  low: 'bg-green-500',
-  medium: 'bg-amber-500',
-  high: 'bg-red-500',
-  critical: 'bg-red-700',
-}
-
-const HEATMAP_PRINT_COLORS: Record<string, string> = {
-  low: '#22c55e',
-  medium: '#f59e0b',
-  high: '#ef4444',
-  critical: '#b91c1c',
-}
 
 export function ReportsClient() {
   const [activeTab, setActiveTab] = useState<Tab>('executive')
@@ -308,10 +291,8 @@ export function ReportsClient() {
 
           {/* Heatmap */}
           {activeTab === 'heatmap' && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-white">5×5 Risk Heatmap</h2>
-
-              <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <div className="flex justify-center">
+              <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 inline-block">
                 <HeatmapGrid risks={risks} />
               </div>
             </div>
@@ -439,8 +420,11 @@ export function ReportsClient() {
   )
 }
 
-// Heatmap component
+// Heatmap component — uses org-configured appetite thresholds via useAppetite()
+// for colour consistency with Dashboard and Risk Register heatmaps.
 function HeatmapGrid({ risks }: { risks: { residualLikelihood: number; residualImpact: number }[] }) {
+  const appetite = useAppetite()
+
   // Build 5x5 grid
   const grid: number[][] = Array.from({ length: 5 }, () => Array(5).fill(0))
   for (const r of risks) {
@@ -450,54 +434,71 @@ function HeatmapGrid({ risks }: { risks: { residualLikelihood: number; residualI
   }
 
   return (
-    <div className="flex items-end gap-4">
+    <div className="flex flex-col gap-3 w-[580px]">
+    <div className="flex items-stretch gap-2">
       {/* Y-axis label */}
-      <div className="flex flex-col items-center justify-center h-full">
-        <span className="text-xs text-slate-400 writing-mode-vertical" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+      <div className="flex items-center justify-center w-4 flex-shrink-0">
+        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest -rotate-90 whitespace-nowrap">
           Likelihood
         </span>
       </div>
 
-      <div>
+      <div className="flex-1 min-w-0">
+        {/* Column headers */}
+        <div className="grid gap-1 mb-1" style={{ gridTemplateColumns: '28px repeat(5, 1fr)' }}>
+          <div />
+          {[1, 2, 3, 4, 5].map((im) => (
+            <div key={im} className="text-center">
+              <span className="text-[10px] font-semibold text-slate-400">{im}</span>
+            </div>
+          ))}
+        </div>
+
         {/* Grid rows (5 = top, 1 = bottom) */}
-        <div className="inline-grid grid-cols-[auto_repeat(5,_3rem)] gap-0.5">
+        <div className="grid gap-1" style={{ gridTemplateColumns: '28px repeat(5, 1fr)' }}>
           {[5, 4, 3, 2, 1].map((li) => (
-            <>
+            <div key={li} className="contents">
               {/* Row label */}
-              <div key={`label-${li}`} className="flex items-center justify-center w-6 text-xs text-slate-400">
-                {li}
+              <div className="flex items-center justify-end pr-1">
+                <span className="text-[10px] font-semibold text-slate-400">{li}</span>
               </div>
               {[1, 2, 3, 4, 5].map((im) => {
                 const count = grid[li - 1][im - 1]
-                const score = li * im
-                const level = getRiskLevel(score)
+                const band  = getRiskBand(li, im, appetite.thresholds)
                 return (
                   <div
                     key={`${li}-${im}`}
-                    className={`w-12 h-12 ${HEATMAP_COLORS[level]} flex items-center justify-center rounded-sm`}
-                    style={{ backgroundColor: HEATMAP_PRINT_COLORS[level] }}
+                    className={`h-14 ${bandToHeatmapClasses(band)} flex items-center justify-center rounded border`}
+                    style={{ backgroundColor: BAND_PRINT_COLOURS[band] }}
                   >
                     {count > 0 && (
-                      <span className="text-white text-sm font-semibold">{count}</span>
+                      <span className="text-sm font-bold tabular-nums text-white">{count}</span>
                     )}
                   </div>
                 )
               })}
-            </>
-          ))}
-          {/* Column labels */}
-          <div />
-          {[1, 2, 3, 4, 5].map((im) => (
-            <div key={`col-${im}`} className="flex items-center justify-center text-xs text-slate-400">
-              {im}
             </div>
           ))}
         </div>
 
         {/* X-axis label */}
         <div className="text-center mt-2">
-          <span className="text-xs text-slate-400">Impact</span>
+          <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Impact</span>
         </div>
+      </div>
+    </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-5 pt-3 border-t border-slate-700 flex-wrap">
+        {appetite.getLegend().map(({ band, label, range }) => (
+          <div key={band} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: BAND_PRINT_COLOURS[band as keyof typeof BAND_PRINT_COLOURS] }}
+            />
+            <span className="text-xs text-slate-400">{label} <span className="text-slate-500">{range}</span></span>
+          </div>
+        ))}
       </div>
     </div>
   )

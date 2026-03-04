@@ -10,7 +10,11 @@ const config: Config = {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['var(--font-plus-jakarta)', 'system-ui', 'sans-serif'],
+  			body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+  			heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
+  			mono: ['var(--font-mono)', 'monospace'],
+  			// Keep sans pointing to body font for Tailwind prose/form defaults
+  			sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -53,13 +57,25 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			// Phase 1 semantic tokens
+  			// Semantic design tokens
   			surface: 'hsl(var(--surface))',
+  			'surface-raised': 'hsl(var(--surface-raised))',
   			'surface-hover': 'hsl(var(--surface-hover))',
   			'text-primary': 'hsl(var(--text-primary))',
   			'text-secondary': 'hsl(var(--text-secondary))',
   			'text-muted': 'hsl(var(--text-muted))',
   			'border-soft': 'hsl(var(--border-soft))',
+  			'border-strong': 'hsl(var(--border-strong))',
+  			'primary-hover': 'hsl(var(--primary-hover))',
+  			'secondary-hover': 'hsl(var(--secondary-hover))',
+  			// Risk colours (full saturation, mode-aware via CSS vars)
+  			'risk-critical': 'hsl(var(--risk-critical))',
+  			'risk-high': 'hsl(var(--risk-high))',
+  			'risk-medium': 'hsl(var(--risk-medium))',
+  			'risk-low': 'hsl(var(--risk-low))',
+  			// Icon colours
+  			'icon-primary': 'hsl(var(--icon-primary))',
+  			'icon-secondary': 'hsl(var(--icon-secondary))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

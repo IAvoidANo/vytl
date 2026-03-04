@@ -130,36 +130,28 @@ export function bandToColorClasses(band: AppetiteBand): {
 } {
   switch (band) {
     case 'LOW':
-      return { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' }
+      return { bg: 'bg-green-500/15', text: 'text-green-700 dark:text-green-400', border: 'border-green-600/40' }
     case 'MEDIUM':
-      return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' }
+      return { bg: 'bg-amber-500/15', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-600/40' }
     case 'HIGH':
-      return { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' }
+      return { bg: 'bg-orange-500/15', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-600/40' }
     case 'CRITICAL':
-      return { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' }
+      return { bg: 'bg-red-500/15', text: 'text-red-700 dark:text-red-400', border: 'border-red-600/40' }
   }
 }
 
 export function bandToHeatmapClasses(band: AppetiteBand): string {
   switch (band) {
-    case 'LOW':
-      return 'bg-green-500/30 hover:bg-green-500/50 border-green-500/50'
-    case 'MEDIUM':
-      return 'bg-yellow-500/30 hover:bg-yellow-500/50 border-yellow-500/50'
-    case 'HIGH':
-      return 'bg-orange-500/30 hover:bg-orange-500/50 border-orange-500/50'
-    case 'CRITICAL':
-      return 'bg-red-500/30 hover:bg-red-500/50 border-red-500/50'
+    case 'LOW':      return 'bg-green-500  hover:bg-green-600  border-green-600'
+    case 'MEDIUM':   return 'bg-amber-500  hover:bg-amber-600  border-amber-600'
+    case 'HIGH':     return 'bg-orange-500 hover:bg-orange-600 border-orange-600'
+    case 'CRITICAL': return 'bg-red-600    hover:bg-red-700    border-red-700'
   }
 }
 
-export function bandToHeatmapTextClass(band: AppetiteBand): string {
-  switch (band) {
-    case 'LOW': return 'text-green-400'
-    case 'MEDIUM': return 'text-yellow-400'
-    case 'HIGH': return 'text-orange-400'
-    case 'CRITICAL': return 'text-red-400'
-  }
+export function bandToHeatmapTextClass(_band: AppetiteBand): string {
+  // Always white — heatmap cells use solid coloured backgrounds
+  return 'text-white'
 }
 
 export function bandToLabel(band: AppetiteBand): string {

@@ -11,27 +11,27 @@ const CE_CONFIG: Record<ControlEffectivenessValue, { label: string; short: strin
   EFFECTIVE: {
     label: 'Effective',
     short: 'Eff',
-    classes: 'bg-green-500/20 text-green-400 border-green-500/30',
+    classes: 'bg-green-500/15 text-green-700 dark:text-green-400 border-green-600/40',
   },
   PARTIALLY_EFFECTIVE: {
     label: 'Partially Effective',
     short: 'Part',
-    classes: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    classes: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-600/40',
   },
   INEFFECTIVE: {
     label: 'Ineffective',
     short: 'Ineff',
-    classes: 'bg-red-500/20 text-red-400 border-red-500/30',
+    classes: 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-600/40',
   },
   NOT_TESTED: {
     label: 'Not Tested',
     short: 'N/T',
-    classes: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    classes: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30',
   },
   NOT_APPLICABLE: {
     label: 'Not Applicable',
     short: 'N/A',
-    classes: 'bg-slate-500/20 text-slate-500 border-slate-600/30',
+    classes: 'bg-slate-400/15 text-slate-500 dark:text-slate-500 border-slate-400/30',
   },
 }
 
