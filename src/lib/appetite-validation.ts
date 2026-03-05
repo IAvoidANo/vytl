@@ -149,6 +149,26 @@ export function bandToHeatmapClasses(band: AppetiteBand): string {
   }
 }
 
+/** Light tinted cell background — used when the count badge carries the solid colour */
+export function bandToLightHeatmapClasses(band: AppetiteBand): string {
+  switch (band) {
+    case 'LOW':      return 'bg-green-50  border-green-200  hover:bg-green-100'
+    case 'MEDIUM':   return 'bg-amber-50  border-amber-200  hover:bg-amber-100'
+    case 'HIGH':     return 'bg-orange-50 border-orange-200 hover:bg-orange-100'
+    case 'CRITICAL': return 'bg-red-50    border-red-200    hover:bg-red-100'
+  }
+}
+
+/** Solid badge colour for count blocks inside heatmap cells */
+export function bandToBadgeClasses(band: AppetiteBand): string {
+  switch (band) {
+    case 'LOW':      return 'bg-green-500  text-white'
+    case 'MEDIUM':   return 'bg-amber-500  text-white'
+    case 'HIGH':     return 'bg-orange-500 text-white'
+    case 'CRITICAL': return 'bg-red-600    text-white'
+  }
+}
+
 export function bandToHeatmapTextClass(_band: AppetiteBand): string {
   // Always white — heatmap cells use solid coloured backgrounds
   return 'text-white'

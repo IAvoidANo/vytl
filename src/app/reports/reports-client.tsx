@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { Printer, Loader2 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
+import { MovementTrendsTab } from '@/components/movement-trends-tab'
 import { useAppetite } from '@/lib/use-appetite'
 import { getRiskBand, BAND_PRINT_COLOURS } from '@/lib/risk-colour-mapping'
-import { bandToHeatmapClasses } from '@/lib/appetite-validation'
+import { bandToHeatmapClasses, bandToBadgeClasses } from '@/lib/appetite-validation'
 
-type Tab = 'executive' | 'overview' | 'top10' | 'heatmap' | 'trends' | 'recommendations' | 'kri'
+type Tab = 'executive' | 'overview' | 'top10' | 'heatmap' | 'trends' | 'recommendations' | 'kri' | 'movement'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'executive', label: 'Executive Summary' },
@@ -17,6 +18,7 @@ const tabs: { id: Tab; label: string }[] = [
   { id: 'trends', label: 'Category Trends' },
   { id: 'recommendations', label: 'Recommendations' },
   { id: 'kri', label: 'KRI Status' },
+  { id: 'movement', label: 'Movement & Trends' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -40,6 +42,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function ReportsClient() {
   const [activeTab, setActiveTab] = useState<Tab>('executive')
+  const appetite = useAppetite()
 
   // Data fetching (same as board-report-modal)
   const { data: org } = trpc.organisation.get.useQuery()
@@ -65,8 +68,50 @@ export function ReportsClient() {
     day: 'numeric',
   })
 
-  const thClass = 'px-4 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider'
-  const tdClass = 'px-4 py-3 text-sm text-slate-300'
+  // ── Derived metrics for summaries ──────────────────────────────────────────
+  const krisRed    = (kris || []).filter((k) => k.status === 'RED').length
+  const krisAmber  = (kris || []).filter((k) => k.status === 'AMBER').length
+  const krisGreen  = (kris || []).filter((k) => k.status === 'GREEN').length
+  const krisTotal  = (kris || []).length
+
+  const vytlScore  = assessment?.vytlScore ?? null
+  const vytlGrade  = assessment?.vytlGrade ?? null
+
+  const scoreHealth =
+    vytlScore === null ? null :
+    vytlScore >= 80    ? 'strong'  :
+    vytlScore >= 60    ? 'acceptable' :
+    vytlScore >= 40    ? 'moderate' : 'challenged'
+
+  const openCount       = riskStats?.byStatus?.OPEN ?? 0
+  const inProgressCount = riskStats?.byStatus?.IN_PROGRESS ?? 0
+  const monitoringCount = riskStats?.byStatus?.MONITORING ?? 0
+  const total           = riskStats?.total ?? 0
+
+  const topCategory = riskStats
+    ? Object.entries(riskStats.byCategory).sort((a, b) => b[1] - a[1])[0]
+    : null
+  const topCategoryLabel = topCategory ? (CATEGORY_LABELS[topCategory[0]] || topCategory[0]) : null
+  const topCategoryCount = topCategory?.[1] ?? 0
+  const topCategoryPct   = total > 0 && topCategoryCount ? Math.round((topCategoryCount / total) * 100) : 0
+  const categoryCount    = riskStats ? Object.keys(riskStats.byCategory).filter((c) => riskStats.byCategory[c] > 0).length : 0
+
+  const criticalRisks = (topRisks || []).filter((r) => appetite.getBand(r.residualScore) === 'CRITICAL')
+  const unassignedTop = (topRisks || []).filter((r) => !r.owner?.name).length
+
+  const worseningCats  = (categoryTrends || []).filter((t) => t.direction === 'worsening')
+  const improvingCats  = (categoryTrends || []).filter((t) => t.direction === 'improving')
+  const highestAvgCat  = (categoryTrends || []).sort((a, b) => b.averageScore - a.averageScore)[0]
+
+  const recCritical = (recommendations || []).filter((r) => r.severity === 'critical').length
+  const recWarning  = (recommendations || []).filter((r) => r.severity === 'warning').length
+  const recInfo     = (recommendations || []).filter((r) => r.severity === 'info').length
+
+  // Shared style helpers
+  const thClass  = 'px-4 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider'
+  const tdClass  = 'px-4 py-3 text-sm text-slate-300'
+  const sumCard  = 'bg-slate-800/50 border border-slate-700/60 rounded-lg p-5 space-y-3'
+  const sumPara  = 'text-sm text-slate-300 leading-relaxed'
 
   return (
     <div className="p-6 text-white">
@@ -135,6 +180,32 @@ export function ReportsClient() {
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-white">Executive Summary & Vytl Score</h2>
 
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  This report presents the risk governance posture of <strong className="text-white">{org.name}</strong> as at <strong className="text-white">{dateStr}</strong>. It has been prepared for board-level review and consolidates the organisation&apos;s full residual risk exposure, control effectiveness assessments, Key Risk Indicator (KRI) performance, and trend analysis across all registered risk categories.
+                </p>
+                {vytlScore !== null ? (
+                  <p className={sumPara}>
+                    The organisation&apos;s current <strong className="text-white">Vytl Score is {vytlScore} (Grade {vytlGrade})</strong>, reflecting a{' '}
+                    {scoreHealth === 'strong'     && 'strong and well-governed risk environment. Controls are operating effectively and the portfolio is well-monitored. Continued focus on maintaining coverage and maturity is recommended.'}
+                    {scoreHealth === 'acceptable' && 'generally sound risk posture with room for improvement. Core governance practices are in place; however, targeted enhancements to control effectiveness and risk coverage would further strengthen the position.'}
+                    {scoreHealth === 'moderate'   && 'risk posture that warrants management attention. While foundational governance structures are present, material gaps in control effectiveness, maturity, or risk coverage have been identified and should be addressed as a priority.'}
+                    {scoreHealth === 'challenged' && 'risk posture that requires urgent corrective action. Significant weaknesses in governance coverage, control effectiveness, or monitoring have been identified. The board should direct management to develop and implement remediation plans as a matter of priority.'}
+                  </p>
+                ) : (
+                  <p className={sumPara}>
+                    No Vytl Score has been calculated yet. An assessment should be run to establish the organisation&apos;s baseline risk governance score.
+                  </p>
+                )}
+                <p className={sumPara}>
+                  The register currently holds <strong className="text-white">{total} risks</strong> across {categoryCount} categories.{' '}
+                  {riskStats?.highRisks ? <><strong className="text-white">{riskStats.highRisks}</strong> risks are rated above the medium severity threshold and warrant active board oversight.</> : 'No risks are currently rated above the medium severity threshold.'}{' '}
+                  {krisTotal > 0
+                    ? <>{krisRed > 0 ? <><strong className="text-red-400">{krisRed} KRI{krisRed !== 1 ? 's' : ''}</strong> {krisRed === 1 ? 'has' : 'have'} breached the red threshold, indicating potential risk materialisation.</> : 'All monitored KRIs are within acceptable thresholds.'} {krisAmber > 0 && <>{krisAmber} KRI{krisAmber !== 1 ? 's' : ''} {krisAmber === 1 ? 'is' : 'are'} in amber caution and should be monitored closely.</>}</>
+                    : 'No KRIs have been configured for this period.'}
+                </p>
+              </div>
+
               {/* Vytl Score Card */}
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
                 <div className="flex items-center justify-between">
@@ -178,6 +249,23 @@ export function ReportsClient() {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-white">Risk Overview</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  This section provides a portfolio-level breakdown of the organisation&apos;s <strong className="text-white">{total} registered risks</strong> by lifecycle status and business category. Understanding the distribution of risks across these dimensions enables management and the board to identify structural patterns, governance gaps, and areas of concentration that may require targeted attention.
+                </p>
+                <p className={sumPara}>
+                  By status,{' '}
+                  <strong className="text-white">{openCount}</strong> risk{openCount !== 1 ? 's' : ''} ({total > 0 ? Math.round((openCount / total) * 100) : 0}%) remain open and require active treatment or escalation.{' '}
+                  <strong className="text-white">{inProgressCount}</strong> {inProgressCount === 1 ? 'risk is' : 'risks are'} currently in progress with treatment plans underway, and{' '}
+                  <strong className="text-white">{monitoringCount}</strong> {monitoringCount === 1 ? 'risk is' : 'risks are'} under ongoing monitoring. A high proportion of open risks relative to in-progress items may indicate insufficient treatment velocity.
+                </p>
+                {topCategoryLabel && (
+                  <p className={sumPara}>
+                    By category, <strong className="text-white">{topCategoryLabel}</strong> carries the highest concentration with <strong className="text-white">{topCategoryCount} risks ({topCategoryPct}%)</strong> of the total portfolio. This concentration should be considered in the context of the organisation&apos;s strategic priorities. The board should satisfy itself that the level of monitoring and control investment is proportionate to this exposure. Categories with very low risk counts may indicate coverage gaps requiring attention.
+                  </p>
+                )}
+              </div>
 
               {/* By Status */}
               <div>
@@ -240,6 +328,26 @@ export function ReportsClient() {
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-white">Top 10 Risks</h2>
 
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  The following table presents the ten highest-priority risks in the organisation&apos;s register, ranked by residual risk score — the risk remaining after existing controls have been applied. Residual scores are derived from the product of assessed likelihood (1–5) and impact (1–5), yielding a maximum score of 25. Where financial exposure has been captured, the associated Value at Risk (VaR) is presented to enable prioritisation based on potential monetary consequence.
+                </p>
+                {criticalRisks.length > 0 ? (
+                  <p className={sumPara}>
+                    <strong className="text-red-400">{criticalRisks.length} risk{criticalRisks.length !== 1 ? 's' : ''}</strong> within the top 10 {criticalRisks.length === 1 ? 'is' : 'are'} rated in the <strong className="text-red-400">critical severity band</strong>, representing threats that exceed the organisation&apos;s risk appetite and require board-level awareness and management escalation. These items should have documented treatment plans with assigned owners and defined timelines.
+                  </p>
+                ) : (
+                  <p className={sumPara}>
+                    No risks within the top 10 are currently rated in the critical band. While this is positive, management should ensure that residual scores accurately reflect the current state of controls and that assessments are kept current.
+                  </p>
+                )}
+                <p className={sumPara}>
+                  {unassignedTop > 0
+                    ? <><strong className="text-amber-400">{unassignedTop} of the top 10 risks</strong> {unassignedTop === 1 ? 'is' : 'are'} currently unassigned. Risk ownership is a fundamental governance requirement — the board should direct management to assign accountable owners to all high-priority risks as a matter of urgency.</>
+                    : 'All top 10 risks have been assigned to named owners, which supports clear accountability for treatment and monitoring.'}
+                </p>
+              </div>
+
               {topRisks.length > 0 ? (
                 <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
                   <table className="w-full">
@@ -261,12 +369,7 @@ export function ReportsClient() {
                           <td className={tdClass}>{risk.title}</td>
                           <td className={tdClass}>{CATEGORY_LABELS[risk.category] || risk.category}</td>
                           <td className={tdClass}>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              risk.residualScore >= 20 ? 'bg-red-500/20 text-red-400' :
-                              risk.residualScore >= 15 ? 'bg-red-500/10 text-red-300' :
-                              risk.residualScore >= 8 ? 'bg-amber-500/20 text-amber-400' :
-                              'bg-green-500/20 text-green-400'
-                            }`}>
+                            <span className={`inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 rounded text-xs font-bold ${bandToBadgeClasses(appetite.getBand(risk.residualScore))}`}>
                               {risk.residualScore}
                             </span>
                           </td>
@@ -291,9 +394,25 @@ export function ReportsClient() {
 
           {/* Heatmap */}
           {activeTab === 'heatmap' && (
-            <div className="flex justify-center">
-              <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 inline-block">
-                <HeatmapGrid risks={risks} />
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-white">Risk Heatmap</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  The risk heatmap provides a visual representation of the organisation&apos;s residual risk portfolio across a 5×5 likelihood-impact matrix, consistent with ISO 31000 risk analysis principles. The horizontal axis represents assessed impact (1 = negligible, 5 = catastrophic) and the vertical axis represents likelihood of occurrence (1 = rare, 5 = almost certain). Each cell displays the number of risks assessed at that likelihood-impact intersection.
+                </p>
+                <p className={sumPara}>
+                  Cell colours reflect the organisation&apos;s configured risk appetite thresholds: <span className="text-green-400 font-medium">green</span> indicates risks within acceptable tolerance (low band, score ≤ {appetite.thresholds.low}); <span className="text-amber-400 font-medium">amber</span> indicates caution (medium band, score ≤ {appetite.thresholds.medium}); <span className="text-orange-400 font-medium">orange</span> indicates elevated concern (high band, score ≤ {appetite.thresholds.high}); and <span className="text-red-400 font-medium">red</span> indicates risks exceeding appetite (critical band, score &gt; {appetite.thresholds.high}).
+                </p>
+                <p className={sumPara}>
+                  The board should focus attention on risks appearing in the upper-right quadrant of the matrix — those with both high likelihood and high impact. Clustering in this zone signals systemic control deficiencies or emerging threats that may not be adequately mitigated. The heatmap should be reviewed alongside the Top 10 Risks table to ensure that the most visually prominent items have appropriate treatment plans.
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 inline-block">
+                  <HeatmapGrid risks={risks} />
+                </div>
               </div>
             </div>
           )}
@@ -302,6 +421,30 @@ export function ReportsClient() {
           {activeTab === 'trends' && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-white">Category Trends</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  This report analyses risk exposure across the organisation&apos;s business categories, presenting the total number of risks per category, the average residual score, and the current directional trend. Category-level analysis enables the board to identify which business domains carry disproportionate risk exposure and whether the overall trend within each category is improving, stable, or deteriorating.
+                </p>
+                {highestAvgCat && (
+                  <p className={sumPara}>
+                    <strong className="text-white">{CATEGORY_LABELS[highestAvgCat.category] || highestAvgCat.category}</strong> carries the highest average residual score of <strong className="text-white">{highestAvgCat.averageScore}</strong>, indicating this category warrants the most intensive management focus. Average scores reflect the mean residual exposure across all risks within a category and are colour-coded against the organisation&apos;s appetite thresholds for ease of interpretation.
+                  </p>
+                )}
+                {worseningCats.length > 0 ? (
+                  <p className={sumPara}>
+                    <strong className="text-red-400">{worseningCats.length} {worseningCats.length === 1 ? 'category is' : 'categories are'} trending upward</strong> ({worseningCats.map((c) => CATEGORY_LABELS[c.category] || c.category).join(', ')}), indicating a deteriorating risk environment in these areas. Management should review the adequacy of existing controls and treatment plans for risks within these categories and consider whether additional mitigation measures are required.
+                  </p>
+                ) : improvingCats.length > 0 ? (
+                  <p className={sumPara}>
+                    No categories are currently trending in a worsening direction. <strong className="text-green-400">{improvingCats.length} {improvingCats.length === 1 ? 'category is' : 'categories are'} improving</strong>, reflecting the effectiveness of active treatment programmes. Maintaining this trajectory requires continued management discipline and regular control testing.
+                  </p>
+                ) : (
+                  <p className={sumPara}>
+                    All categories are currently stable. While the absence of deterioration is positive, management should ensure that stability reflects genuine control effectiveness rather than infrequent risk reassessment.
+                  </p>
+                )}
+              </div>
 
               {(categoryTrends || []).length > 0 ? (
                 <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
@@ -319,7 +462,11 @@ export function ReportsClient() {
                         <tr key={t.category}>
                           <td className={tdClass}>{CATEGORY_LABELS[t.category] || t.category}</td>
                           <td className={tdClass}>{t.riskCount}</td>
-                          <td className={tdClass}>{t.averageScore}</td>
+                          <td className={tdClass}>
+                            <span className={`inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 rounded text-xs font-bold ${bandToBadgeClasses(appetite.getBand(t.averageScore))}`}>
+                              {t.averageScore}
+                            </span>
+                          </td>
                           <td className={tdClass}>
                             <span className={`inline-flex items-center gap-1 ${
                               t.direction === 'improving' ? 'text-green-400' :
@@ -345,7 +492,34 @@ export function ReportsClient() {
           {/* Recommendations */}
           {activeTab === 'recommendations' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-white">Scoring Recommendations</h2>
+              <h2 className="text-lg font-semibold text-white">Risk Intelligence Recommendations</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  The recommendations below are generated by Vytl&apos;s risk intelligence engine, which continuously analyses the organisation&apos;s risk register for scoring inconsistencies, coverage gaps, control weaknesses, and KRI alignment issues. These recommendations are designed to support management in maintaining a well-governed and accurately calibrated risk register, and to guide prioritisation of governance improvement activities.
+                </p>
+                {(recommendations || []).length > 0 ? (
+                  <p className={sumPara}>
+                    There are currently{' '}
+                    {recCritical > 0 && <><strong className="text-red-400">{recCritical} critical</strong>{(recWarning > 0 || recInfo > 0) ? ', ' : ' '}</>}
+                    {recWarning > 0  && <><strong className="text-amber-400">{recWarning} warning</strong>{recInfo > 0 ? ', and ' : ' '}</>}
+                    {recInfo > 0     && <><strong className="text-blue-400">{recInfo} informational</strong> </>}
+                    recommendation{(recCritical + recWarning + recInfo) !== 1 ? 's' : ''} outstanding.{' '}
+                    {recCritical > 0
+                      ? 'Critical items represent material deficiencies in the risk register that could lead to an inaccurate assessment of the organisation\'s risk posture. The board should direct management to address these as an immediate priority.'
+                      : recWarning > 0
+                      ? 'Warning-level items indicate emerging concerns that, if left unaddressed, could escalate to material governance issues. Management should develop response plans for all warning-level items within the current reporting period.'
+                      : 'No critical or warning-level issues are outstanding. The informational recommendations support continuous improvement of the risk register quality.'}
+                  </p>
+                ) : (
+                  <p className={sumPara}>
+                    No recommendations have been generated at this time. This indicates that the risk register is well-structured and consistently maintained. The board should encourage management to maintain this standard through regular reviews and timely updates.
+                  </p>
+                )}
+                <p className={sumPara}>
+                  Addressing recommendations — particularly at the critical and warning levels — typically yields measurable improvements to the organisation&apos;s Vytl Score, as they directly target the dimensions of coverage, control quality, and maturity that underpin the score calculation.
+                </p>
+              </div>
 
               {(recommendations || []).length > 0 ? (
                 <div className="space-y-3">
@@ -368,10 +542,56 @@ export function ReportsClient() {
             </div>
           )}
 
+          {/* Movement & Trends */}
+          {activeTab === 'movement' && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-white">Movement & Trends</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  The Movement & Trends report provides a temporal analysis of the organisation&apos;s risk portfolio, comparing the current risk profile against historical snapshots to identify material changes in risk exposure, control effectiveness, and overall governance posture. This section directly supports the board&apos;s responsibility to assess whether the organisation&apos;s risk management programme is producing measurable improvement over time.
+                </p>
+                <p className={sumPara}>
+                  Risk snapshots are captured automatically on a scheduled basis and may also be triggered manually. The analysis compares the most recent snapshot against the earliest snapshot within the selected time window (3, 6, or 12 months). Material movements are flagged where residual risk scores have changed by a defined threshold — risks that have increased, decreased, been newly added, or closed during the period are highlighted separately for ease of review.
+                </p>
+                <p className={sumPara}>
+                  The board should use this report to assess whether treatment plans are reducing residual risk over time, to identify risks that are escalating despite management intervention, and to evaluate the organisation&apos;s overall risk trajectory. A consistent pattern of improvement in the Vytl Score trajectory, declining KRI breaches, and increasing treatment completion rates indicates an effective and maturing risk management function.
+                </p>
+              </div>
+
+              <MovementTrendsTab />
+            </div>
+          )}
+
           {/* KRI Status */}
           {activeTab === 'kri' && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-white">KRI Status Dashboard</h2>
+
+              <div className={sumCard}>
+                <p className={sumPara}>
+                  Key Risk Indicators (KRIs) are forward-looking quantitative measures that signal changes in the organisation&apos;s risk exposure before risks fully materialise. Each KRI is configured with three threshold levels — Green (within acceptable tolerance), Amber (elevated concern requiring monitoring), and Red (threshold breach requiring immediate management response) — calibrated to the organisation&apos;s risk appetite.
+                </p>
+                {krisTotal > 0 ? (
+                  <p className={sumPara}>
+                    The organisation currently monitors <strong className="text-white">{krisTotal} KRI{krisTotal !== 1 ? 's' : ''}</strong>.{' '}
+                    {krisGreen > 0 && <><strong className="text-green-400">{krisGreen}</strong> {krisGreen === 1 ? 'is' : 'are'} within green thresholds; </>}
+                    {krisAmber > 0 && <><strong className="text-amber-400">{krisAmber}</strong> {krisAmber === 1 ? 'is' : 'are'} in amber caution, indicating elevated exposure that warrants close monitoring; </>}
+                    {krisRed > 0
+                      ? <><strong className="text-red-400">{krisRed}</strong> {krisRed === 1 ? 'has' : 'have'} breached the red threshold, indicating that associated risks may be actively materialising and requiring immediate management investigation and response.</>
+                      : 'and none have breached the red threshold in the current period.'}
+                  </p>
+                ) : (
+                  <p className={sumPara}>
+                    No KRIs have been configured for this organisation. KRIs are a critical component of effective risk monitoring — the board should direct management to establish a suite of KRIs aligned to the most significant risks in the register. Well-designed KRIs provide early warning signals that enable proactive risk management before potential losses are incurred.
+                  </p>
+                )}
+                {krisRed > 0 && (
+                  <p className={sumPara}>
+                    <strong className="text-red-400">Board action required:</strong> All red-status KRIs represent breaches of the organisation&apos;s defined risk appetite. Management should provide a formal response for each breached indicator, including root cause analysis, remediation actions, and expected resolution timelines.
+                  </p>
+                )}
+              </div>
 
               {(kris || []).length > 0 ? (
                 <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">

@@ -18,6 +18,8 @@ export const organisationRouter = router({
         consentGiven: true,
         consentDate: true,
         createdAt: true,
+        snapshotFrequency: true,
+        snapshotMateriality: true,
       },
     })
     return org
@@ -29,15 +31,23 @@ export const organisationRouter = router({
       name: z.string().min(1).optional(),
       industry: z.string().nullable().optional(),
       employeeCount: z.number().nullable().optional(),
+      snapshotFrequency: z.enum(['WEEKLY', 'MONTHLY']).optional(),
+      snapshotMateriality: z.number().min(1).max(25).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const oldOrg = await db.organisation.findUnique({
         where: { id: ctx.user.orgId },
       })
 
+      const { snapshotFrequency, snapshotMateriality, ...coreInput } = input
+
+      const updateData: Record<string, unknown> = { ...coreInput }
+      if (snapshotFrequency !== undefined) updateData.snapshotFrequency = snapshotFrequency
+      if (snapshotMateriality !== undefined) updateData.snapshotMateriality = snapshotMateriality
+
       const org = await db.organisation.update({
         where: { id: ctx.user.orgId },
-        data: input,
+        data: updateData,
       })
 
       await createAuditLog({
@@ -52,11 +62,15 @@ export const organisationRouter = router({
           name: oldOrg?.name,
           industry: oldOrg?.industry,
           employeeCount: oldOrg?.employeeCount,
+          snapshotFrequency: oldOrg?.snapshotFrequency,
+          snapshotMateriality: oldOrg?.snapshotMateriality,
         },
         newValues: {
           name: org.name,
           industry: org.industry,
           employeeCount: org.employeeCount,
+          snapshotFrequency: org.snapshotFrequency,
+          snapshotMateriality: org.snapshotMateriality,
         },
       })
 

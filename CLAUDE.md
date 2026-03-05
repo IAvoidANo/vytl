@@ -334,6 +334,23 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - AppetiteBreachWidget on dashboard
   - 50 new tests
 
+### Sprint 15 - COMPLETE (Movement & Trends + Report Improvements)
+- [x] **Risk Snapshots** — Temporal portfolio capture
+  - Prisma: `RiskSnapshot`, `RiskSnapshotDetail` models; `SnapshotType`, `SnapshotFrequency` enums
+  - Organisation fields: `snapshotFrequency` (WEEKLY/MONTHLY), `snapshotMateriality` (±N pts)
+  - `snapshot-validation.ts`: pure functions (buildSeverityCounts, buildKriCounts, detectRiskMovers, etc.)
+  - `snapshot-utils.ts`: captureSnapshot, hasBaselineSnapshot, getEarliestSnapshotDate
+  - Auto-baseline on first risk creation; weekly Vercel Cron (Sundays 2am UTC, CRON_SECRET protected)
+- [x] **Snapshots tRPC Router** — 6 procedures (capture, list, getById, checkDataAvailability, compare, delete)
+- [x] **Settings → Snapshots tab** — Frequency config, materiality threshold, manual capture, history list
+- [x] **Movement & Trends tab** (8th Reports tab) — Period selector (3/6/12M), Vytl Score trajectory, risk movers (increased/decreased/new/closed), KRI breach patterns, treatment velocity, category evolution
+- [x] **MovementAlertWidget** — Optional dashboard widget (`src/components/dashboard/movement-alert-widget.tsx`)
+- [x] **Tests** — 43 new tests (26 pure function + 17 router logic), 890 total passing
+- [x] **Report Executive Summaries** — Data-driven narrative paragraphs on all 8 report tabs
+- [x] **Consistent Score Badges** — `bandToBadgeClasses()` applied to Top 10 score + Category Trends avg score
+- [x] **Heatmap fixes** — Tailwind content path (`src/lib/**/*.ts`) added; critical-band red cells restored; count badges as white pills on solid-colour cells
+- [x] **appetite-validation.ts** — Added `bandToLightHeatmapClasses`, `bandToBadgeClasses` helpers
+
 ### Sprint 14 - COMPLETE (Incident Linking)
 - [x] **Incident Model** - Track materialised risk events
   - Prisma: Incident model with IncidentSeverity + IncidentStatus enums
@@ -378,9 +395,9 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | `/risks` | ✅ | Risk register (table/heatmap) with sparklines + register filter |
 | `/risks/[id]` | ✅ | Risk detail (8 tabs: Overview, AI Analysis, Treatment, Compliance, Incidents, Risk Intelligence, History, Documents) |
 | `/workspace` | ✅ | Kanban board with quick actions (edit, assign, approve, reject, archive, delete) |
-| `/reports` | ✅ | Interactive board governance reports with 7 tabs + print support |
+| `/reports` | ✅ | Board governance reports with 8 tabs + executive summaries + print support |
 | `/users` | ✅ | Team management (ADMIN+) |
-| `/settings` | ✅ | Profile, Security, Organisation, POPIA Compliance, Methodology, Registers, Risk Appetite |
+| `/settings` | ✅ | Profile, Security, Organisation, POPIA Compliance, Methodology, Registers, Risk Appetite, Snapshots |
 | `/forgot-password` | ✅ | Password reset request |
 | `/reset-password` | ✅ | Password reset with token |
 | `/accept-invite` | ✅ | Accept user invitation |
@@ -419,6 +436,10 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `AppetiteSettings` - Risk appetite configuration component
 - `IncidentLinks` - Incidents tab: stats bar, inline form, incident cards with status cycling
 - `CreateRegisterModal` - Register creation modal
+- `MovementTrendsTab` - Reports Movement & Trends tab: period selector, score trajectory, risk movers, KRI breach, treatment velocity
+- `SnapshotSettings` - Settings Snapshots tab: frequency, materiality, manual capture, history
+- `MovementAlertWidget` - Optional dashboard widget: shows material risk movements since last snapshot
+- `DashboardHeatmap` - Dashboard heatmap: solid band colours, count badges, appetite-aware legend
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -433,7 +454,8 @@ src/
 │   ├── api/
 │   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
 │   │   ├── trpc/[trpc]/route.ts          # tRPC endpoint
-│   │   └── parse-document/route.ts       # PDF/Word parsing
+│   │   ├── parse-document/route.ts       # PDF/Word parsing
+│   │   └── cron/snapshot/route.ts        # Vercel Cron — weekly snapshot capture (CRON_SECRET)
 │   ├── dashboard/page.tsx
 │   ├── login/page.tsx
 │   ├── risks/
@@ -475,6 +497,8 @@ src/
 │   ├── create-register-modal.tsx        # Register creation modal
 │   ├── appetite-settings.tsx            # Risk appetite config component
 │   ├── incident-links.tsx               # Incident list + form component
+│   ├── movement-trends-tab.tsx          # Reports Movement & Trends tab
+│   ├── snapshot-settings.tsx            # Settings Snapshots tab
 │   ├── dashboard/
 │   │   ├── risk-pulse.tsx, top-risks.tsx
 │   │   ├── activity-feed.tsx, category-chart.tsx
@@ -492,6 +516,7 @@ src/
 │   │   │   ├── compliance-coverage-widget.tsx
 │   │   │   ├── appetite-breach-widget.tsx
 │   │   │   └── index.ts
+│   │   ├── movement-alert-widget.tsx    # Optional: material risk movements since last snapshot
 │   │   └── index.ts
 │   ├── workspace/                       # Kanban components
 │   │   ├── kanban-column.tsx
@@ -520,11 +545,14 @@ src/
 │   ├── register-validation.ts   # Register Zod schemas + delete guards
 │   ├── regulatory-frameworks.ts  # Static King V + ISO 31000 framework data
 │   ├── regulatory-validation.ts  # Regulatory mapping schemas + coverage calc
-│   ├── appetite-validation.ts   # Risk appetite schemas + threshold classification
+│   ├── appetite-validation.ts   # Risk appetite schemas + threshold classification + heatmap colour helpers
 │   ├── use-appetite.ts          # Shared appetite hook for UI components
-│   └── incident-validation.ts   # Incident schemas + severity sort + status cycle
+│   ├── incident-validation.ts   # Incident schemas + severity sort + status cycle
+│   ├── snapshot-validation.ts   # Snapshot pure functions (buildSeverityCounts, detectRiskMovers, etc.)
+│   ├── snapshot-utils.ts        # captureSnapshot, hasBaselineSnapshot, getEarliestSnapshotDate
+│   └── risk-colour-mapping.ts   # Canonical L×I → colour mapping (getRiskColour, BAND_PRINT_COLOURS)
 └── server/routers/
-    ├── index.ts         # Root router (15 sub-routers)
+    ├── index.ts         # Root router (16 sub-routers)
     ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace + VaR calc
     ├── kri.ts           # KRI CRUD + status calc
     ├── audit.ts         # Audit log queries + recent activity
@@ -538,9 +566,10 @@ src/
     ├── register.ts      # Risk register CRUD
     ├── regulatory.ts    # Regulatory mapping CRUD + coverage
     ├── appetite.ts      # Risk appetite config + breach summary
-    └── incident.ts      # Incident CRUD + stats
+    ├── incident.ts      # Incident CRUD + stats
+    └── snapshots.ts     # Snapshot CRUD + compare + checkDataAvailability
 
-tests/                                   # 813 tests across 23 files (all passing)
+tests/                                   # 890 tests across 26 files (all passing)
 ├── setup.ts
 ├── e2e/
 │   └── user-journeys.test.ts
@@ -548,7 +577,8 @@ tests/                                   # 813 tests across 23 files (all passin
 │   └── data-integrity.test.ts
 ├── server/routers/
 │   ├── risk.test.ts
-│   └── assessment.test.ts
+│   ├── assessment.test.ts
+│   └── snapshots.test.ts                # Sprint 15 — router logic tests
 └── utils/
     ├── scoring-engine.test.ts
     ├── scoring-validation.test.ts
@@ -561,6 +591,7 @@ tests/                                   # 813 tests across 23 files (all passin
     ├── regulatory-validation.test.ts
     ├── appetite-validation.test.ts
     ├── incident-validation.test.ts
+    ├── snapshot-validation.test.ts      # Sprint 15 — pure function tests
     ├── phase-a-scoring.test.ts          # Scoring Architecture Phase A
     ├── phase-b-scoring-ui.test.ts       # Scoring Architecture Phase B
     ├── risk-scoring.test.ts

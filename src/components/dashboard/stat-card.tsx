@@ -22,31 +22,31 @@ const variantStyles: Record<Variant, {
 }> = {
   default: {
     border:   'border-l-teal-500',
-    iconBg:   'bg-teal-50',
-    iconText: 'text-teal-600',
-    value:    'text-slate-900',
-    cardBg:   'bg-white',
+    iconBg:   'bg-teal-50 dark:bg-teal-900/30',
+    iconText: 'text-teal-600 dark:text-teal-400',
+    value:    'text-slate-900 dark:text-slate-100',
+    cardBg:   'bg-white dark:bg-slate-800',
   },
   success: {
     border:   'border-l-green-500',
-    iconBg:   'bg-green-50',
-    iconText: 'text-green-600',
-    value:    'text-green-700',
-    cardBg:   'bg-white',
+    iconBg:   'bg-green-50 dark:bg-green-900/30',
+    iconText: 'text-green-600 dark:text-green-400',
+    value:    'text-green-700 dark:text-green-400',
+    cardBg:   'bg-white dark:bg-slate-800',
   },
   warning: {
     border:   'border-l-amber-500',
-    iconBg:   'bg-amber-50',
-    iconText: 'text-amber-600',
-    value:    'text-amber-700',
-    cardBg:   'bg-amber-50/40',
+    iconBg:   'bg-amber-50 dark:bg-amber-900/30',
+    iconText: 'text-amber-600 dark:text-amber-400',
+    value:    'text-amber-700 dark:text-amber-400',
+    cardBg:   'bg-amber-50/40 dark:bg-amber-900/20',
   },
   danger: {
     border:   'border-l-red-500',
-    iconBg:   'bg-red-50',
-    iconText: 'text-red-600',
-    value:    'text-red-700',
-    cardBg:   'bg-red-50/40',
+    iconBg:   'bg-red-50 dark:bg-red-900/30',
+    iconText: 'text-red-600 dark:text-red-400',
+    value:    'text-red-700 dark:text-red-400',
+    cardBg:   'bg-red-50/40 dark:bg-red-900/20',
   },
 }
 
@@ -63,7 +63,7 @@ export function StatCard({
 
   const inner = (
     <div className={cn(
-      'rounded-card shadow-card border border-slate-100 border-l-4 p-4 transition-all duration-200',
+      'rounded-card shadow-card border border-slate-100 dark:border-slate-700 border-l-4 p-4 transition-all duration-200',
       s.border,
       s.cardBg,
       href && 'hover:shadow-panel hover:-translate-y-0.5 cursor-pointer',
@@ -76,7 +76,7 @@ export function StatCard({
       ) : (
         <>
           <div className="flex items-start justify-between mb-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider leading-none mt-0.5">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none mt-0.5">
               {title}
             </p>
             {icon && (
@@ -92,7 +92,7 @@ export function StatCard({
             {value}
           </p>
           {sublabel && (
-            <p className="text-xs text-slate-400 mt-2">{sublabel}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">{sublabel}</p>
           )}
         </>
       )}

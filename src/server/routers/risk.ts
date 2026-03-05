@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { router, protectedProcedure, editorProcedure, riskManagerProcedure } from '@/lib/trpc'
+import { captureSnapshot, hasBaselineSnapshot } from '@/lib/snapshot-utils'
+import { SnapshotType } from '@prisma/client'
 import { db } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
@@ -274,6 +276,21 @@ export const riskRouter = router({
           response: risk.response,
         },
       })
+
+      // Auto-create baseline snapshot on first risk creation
+      const orgRiskCount = await db.risk.count({
+        where: { register: { orgId: ctx.user.orgId }, status: { not: 'ARCHIVED' } },
+      })
+      if (orgRiskCount === 1) {
+        const alreadyHasBaseline = await hasBaselineSnapshot(ctx.user.orgId)
+        if (!alreadyHasBaseline) {
+          try {
+            await captureSnapshot(ctx.user.orgId, SnapshotType.BASELINE, ctx.user.id)
+          } catch {
+            // Baseline snapshot failure must not block risk creation
+          }
+        }
+      }
 
       return risk
     }),

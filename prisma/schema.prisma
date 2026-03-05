@@ -35,6 +35,10 @@ model Organisation {
   appetiteHigh           Int      @default(14)
   appetiteCategoryConfig Json?
 
+  // Snapshot configuration
+  snapshotFrequency   SnapshotFrequency @default(WEEKLY)
+  snapshotMateriality Int               @default(2)
+
   // Relationships
   users         User[]
   riskRegisters RiskRegister[]
@@ -43,6 +47,7 @@ model Organisation {
   kris          Kri[]
   emailSubmissions EmailSubmission[]
   scoringProfiles  ScoringProfile[]
+  snapshots        RiskSnapshot[]
 
   @@map("organisations")
 }
@@ -663,4 +668,110 @@ enum IncidentStatus {
   CONTAINED
   RESOLVED
   CLOSED
+}
+
+// ============================================
+// RISK SNAPSHOTS (Movement & Trends)
+// ============================================
+
+model RiskSnapshot {
+  id   String       @id @default(cuid())
+  orgId String
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  snapshotDate DateTime
+  snapshotType SnapshotType
+  createdBy    String?  // userId if MANUAL, null if automated
+
+  // Vytl Score components (null if no assessment at snapshot time)
+  vytlScore    Int?
+  vytlGrade    String?
+  vytlCoverage Float?  // coverage.score (0-25)
+  vytlControl  Float?  // controlEffectiveness.score (0-25)
+  vytlMaturity Float?  // maturity.score (0-25)
+  vytlTrend    Float?  // trend.score (0-25)
+
+  // Risk distribution by RiskStatus
+  totalRisks      Int
+  openRisks       Int
+  inProgressRisks Int
+  monitoringRisks Int
+  closedRisks     Int
+  archivedRisks   Int
+
+  // Category distribution JSON (e.g. {"STRATEGIC": 5, "OPERATIONAL": 8})
+  risksByCategory Json
+
+  // Risk severity counts (residual score vs appetite thresholds)
+  lowRiskCount     Int
+  mediumRiskCount  Int
+  highRiskCount    Int
+  extremeRiskCount Int
+
+  // KRI metrics
+  krisTotal Int
+  krisGreen Int
+  krisAmber Int
+  krisRed   Int
+
+  // Treatment metrics
+  treatmentsTotal         Int
+  treatmentsOpen          Int
+  treatmentsInProgress    Int
+  treatmentsCompleted     Int
+  treatmentCompletionRate Float?
+
+  riskDetails RiskSnapshotDetail[]
+
+  createdAt DateTime @default(now())
+
+  @@index([orgId, snapshotDate])
+  @@index([orgId, snapshotType])
+  @@unique([orgId, snapshotDate, snapshotType])
+  @@map("risk_snapshots")
+}
+
+model RiskSnapshotDetail {
+  id         String       @id @default(cuid())
+  snapshotId String
+  snapshot   RiskSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  riskId   String
+  refCode  String
+  title    String
+  category RiskCategory
+  status   RiskStatus
+
+  inherentLikelihood Int
+  inherentImpact     Int
+  inherentScore      Int
+
+  residualLikelihood Int
+  residualImpact     Int
+  residualScore      Int
+
+  owner      String?
+  ownerEmail String?
+
+  isTopRisk      Boolean @default(false)
+  rankAtSnapshot Int?
+  fullState      Json?  // populated only when isTopRisk = true
+
+  createdAt DateTime @default(now())
+
+  @@index([snapshotId, riskId])
+  @@index([riskId])
+  @@map("risk_snapshot_details")
+}
+
+enum SnapshotType {
+  BASELINE
+  SCHEDULED
+  MANUAL
+  QUARTERLY
+}
+
+enum SnapshotFrequency {
+  WEEKLY
+  MONTHLY
 }

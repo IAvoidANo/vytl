@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc-client'
 import { AppetiteSettings } from '@/components/appetite-settings'
+import { SnapshotSettings } from '@/components/snapshot-settings'
 
 interface SettingsClientProps {
   isAdmin: boolean
 }
 
-type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers' | 'appetite'
+type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers' | 'appetite' | 'snapshots'
 
 const INDUSTRIES = [
   'Financial Services',
@@ -244,6 +245,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     { id: 'scoring', label: 'Methodology', adminOnly: true },
     { id: 'registers', label: 'Registers', adminOnly: true },
     { id: 'appetite', label: 'Risk Appetite', adminOnly: true },
+    { id: 'snapshots', label: 'Snapshots', adminOnly: true },
   ]
 
   // Shared input styles
@@ -806,6 +808,13 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {activeTab === 'appetite' && isAdmin && (
         <div className="max-w-2xl">
           <AppetiteSettings />
+        </div>
+      )}
+
+      {/* Snapshots Tab */}
+      {activeTab === 'snapshots' && isAdmin && (
+        <div className="max-w-2xl">
+          <SnapshotSettings />
         </div>
       )}
     </div>

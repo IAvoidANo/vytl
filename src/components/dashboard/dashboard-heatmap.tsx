@@ -102,9 +102,11 @@ export function DashboardHeatmap() {
                         onMouseEnter={() => setHovered(key)}
                         onMouseLeave={() => setHovered(null)}
                       >
-                        <span className="text-sm font-bold tabular-nums text-white">
-                          {count > 0 ? count : ''}
-                        </span>
+                        {count > 0 && (
+                          <span className="text-xs font-bold tabular-nums text-white bg-black/20 rounded px-1.5 py-0.5 min-w-[1.5rem] text-center">
+                            {count}
+                          </span>
+                        )}
                       </Link>
                     )
                   })}

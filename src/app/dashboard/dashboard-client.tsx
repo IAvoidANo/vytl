@@ -71,7 +71,7 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
           loading={breachLoading}
         />
         <StatCard
-          title="KRIs in Red"
+          title="KRI's in Breach"
           value={kriStats?.red ?? 0}
           sublabel="Breached indicators"
           href="/kris"
