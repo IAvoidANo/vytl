@@ -7,6 +7,7 @@ import {
   createTreatmentActionSchema,
   updateTreatmentActionSchema,
   getCompletedAtForStatus,
+  listAllActionsSchema,
 } from '@/lib/treatment-validation'
 
 export const treatmentRouter = router({
@@ -201,6 +202,82 @@ export const treatmentRouter = router({
         byStatus,
       }
     }),
+
+  // Org-wide list of all treatment actions (Actions Register page)
+  listAll: protectedProcedure
+    .input(listAllActionsSchema)
+    .query(async ({ ctx, input }) => {
+      const { status, priority, assigneeId, overdueOnly, sortBy = 'dueDate', sortDir = 'asc' } = input
+
+      const now = new Date()
+
+      const where: Record<string, unknown> = {
+        risk: { register: { orgId: ctx.user.orgId } },
+      }
+      if (status) where.status = status
+      if (priority) where.priority = priority
+      if (assigneeId) where.assigneeId = assigneeId
+      if (overdueOnly) {
+        where.dueDate = { lt: now }
+        where.status = { notIn: ['COMPLETED', 'CANCELLED'] }
+      }
+
+      let orderBy: Record<string, unknown> = { createdAt: sortDir }
+      if (sortBy === 'dueDate') orderBy = { dueDate: sortDir }
+      else if (sortBy === 'priority') orderBy = { priority: sortDir }
+      else if (sortBy === 'riskTitle') orderBy = { risk: { title: sortDir } }
+
+      const actions = await db.treatmentAction.findMany({
+        where,
+        orderBy,
+        include: {
+          risk: {
+            select: {
+              id: true,
+              refCode: true,
+              title: true,
+              register: { select: { name: true } },
+            },
+          },
+          assignee: { select: { id: true, name: true, email: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
+      })
+
+      return actions
+    }),
+
+  // Overdue summary for the dashboard widget
+  overdueSummary: protectedProcedure.query(async ({ ctx }) => {
+    const now = new Date()
+
+    const actions = await db.treatmentAction.findMany({
+      where: {
+        risk: { register: { orgId: ctx.user.orgId } },
+        status: { notIn: ['COMPLETED', 'CANCELLED'] },
+        dueDate: { lt: now },
+      },
+      select: {
+        id: true,
+        priority: true,
+        dueDate: true,
+        status: true,
+        risk: { select: { id: true, refCode: true, title: true } },
+      },
+      orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
+    })
+
+    const byPriority: Record<string, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 }
+    for (const a of actions) {
+      if (a.priority in byPriority) byPriority[a.priority]++
+    }
+
+    return {
+      total: actions.length,
+      byPriority,
+      topItems: actions.slice(0, 5),
+    }
+  }),
 
   // Org-wide treatment action stats for dashboard
   orgStats: protectedProcedure.query(async ({ ctx }) => {

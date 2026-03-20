@@ -24,7 +24,7 @@ export const scoringProfileSchema = z.object({
   categoryMultipliers: z.record(
     z.enum([
       'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-      'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
+      'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY',
     ]),
     z.number().min(0.1).max(3.0)
   ).optional(),
@@ -61,7 +61,7 @@ const scoringProfileBaseShape = z.object({
   categoryMultipliers: z.record(
     z.enum([
       'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-      'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
+      'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY',
     ]),
     z.number().min(0.1).max(3.0)
   ).optional(),

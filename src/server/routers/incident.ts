@@ -3,6 +3,7 @@ import { router, protectedProcedure, editorProcedure, riskManagerProcedure } fro
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import { createAuditLog } from '@/lib/audit'
+import { maybeNotifyIncidentCreated } from '@/lib/notification-triggers'
 import {
   createIncidentSchema,
   updateIncidentSchema,
@@ -74,6 +75,8 @@ export const incidentRouter = router({
           riskId: incident.riskId,
         },
       })
+
+      maybeNotifyIncidentCreated(ctx.user.orgId, incident.id).catch(() => {})
 
       return incident
     }),

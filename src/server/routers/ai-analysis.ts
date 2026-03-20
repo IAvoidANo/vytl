@@ -225,7 +225,7 @@ Risk Description: ${input.description}
 
 Respond with ONLY a JSON object (no markdown, no explanation):
 {
-  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE",
+  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE|HEALTH_SAFETY",
   "likelihood": 1-5,
   "impact": 1-5,
   "reasoning": "Brief 10-word max explanation"
@@ -352,7 +352,7 @@ Provide your analysis as a JSON object with the following structure:
 1. **Executive Summary**: Be concise but capture the essence of the risk and its potential business impact
 2. **Suggested Controls**: Provide 3-5 specific, practical controls tailored to this risk. Consider South African regulatory context (POPIA, King V, etc.) where relevant
 3. **Score Justification**: Evaluate if the current likelihood and impact scores seem reasonable given the risk description
-4. **Related Categories**: List other risk categories (from: STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, TECHNOLOGY, REPUTATIONAL, ENVIRONMENTAL, PEOPLE) that might be affected by this risk
+4. **Related Categories**: List other risk categories (from: STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, TECHNOLOGY, REPUTATIONAL, ENVIRONMENTAL, PEOPLE, HEALTH_SAFETY) that might be affected by this risk
 5. **Suggested KRIs**: Recommend 2-3 Key Risk Indicators that could help monitor this risk
 6. **Confidence**: A value between 0.0 and 1.0 indicating your confidence in this analysis based on the information provided
 

@@ -70,6 +70,7 @@ const ALL_CATEGORIES = [
   'REPUTATIONAL',
   'ENVIRONMENTAL',
   'PEOPLE',
+  'HEALTH_SAFETY',
 ]
 
 /**

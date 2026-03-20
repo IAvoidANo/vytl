@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { trpc } from '@/lib/trpc-client'
 import { AppetiteSettings } from '@/components/appetite-settings'
 import { SnapshotSettings } from '@/components/snapshot-settings'
+import { getAllTemplates, type IndustryCode } from '@/lib/industry-templates'
+import { useRouter } from 'next/navigation'
 
 interface SettingsClientProps {
   isAdmin: boolean
 }
 
-type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers' | 'appetite' | 'snapshots'
+type Tab = 'profile' | 'organisation' | 'popia' | 'security' | 'scoring' | 'registers' | 'appetite' | 'snapshots' | 'templates'
 
 const INDUSTRIES = [
   'Financial Services',
@@ -52,6 +54,10 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
   const [retentionDays, setRetentionDays] = useState('')
   const [consentGiven, setConsentGiven] = useState(false)
   const [popiaSaved, setPopiaSaved] = useState(false)
+
+  // Template state
+  const [templateApplied, setTemplateApplied] = useState(false)
+  const [showTemplateConfirm, setShowTemplateConfirm] = useState<IndustryCode | null>(null)
 
   // (Scoring profile/rules/industry UI removed — now read-only methodology panel)
 
@@ -164,6 +170,24 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     },
   })
 
+  const router = useRouter()
+  const { data: riskStats } = trpc.risk.stats.useQuery(
+    undefined,
+    { enabled: activeTab === 'templates' }
+  )
+  const existingRiskCount = riskStats?.total ?? 0
+  const applyTemplate = trpc.template.applyTemplate.useMutation({
+    onSuccess: () => {
+      setTemplateApplied(true)
+
+      setShowTemplateConfirm(null)
+      setTimeout(() => {
+        setTemplateApplied(false)
+        router.push('/dashboard')
+      }, 2000)
+    },
+  })
+
 
   const handleCreateRegister = (e: React.FormEvent) => {
     e.preventDefault()
@@ -246,6 +270,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
     { id: 'registers', label: 'Registers', adminOnly: true },
     { id: 'appetite', label: 'Risk Appetite', adminOnly: true },
     { id: 'snapshots', label: 'Snapshots', adminOnly: true },
+    { id: 'templates', label: 'Industry Templates', adminOnly: true },
   ]
 
   // Shared input styles
@@ -815,6 +840,103 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {activeTab === 'snapshots' && isAdmin && (
         <div className="max-w-2xl">
           <SnapshotSettings />
+        </div>
+      )}
+
+      {/* Industry Templates Tab */}
+      {activeTab === 'templates' && isAdmin && (
+        <div>
+          <div className="mb-6 max-w-2xl">
+            <h2 className="text-lg font-semibold text-white mb-1">Industry Templates</h2>
+            <p className="text-slate-400 text-sm">
+              Apply a pre-built SA risk library to your organisation. A new register with 15 pre-scored risks will be created.
+            </p>
+            {(existingRiskCount ?? 0) > 0 && (
+              <div className="mt-3 flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3">
+                <span className="text-amber-400 text-sm">⚠</span>
+                <p className="text-amber-300 text-sm">
+                  Your organisation already has {existingRiskCount} risk{existingRiskCount !== 1 ? 's' : ''}. Applying a template will <strong>add</strong> 15 new risks alongside your existing data.
+                </p>
+              </div>
+            )}
+            {templateApplied && (
+              <div className="mt-3 flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3">
+                <span className="text-green-400 text-sm">✓</span>
+                <p className="text-green-300 text-sm">Template applied! Redirecting to dashboard…</p>
+              </div>
+            )}
+            {applyTemplate.isError && (
+              <div className="mt-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+                <p className="text-red-300 text-sm">{applyTemplate.error.message}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Confirmation dialog */}
+          {showTemplateConfirm && (
+            <div className="max-w-md mb-6 bg-slate-800 border border-slate-600 rounded-xl p-5">
+              <h3 className="text-white font-semibold mb-2">Confirm template application</h3>
+              <p className="text-slate-400 text-sm mb-4">
+                This will create a new register and add 15 pre-scored {showTemplateConfirm.replace(/_/g, ' ').toLowerCase()} risks to your organisation.
+                {(existingRiskCount ?? 0) > 0 ? ' Your existing risks will not be affected.' : ''}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+
+                    applyTemplate.mutate({ industryCode: showTemplateConfirm, force: true })
+                    setShowTemplateConfirm(null)
+                  }}
+                  disabled={applyTemplate.isPending}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:opacity-50 text-sm font-medium"
+                >
+                  {applyTemplate.isPending ? 'Applying…' : 'Apply Template'}
+                </button>
+                <button
+                  onClick={() => setShowTemplateConfirm(null)}
+                  className="px-4 py-2 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Industry cards */}
+          <div className="grid md:grid-cols-3 gap-4 max-w-4xl">
+            {getAllTemplates().map((template) => (
+              <button
+                key={template.code}
+                onClick={() => !applyTemplate.isPending && setShowTemplateConfirm(template.code)}
+                disabled={applyTemplate.isPending}
+                className={`text-left bg-slate-800 border-2 rounded-xl p-5 transition-all hover:border-teal-500 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  showTemplateConfirm === template.code
+                    ? 'border-teal-500'
+                    : 'border-slate-700'
+                }`}
+              >
+                <div className="mb-3">
+                  <span className="text-xs font-medium text-teal-400 uppercase tracking-wider">
+                    {template.code.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <h3 className="text-white font-semibold mb-1">{template.name}</h3>
+                <p className="text-slate-400 text-sm mb-3">{template.description}</p>
+                <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
+                  <span>{template.risks.length} risks</span>
+                  <span>Benchmark: {template.benchmarkScore}</span>
+                </div>
+                <div className="border-t border-slate-700 pt-3 space-y-1">
+                  {template.risks.slice(0, 3).map((r, i) => (
+                    <div key={i} className="text-xs text-slate-500 flex items-start gap-1.5">
+                      <span className="text-teal-600 mt-0.5">•</span>
+                      <span className="line-clamp-1">{r.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -4,9 +4,20 @@ import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import {
   X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, ArrowRight, ArrowLeft,
-  FileText, Sparkles, AlertTriangle, Loader2, Wand2, Download
+  FileText, Sparkles, AlertTriangle, Loader2, Wand2, Download, Info
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
+import {
+  type ColumnMapping,
+  detectHeaderRow,
+  smartAutoMap,
+} from '@/lib/excel-import/header-detection'
+import {
+  normalizeCategory,
+  normalizeStatus,
+} from '@/lib/excel-import/enum-mapping'
+import { validateScore, validateResidualNotExceedsInherent } from '@/lib/excel-import/score-validation'
+import { checkDuplicates, type DuplicateCheckResult, type ExistingRisk } from '@/lib/excel-import/duplicate-detection'
 
 type ImportStep = 'upload' | 'extracting' | 'mapping' | 'preview' | 'importing' | 'complete'
 type FileType = 'excel' | 'pdf' | 'docx'
@@ -14,22 +25,6 @@ type FileType = 'excel' | 'pdf' | 'docx'
 interface ExcelImportModalProps {
   onClose: () => void
   onSuccess: (count: number) => void
-}
-
-interface ColumnMapping {
-  title: string
-  description: string
-  category: string
-  inherentLikelihood: string
-  inherentImpact: string
-  residualLikelihood: string
-  residualImpact: string
-  response: string
-  controls: string
-  status: string
-  // Combined columns (e.g., "Likelihood_Impact" containing "3,4")
-  inherentCombined: string
-  residualCombined: string
 }
 
 interface RiskPreview {
@@ -72,357 +67,7 @@ const COMBINED_FIELDS: { key: keyof ColumnMapping; label: string }[] = [
   { key: 'residualCombined', label: 'Residual L×I (combined)' },
 ]
 
-const CATEGORIES = [
-  'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-  'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
-]
-
 const RESPONSES = ['AVOID', 'MITIGATE', 'TRANSFER', 'ACCEPT']
-const STATUSES = ['OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED', 'ARCHIVED']
-
-// Human-friendly status label → canonical enum mapping (case-insensitive key lookup)
-// Each entry sets BOTH status (RiskStatus) and workflowStatus (WorkflowStatus) where applicable.
-// Unrecognised values fall through to defaults: status=OPEN, workflowStatus=INBOX (set by bulkCreate).
-const STATUS_ALIASES: Record<string, { status?: string; workflowStatus?: string }> = {
-  // ── Human-friendly labels (from bug report mapping table) ────────────────
-  'active':         { status: 'OPEN',        workflowStatus: 'APPROVED'  }, // active risks are approved+open
-  'in progression': { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  }, // being actively treated
-  'in progress':    { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
-  'archive':        { status: 'CLOSED',      workflowStatus: 'APPROVED'  }, // completed lifecycle
-  'archived':       { status: 'CLOSED',      workflowStatus: 'APPROVED'  },
-  'inbox':          { status: 'OPEN',        workflowStatus: 'INBOX'     }, // newly received
-  'triage':         { status: 'OPEN',        workflowStatus: 'TRIAGE'    }, // under initial assessment
-  'draft':          { status: 'OPEN',        workflowStatus: 'INBOX'     }, // same as inbox
-  'under review':   { status: 'OPEN',        workflowStatus: 'TRIAGE'    }, // no REVIEW enum; TRIAGE is the review stage
-  'review':         { status: 'OPEN',        workflowStatus: 'TRIAGE'    },
-  'closed':         { status: 'CLOSED',      workflowStatus: 'APPROVED'  },
-  'monitoring':     { status: 'MONITORING',  workflowStatus: 'APPROVED'  },
-  // ── Direct enum pass-through ─────────────────────────────────────────────
-  'open':        { status: 'OPEN',        workflowStatus: 'INBOX'     },
-  'in_progress': { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
-  'assigned':    { status: 'IN_PROGRESS', workflowStatus: 'ASSIGNED'  },
-  'approved':    { status: 'OPEN',        workflowStatus: 'APPROVED'  },
-  // ── Additional common labels ──────────────────────────────────────────────
-  'new':       { status: 'OPEN',   workflowStatus: 'INBOX'    },
-  'pending':   { status: 'OPEN',   workflowStatus: 'INBOX'    },
-  'complete':  { status: 'CLOSED', workflowStatus: 'APPROVED' },
-  'completed': { status: 'CLOSED', workflowStatus: 'APPROVED' },
-  'done':      { status: 'CLOSED', workflowStatus: 'APPROVED' },
-  'monitor':   { status: 'MONITORING', workflowStatus: 'APPROVED' },
-  'watch':     { status: 'MONITORING', workflowStatus: 'APPROVED' },
-}
-
-// Human-friendly category label → canonical RiskCategory enum (case-insensitive key lookup)
-const CATEGORY_ALIASES: Record<string, string> = {
-  // TECHNOLOGY
-  'cyb':                    'TECHNOLOGY',
-  'cyber':                  'TECHNOLOGY',
-  'cyber security':         'TECHNOLOGY',
-  'cybersecurity':          'TECHNOLOGY',
-  'it':                     'TECHNOLOGY',
-  'information technology': 'TECHNOLOGY',
-  'tech':                   'TECHNOLOGY',
-  // COMPLIANCE
-  'com':        'COMPLIANCE',
-  'compliance': 'COMPLIANCE',
-  'regulatory': 'COMPLIANCE',
-  'legal':      'COMPLIANCE',
-  // PEOPLE
-  'hrm':             'PEOPLE',
-  'human resources': 'PEOPLE',
-  'hr':              'PEOPLE',
-  'people':          'PEOPLE',
-  'human capital':   'PEOPLE',
-  'workforce':       'PEOPLE',
-  // STRATEGIC
-  'str':      'STRATEGIC',
-  'strategic': 'STRATEGIC',
-  'strategy':  'STRATEGIC',
-  // OPERATIONAL
-  'ops':         'OPERATIONAL',
-  'operational': 'OPERATIONAL',
-  'operations':  'OPERATIONAL',
-  'process':     'OPERATIONAL',
-  // FINANCIAL
-  'fin':       'FINANCIAL',
-  'financial': 'FINANCIAL',
-  'finance':   'FINANCIAL',
-  // REPUTATIONAL
-  'rep':           'REPUTATIONAL',
-  'reputational':  'REPUTATIONAL',
-  'reputation':    'REPUTATIONAL',
-  'brand':         'REPUTATIONAL',
-  // ENVIRONMENTAL
-  'env':           'ENVIRONMENTAL',
-  'environmental': 'ENVIRONMENTAL',
-  'environment':   'ENVIRONMENTAL',
-  'esg':           'ENVIRONMENTAL',
-}
-
-// Patterns for combined Likelihood/Impact columns (e.g., "3,4" or "3x4")
-const COMBINED_PATTERNS: { pattern: RegExp; confidence: number; type: 'inherent' | 'residual' }[] = [
-  { pattern: /^inherent\s*(?:risk\s*)?(?:l[_x/]i|likelihood[_x/\s]*impact|l\s*[x\/]\s*i)$/i, confidence: 1.0, type: 'inherent' },
-  { pattern: /^gross\s*(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 1.0, type: 'inherent' },
-  { pattern: /^(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 0.9, type: 'inherent' },
-  { pattern: /^inherent\s*(?:risk\s*)?score$/i, confidence: 0.85, type: 'inherent' },
-  { pattern: /^inherent\s*risk$/i, confidence: 0.8, type: 'inherent' },
-  { pattern: /^residual\s*(?:risk\s*)?(?:l[_x/]i|likelihood[_x/\s]*impact|l\s*[x\/]\s*i)$/i, confidence: 1.0, type: 'residual' },
-  { pattern: /^net\s*(?:l[_x/]i|likelihood[_x/\s]*impact)$/i, confidence: 1.0, type: 'residual' },
-  { pattern: /^residual\s*(?:risk\s*)?score$/i, confidence: 0.85, type: 'residual' },
-  { pattern: /^residual\s*risk$/i, confidence: 0.8, type: 'residual' },
-]
-
-// Smart field mapping patterns - ordered by priority (first match wins)
-// More specific patterns should come before generic ones
-const FIELD_PATTERNS: Record<keyof Omit<ColumnMapping, 'inherentCombined' | 'residualCombined'>, { pattern: RegExp; confidence: number }[]> = {
-  title: [
-    { pattern: /^risk\s*title$/i, confidence: 1.0 },
-    { pattern: /^risk\s*name$/i, confidence: 1.0 },
-    { pattern: /^risk\s*id$/i, confidence: 0.6 }, // Sometimes ID is the title in simple registers
-    { pattern: /^title$/i, confidence: 0.95 },
-    { pattern: /^name$/i, confidence: 0.85 },
-    { pattern: /^risk$/i, confidence: 0.75 },
-    { pattern: /risk.*title/i, confidence: 0.7 },
-    { pattern: /risk.*name/i, confidence: 0.7 },
-    { pattern: /^issue$/i, confidence: 0.5 },
-    { pattern: /^event$/i, confidence: 0.5 },
-  ],
-  description: [
-    { pattern: /^risk\s*description$/i, confidence: 1.0 },
-    { pattern: /^description$/i, confidence: 0.95 },
-    { pattern: /^desc\.?$/i, confidence: 0.9 },
-    { pattern: /^risk\s*details?$/i, confidence: 0.9 },
-    { pattern: /^details?$/i, confidence: 0.8 },
-    { pattern: /^summary$/i, confidence: 0.75 },
-    { pattern: /^narrative$/i, confidence: 0.7 },
-    { pattern: /^notes?$/i, confidence: 0.6 },
-    { pattern: /description/i, confidence: 0.6 },
-    { pattern: /detail/i, confidence: 0.5 },
-  ],
-  category: [
-    { pattern: /^risk\s*category$/i, confidence: 1.0 },
-    { pattern: /^category$/i, confidence: 0.95 },
-    { pattern: /^risk\s*type$/i, confidence: 0.95 },
-    { pattern: /^risk\s*class$/i, confidence: 0.95 },
-    { pattern: /^risk\s*area$/i, confidence: 0.95 },
-    { pattern: /^risk\s*domain$/i, confidence: 0.95 },
-    { pattern: /^principal\s*risk(s)?$/i, confidence: 0.9 },
-    { pattern: /^operational\s*risk\s*class(es)?$/i, confidence: 0.9 },
-    { pattern: /^strategic\s*objectives?$/i, confidence: 0.85 },
-    { pattern: /^type$/i, confidence: 0.8 },
-    { pattern: /^class$/i, confidence: 0.8 },
-    { pattern: /^division$/i, confidence: 0.75 },
-    { pattern: /^business\s*unit$/i, confidence: 0.75 },
-    { pattern: /^department$/i, confidence: 0.75 },
-    { pattern: /^function$/i, confidence: 0.7 },
-    { pattern: /^area$/i, confidence: 0.7 },
-    { pattern: /^domain$/i, confidence: 0.7 },
-    { pattern: /^pillar$/i, confidence: 0.7 },
-    { pattern: /^theme$/i, confidence: 0.6 },
-    { pattern: /category/i, confidence: 0.5 },
-    { pattern: /class/i, confidence: 0.4 },
-  ],
-  inherentLikelihood: [
-    { pattern: /^inherent\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^gross\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^raw\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^initial\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /inherent.*likelihood/i, confidence: 0.95 },
-    { pattern: /gross.*likelihood/i, confidence: 0.95 },
-    { pattern: /^likelihood\s*\(?rating\)?$/i, confidence: 0.9 },
-    { pattern: /^likelihood\s*\(?score\)?$/i, confidence: 0.9 },
-    { pattern: /^likelihood\s*\(?\d+-\d+\)?$/i, confidence: 0.9 }, // "Likelihood (1-5)"
-    { pattern: /^likelihood$/i, confidence: 0.85 },
-    { pattern: /^probability$/i, confidence: 0.8 },
-    { pattern: /^l\s*rating$/i, confidence: 0.8 },
-    { pattern: /^prob\.?$/i, confidence: 0.7 },
-    { pattern: /likelihood/i, confidence: 0.6 },
-    { pattern: /^l$/i, confidence: 0.4 },
-  ],
-  inherentImpact: [
-    { pattern: /^inherent\s*impact$/i, confidence: 1.0 },
-    { pattern: /^gross\s*impact$/i, confidence: 1.0 },
-    { pattern: /^raw\s*impact$/i, confidence: 1.0 },
-    { pattern: /^initial\s*impact$/i, confidence: 1.0 },
-    { pattern: /inherent.*impact/i, confidence: 0.95 },
-    { pattern: /gross.*impact/i, confidence: 0.95 },
-    { pattern: /^impact\s*\(?rating\)?$/i, confidence: 0.9 },
-    { pattern: /^impact\s*\(?score\)?$/i, confidence: 0.9 },
-    { pattern: /^impact\s*\(?\d+-\d+\)?$/i, confidence: 0.9 }, // "Impact (1-5)"
-    { pattern: /^impact$/i, confidence: 0.85 },
-    { pattern: /^consequence$/i, confidence: 0.8 },
-    { pattern: /^severity$/i, confidence: 0.8 },
-    { pattern: /^i\s*rating$/i, confidence: 0.8 },
-    { pattern: /^sev\.?$/i, confidence: 0.7 },
-    { pattern: /impact/i, confidence: 0.6 },
-    { pattern: /^i$/i, confidence: 0.4 },
-  ],
-  residualLikelihood: [
-    { pattern: /^residual\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^net\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^current\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /^controlled\s*likelihood$/i, confidence: 1.0 },
-    { pattern: /residual.*likelihood/i, confidence: 0.95 },
-    { pattern: /net.*likelihood/i, confidence: 0.95 },
-    { pattern: /^res\.?\s*likelihood$/i, confidence: 0.9 },
-    { pattern: /^res\.?\s*l$/i, confidence: 0.8 },
-    { pattern: /^rl$/i, confidence: 0.7 },
-  ],
-  residualImpact: [
-    { pattern: /^residual\s*impact$/i, confidence: 1.0 },
-    { pattern: /^net\s*impact$/i, confidence: 1.0 },
-    { pattern: /^current\s*impact$/i, confidence: 1.0 },
-    { pattern: /^controlled\s*impact$/i, confidence: 1.0 },
-    { pattern: /residual.*impact/i, confidence: 0.95 },
-    { pattern: /net.*impact/i, confidence: 0.95 },
-    { pattern: /^res\.?\s*impact$/i, confidence: 0.9 },
-    { pattern: /^res\.?\s*i$/i, confidence: 0.8 },
-    { pattern: /^ri$/i, confidence: 0.7 },
-  ],
-  response: [
-    { pattern: /^risk\s*response$/i, confidence: 1.0 },
-    { pattern: /^response\s*strategy$/i, confidence: 1.0 },
-    { pattern: /^response$/i, confidence: 0.9 },
-    { pattern: /^treatment$/i, confidence: 0.9 },
-    { pattern: /^risk\s*treatment$/i, confidence: 1.0 },
-    { pattern: /^strategy$/i, confidence: 0.7 },
-    { pattern: /^action$/i, confidence: 0.6 },
-    { pattern: /response/i, confidence: 0.5 },
-    { pattern: /treatment/i, confidence: 0.5 },
-  ],
-  controls: [
-    { pattern: /^controls?$/i, confidence: 1.0 },
-    { pattern: /^existing\s*controls?$/i, confidence: 1.0 },
-    { pattern: /^current\s*controls?$/i, confidence: 1.0 },
-    { pattern: /^mitigating\s*controls?$/i, confidence: 1.0 },
-    { pattern: /^mitigation$/i, confidence: 0.95 },
-    { pattern: /^mitigations?$/i, confidence: 0.95 },
-    { pattern: /^countermeasures?$/i, confidence: 0.9 },
-    { pattern: /control/i, confidence: 0.6 },
-    { pattern: /mitigation/i, confidence: 0.6 },
-    { pattern: /measure/i, confidence: 0.5 },
-    { pattern: /safeguard/i, confidence: 0.5 },
-  ],
-  status: [
-    { pattern: /^risk\s*status$/i, confidence: 1.0 },
-    { pattern: /^status$/i, confidence: 0.95 },
-    { pattern: /^state$/i, confidence: 0.8 },
-    { pattern: /^progress$/i, confidence: 0.7 },
-    { pattern: /^phase$/i, confidence: 0.6 },
-    { pattern: /status/i, confidence: 0.5 },
-  ],
-}
-
-function smartAutoMap(headers: string[]): { mapping: ColumnMapping; confidence: Record<string, number>; debug: string[] } {
-  const mapping: ColumnMapping = {
-    title: '', description: '', category: '',
-    inherentLikelihood: '', inherentImpact: '',
-    residualLikelihood: '', residualImpact: '',
-    response: '', controls: '', status: '',
-    inherentCombined: '', residualCombined: '',
-  }
-  const confidence: Record<string, number> = {}
-  const usedHeaders = new Set<string>()
-  const debug: string[] = []
-
-  // Log all headers for debugging
-  debug.push(`Found ${headers.length} columns: ${headers.join(', ')}`)
-
-  // First, check for combined Likelihood/Impact columns
-  for (const header of headers) {
-    const normalizedHeader = header.trim()
-    for (const { pattern, confidence: patternConf, type } of COMBINED_PATTERNS) {
-      if (pattern.test(normalizedHeader)) {
-        const field = type === 'inherent' ? 'inherentCombined' : 'residualCombined'
-        if (!mapping[field] || patternConf > (confidence[field] || 0)) {
-          mapping[field] = header
-          confidence[field] = patternConf
-          debug.push(`🔗 Combined column: "${header}" → ${field} (${Math.round(patternConf * 100)}%)`)
-          if (patternConf >= 0.9) usedHeaders.add(header)
-        }
-        break
-      }
-    }
-  }
-
-  // Match each field using patterns with confidence
-  for (const [field, patterns] of Object.entries(FIELD_PATTERNS)) {
-    for (const header of headers) {
-      if (usedHeaders.has(header)) continue
-      const normalizedHeader = header.trim()
-
-      for (const { pattern, confidence: patternConf } of patterns) {
-        if (pattern.test(normalizedHeader)) {
-          // Only update if this match has higher confidence
-          if (!mapping[field as keyof ColumnMapping] || patternConf > (confidence[field] || 0)) {
-            mapping[field as keyof ColumnMapping] = header
-            confidence[field] = patternConf
-            debug.push(`Mapped "${header}" → ${field} (${Math.round(patternConf * 100)}%)`)
-            // Mark as used if high confidence to avoid reuse
-            if (patternConf >= 0.9) usedHeaders.add(header)
-          }
-          break
-        }
-      }
-    }
-  }
-
-  // If we have combined columns but no separate likelihood/impact, note it
-  if (mapping.inherentCombined && !mapping.inherentLikelihood && !mapping.inherentImpact) {
-    debug.push(`ℹ️ Using combined column "${mapping.inherentCombined}" for inherent L×I`)
-  }
-  if (mapping.residualCombined && !mapping.residualLikelihood && !mapping.residualImpact) {
-    debug.push(`ℹ️ Using combined column "${mapping.residualCombined}" for residual L×I`)
-  }
-
-  // Auto-copy inherent to residual if residual not found
-  if (!mapping.residualLikelihood && !mapping.residualCombined && mapping.inherentLikelihood) {
-    mapping.residualLikelihood = mapping.inherentLikelihood
-    confidence.residualLikelihood = 0.4
-    debug.push(`Auto-copied inherent likelihood → residual likelihood`)
-  }
-  if (!mapping.residualImpact && !mapping.residualCombined && mapping.inherentImpact) {
-    mapping.residualImpact = mapping.inherentImpact
-    confidence.residualImpact = 0.4
-    debug.push(`Auto-copied inherent impact → residual impact`)
-  }
-  if (!mapping.residualCombined && mapping.inherentCombined && !mapping.residualLikelihood) {
-    mapping.residualCombined = mapping.inherentCombined
-    confidence.residualCombined = 0.4
-    debug.push(`Auto-copied inherent combined → residual combined`)
-  }
-
-  // Log unmapped required fields (considering combined columns satisfy L+I requirements)
-  const hasInherent = mapping.inherentLikelihood || mapping.inherentCombined
-  const hasResidual = mapping.residualLikelihood || mapping.residualCombined
-  const unmapped = ['title', 'description', 'category']
-    .filter(f => !mapping[f as keyof ColumnMapping])
-  if (!hasInherent) unmapped.push('inherentLikelihood/Impact')
-  if (!hasResidual) unmapped.push('residualLikelihood/Impact')
-
-  if (unmapped.length > 0) {
-    debug.push(`⚠️ Unmapped required fields: ${unmapped.join(', ')}`)
-  }
-
-  return { mapping, confidence, debug }
-}
-
-function parseCategory(value: string): { value: string; warning?: string } {
-  if (!value?.toString().trim()) return { value: 'OPERATIONAL' }
-  const normalized = value.toString().toLowerCase().trim()
-  const upper = normalized.toUpperCase()
-  // Direct enum match (case-insensitive)
-  if (CATEGORIES.includes(upper)) return { value: upper }
-  // Alias table lookup
-  if (CATEGORY_ALIASES[normalized]) return { value: CATEGORY_ALIASES[normalized] }
-  // Legacy 3-char prefix fallback
-  const partial = CATEGORIES.find(c => c.startsWith(upper.substring(0, 3)))
-  if (partial) return { value: partial }
-  return {
-    value: 'OPERATIONAL',
-    warning: `Unknown category "${value}" — defaulted to OPERATIONAL`,
-  }
-}
 
 function parseResponse(value: string | undefined): string | undefined {
   if (!value) return undefined
@@ -433,35 +78,6 @@ function parseResponse(value: string | undefined): string | undefined {
   if (upper.includes('TRANS')) return 'TRANSFER'
   if (upper.includes('ACCEPT')) return 'ACCEPT'
   return undefined
-}
-
-function parseStatus(value: string | undefined): {
-  status?: string
-  workflowStatus?: string
-  warning?: string
-} {
-  if (!value?.toString().trim()) return {}
-  const normalized = value.toString().toLowerCase().trim()
-  // Direct alias table lookup
-  const match = STATUS_ALIASES[normalized]
-  if (match) return match
-  // Normalise spaces to underscores and try again ("in progress" → "in_progress")
-  const withUnderscore = normalized.replace(/\s+/g, '_')
-  const matchUs = STATUS_ALIASES[withUnderscore]
-  if (matchUs) return matchUs
-  // Partial substring fallback
-  if (normalized.includes('progress'))                        return { status: 'IN_PROGRESS' }
-  if (normalized.includes('monitor') || normalized.includes('watch')) return { status: 'MONITORING' }
-  if (normalized.includes('close')   || normalized.includes('done'))  return { status: 'CLOSED' }
-  if (normalized.includes('archive'))                         return { status: 'ARCHIVED' }
-  if (normalized.includes('open')    || normalized.includes('new'))   return { status: 'OPEN' }
-  return { warning: `Unknown status "${value}" — will use defaults` }
-}
-
-function parseNumber(value: unknown, min: number, max: number, defaultVal: number): number {
-  const num = parseInt(String(value))
-  if (isNaN(num)) return defaultVal
-  return Math.min(max, Math.max(min, num))
 }
 
 // Parse combined likelihood/impact values like "3,4", "3x4", "3/4", "3 x 4"
@@ -499,6 +115,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [sheetData, setSheetData] = useState<string[][]>([])
+  const [detectedHeaderRowIndex, setDetectedHeaderRowIndex] = useState<number | null>(null)
   const [mapping, setMapping] = useState<ColumnMapping>({
     title: '', description: '', category: '',
     inherentLikelihood: '', inherentImpact: '',
@@ -509,6 +126,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
   const [mappingConfidence, setMappingConfidence] = useState<Record<string, number>>({})
   const [mappingDebug, setMappingDebug] = useState<string[]>([])
   const [previewData, setPreviewData] = useState<RiskPreview[]>([])
+  const [duplicateResults, setDuplicateResults] = useState<DuplicateCheckResult[]>([])
   const [importedCount, setImportedCount] = useState(0)
   const [error, setError] = useState('')
   const [extractionProgress, setExtractionProgress] = useState('')
@@ -517,6 +135,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
   const utils = trpc.useUtils()
   const { data: registers } = trpc.risk.registers.useQuery()
+  const { data: existingRisksData } = trpc.risk.listForWorkspace.useQuery(undefined, { staleTime: 30_000 })
   const [selectedRegisterId, setSelectedRegisterId] = useState<string>('')
 
   // Auto-select first register when data loads
@@ -743,41 +362,21 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
         return
       }
 
-      // Try to detect header row (might not be row 0)
-      let headerRowIndex = 0
-      let headerRow: string[] = []
+      // Detect header row using field-pattern scoring (handles title rows above headers)
+      const stringRows = jsonData.map(row =>
+        (row || []).map(c => String(c ?? '').trim())
+      )
+      const headerDetection = detectHeaderRow(stringRows)
 
-      // Score each row to find the header:
-      // - Prefer rows with text content (not just numbers)
-      // - Prefer rows with more non-empty columns
-      // - Headers typically have short, text-like values
-      let maxScore = 0
-      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
-        const row = jsonData[i] || []
-        const nonEmptyCols = row.filter(c => c !== undefined && c !== '' && c !== null).length
-        if (nonEmptyCols === 0) continue
+      const headerRowIndex = headerDetection?.rowIndex ?? 0
+      const headerRow = headerDetection?.headers ??
+        (jsonData[0] || []).map(h => String(h ?? '').trim())
 
-        // Count cells that look like headers (text, not just numbers)
-        const textCells = row.filter(c => {
-          const val = String(c || '').trim()
-          if (!val) return false
-          // Headers are usually short text, not long paragraphs or pure numbers
-          return val.length > 0 && val.length < 50 && !/^\d+([.,]\d+)?$/.test(val)
-        }).length
-
-        // Score: weight text cells heavily, also consider total columns
-        const score = (textCells * 3) + nonEmptyCols
-        debug.push(`Row ${i} score: ${score} (${textCells} text cells, ${nonEmptyCols} non-empty)`)
-
-        if (score > maxScore) {
-          maxScore = score
-          headerRowIndex = i
-        }
-      }
-
-      headerRow = (jsonData[headerRowIndex] || []).map(h => String(h || '').trim())
-      const nonEmptyHeaders = headerRow.filter(h => h).length
-      debug.push(`🎯 Detected header row: ${headerRowIndex} (${headerRow.length} columns, ${nonEmptyHeaders} non-empty)`)
+      debug.push(
+        headerDetection
+          ? `🎯 Detected header row: ${headerRowIndex} (${headerDetection.matchedFields} field matches, score ${Math.round(headerDetection.score)})`
+          : `⚠️ No header row detected by field patterns — defaulting to row 0`
+      )
       debug.push(`📋 Headers: ${headerRow.filter(h => h).join(', ')}`)
 
       // Data starts after header row
@@ -786,6 +385,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       )
       debug.push(`📊 Data rows (after filtering empty): ${dataRows.length}`)
 
+      setDetectedHeaderRowIndex(headerRowIndex)
       setHeaders(headerRow)
       setSheetData(dataRows)
 
@@ -856,7 +456,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
 
       const title = String(getValue(mapping.title) || '').trim()
       const description = String(getValue(mapping.description) || '').trim()
-      const categoryResult = parseCategory(String(getValue(mapping.category) || ''))
+      const categoryResult = normalizeCategory(String(getValue(mapping.category) || ''))
       if (categoryResult.warning) warnings.push(categoryResult.warning)
       const category = categoryResult.value
 
@@ -879,8 +479,12 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
           warnings.push('Could not parse inherent L×I')
         }
       } else {
-        inherentLikelihood = parseNumber(getValue(mapping.inherentLikelihood), 1, 5, 3)
-        inherentImpact = parseNumber(getValue(mapping.inherentImpact), 1, 5, 3)
+        const ilResult = validateScore(getValue(mapping.inherentLikelihood), 'Inherent Likelihood')
+        const iiResult = validateScore(getValue(mapping.inherentImpact), 'Inherent Impact')
+        inherentLikelihood = ilResult.value
+        inherentImpact = iiResult.value
+        if (ilResult.warning) warnings.push(ilResult.warning)
+        if (iiResult.warning) warnings.push(iiResult.warning)
       }
 
       // Parse residual scores (from combined or separate columns)
@@ -897,14 +501,18 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
           warnings.push('Could not parse residual L×I')
         }
       } else {
-        residualLikelihood = parseNumber(getValue(mapping.residualLikelihood), 1, 5, inherentLikelihood)
-        residualImpact = parseNumber(getValue(mapping.residualImpact), 1, 5, inherentImpact)
+        const rlResult = validateScore(getValue(mapping.residualLikelihood), 'Residual Likelihood', inherentLikelihood)
+        const riResult = validateScore(getValue(mapping.residualImpact), 'Residual Impact', inherentImpact)
+        residualLikelihood = rlResult.value
+        residualImpact = riResult.value
+        if (rlResult.warning) warnings.push(rlResult.warning)
+        if (riResult.warning) warnings.push(riResult.warning)
       }
 
-      if (residualLikelihood > inherentLikelihood) warnings.push('Residual L > Inherent L')
-      if (residualImpact > inherentImpact) warnings.push('Residual I > Inherent I')
+      const residualCheck = validateResidualNotExceedsInherent(residualLikelihood, inherentLikelihood, residualImpact, inherentImpact)
+      residualCheck.warnings.forEach(w => warnings.push(w))
 
-      const statusResult = parseStatus(getValue(mapping.status) as string | undefined)
+      const statusResult = normalizeStatus(getValue(mapping.status) as string | undefined)
       if (statusResult.warning) warnings.push(statusResult.warning)
 
       return {
@@ -926,6 +534,13 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
     })
 
     setPreviewData(risks)
+    const existing: ExistingRisk[] = (existingRisksData ?? []).map(r => ({
+      id: r.id,
+      refCode: r.refCode,
+      title: r.title,
+      category: r.category,
+    }))
+    setDuplicateResults(checkDuplicates(risks.map(r => ({ title: r.title, category: r.category })), existing))
     setStep('preview')
   }
 
@@ -944,7 +559,7 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
       risks: validRisks.map(r => ({
         title: r.title,
         description: r.description,
-        category: r.category as 'STRATEGIC' | 'OPERATIONAL' | 'FINANCIAL' | 'COMPLIANCE' | 'TECHNOLOGY' | 'REPUTATIONAL' | 'ENVIRONMENTAL' | 'PEOPLE',
+        category: r.category as 'STRATEGIC' | 'OPERATIONAL' | 'FINANCIAL' | 'COMPLIANCE' | 'TECHNOLOGY' | 'REPUTATIONAL' | 'ENVIRONMENTAL' | 'PEOPLE' | 'HEALTH_SAFETY',
         inherentLikelihood: r.inherentLikelihood,
         inherentImpact: r.inherentImpact,
         residualLikelihood: r.residualLikelihood,
@@ -1117,6 +732,20 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 </div>
               </div>
 
+              {/* Header row detection result */}
+              {detectedHeaderRowIndex !== null && (
+                <div className="flex items-start gap-2 px-3 py-2 bg-teal-950/60 border border-teal-700/40 rounded-lg text-xs">
+                  <Info className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-teal-300">
+                    Header row detected at <strong className="text-teal-200">row {detectedHeaderRowIndex + 1}</strong>
+                    {detectedHeaderRowIndex > 0 && (
+                      <span className="text-teal-400"> — skipped {detectedHeaderRowIndex} title row{detectedHeaderRowIndex > 1 ? 's' : ''} above</span>
+                    )}
+                    {' · '}{headers.filter(h => h).length} columns mapped
+                  </span>
+                </div>
+              )}
+
               {/* Debug info showing detected columns */}
               {mappingDebug.length > 0 && (
                 <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
@@ -1252,6 +881,11 @@ export function ExcelImportModal({ onClose, onSuccess }: ExcelImportModalProps) 
                 {errorCount > 0 && (
                   <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm">
                     {errorCount} will be skipped
+                  </span>
+                )}
+                {duplicateResults.filter(d => d.matchType !== 'none').length > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-sm">
+                    {duplicateResults.filter(d => d.matchType !== 'none').length} possible duplicate{duplicateResults.filter(d => d.matchType !== 'none').length > 1 ? 's' : ''}
                   </span>
                 )}
                 {fileType !== 'excel' && (

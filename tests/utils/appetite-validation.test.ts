@@ -22,8 +22,8 @@ import {
 // ============================================
 
 describe('constants', () => {
-  it('has 8 risk categories', () => {
-    expect(RISK_CATEGORIES).toHaveLength(8)
+  it('has 9 risk categories', () => {
+    expect(RISK_CATEGORIES).toHaveLength(9)
   })
 
   it('has a label for every category', () => {
@@ -269,9 +269,9 @@ describe('bandToColorClasses', () => {
     expect(c.border).toContain('green')
   })
 
-  it('returns yellow classes for MEDIUM', () => {
+  it('returns amber classes for MEDIUM', () => {
     const c = bandToColorClasses('MEDIUM')
-    expect(c.bg).toContain('yellow')
+    expect(c.bg).toContain('amber')
   })
 
   it('returns orange classes for HIGH', () => {
@@ -292,16 +292,19 @@ describe('bandToColorClasses', () => {
 describe('bandToHeatmapClasses', () => {
   it('returns heatmap classes for each band', () => {
     expect(bandToHeatmapClasses('LOW')).toContain('green')
-    expect(bandToHeatmapClasses('MEDIUM')).toContain('yellow')
+    expect(bandToHeatmapClasses('MEDIUM')).toContain('amber')
     expect(bandToHeatmapClasses('HIGH')).toContain('orange')
     expect(bandToHeatmapClasses('CRITICAL')).toContain('red')
   })
 })
 
 describe('bandToHeatmapTextClass', () => {
-  it('returns text color for each band', () => {
-    expect(bandToHeatmapTextClass('LOW')).toContain('green')
-    expect(bandToHeatmapTextClass('CRITICAL')).toContain('red')
+  it('always returns text-white (solid coloured heatmap cells)', () => {
+    // All bands use text-white since cells have solid coloured backgrounds
+    expect(bandToHeatmapTextClass('LOW')).toBe('text-white')
+    expect(bandToHeatmapTextClass('MEDIUM')).toBe('text-white')
+    expect(bandToHeatmapTextClass('HIGH')).toBe('text-white')
+    expect(bandToHeatmapTextClass('CRITICAL')).toBe('text-white')
   })
 })
 

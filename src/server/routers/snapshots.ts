@@ -6,7 +6,6 @@ import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/audit'
 import { captureSnapshot, getEarliestSnapshotDate } from '@/lib/snapshot-utils'
 import { detectRiskMovers, monthsDiff } from '@/lib/snapshot-validation'
-import type { ScoreBreakdown } from '@/lib/vytl-score'
 
 export const snapshotsRouter = router({
   /**
@@ -141,9 +140,6 @@ export const snapshotsRouter = router({
           ? (scoreDelta / earliestSnapshot.vytlScore) * 100
           : null
 
-      const eBreakdown = earliestSnapshot.scoreBreakdown as ScoreBreakdown | null | undefined
-      const lBreakdown = latestSnapshot.scoreBreakdown as ScoreBreakdown | null | undefined
-
       // Risk movers
       const movers = detectRiskMovers(
         latestSnapshot.riskDetails,
@@ -204,44 +200,32 @@ export const snapshotsRouter = router({
           gradeNow: latestSnapshot.vytlGrade,
           components: {
             coverage: {
-              then: eBreakdown?.coverage?.score ?? earliestSnapshot.vytlCoverage,
-              now: lBreakdown?.coverage?.score ?? latestSnapshot.vytlCoverage,
-              change:
-                (lBreakdown?.coverage?.score ?? latestSnapshot.vytlCoverage) != null &&
-                (eBreakdown?.coverage?.score ?? earliestSnapshot.vytlCoverage) != null
-                  ? (lBreakdown?.coverage?.score ?? latestSnapshot.vytlCoverage)! -
-                    (eBreakdown?.coverage?.score ?? earliestSnapshot.vytlCoverage)!
-                  : null,
+              then: earliestSnapshot.vytlCoverage,
+              now: latestSnapshot.vytlCoverage,
+              change: latestSnapshot.vytlCoverage != null && earliestSnapshot.vytlCoverage != null
+                ? latestSnapshot.vytlCoverage - earliestSnapshot.vytlCoverage
+                : null,
             },
             control: {
-              then: eBreakdown?.controlEffectiveness?.score ?? earliestSnapshot.vytlControl,
-              now: lBreakdown?.controlEffectiveness?.score ?? latestSnapshot.vytlControl,
-              change:
-                (lBreakdown?.controlEffectiveness?.score ?? latestSnapshot.vytlControl) != null &&
-                (eBreakdown?.controlEffectiveness?.score ?? earliestSnapshot.vytlControl) != null
-                  ? (lBreakdown?.controlEffectiveness?.score ?? latestSnapshot.vytlControl)! -
-                    (eBreakdown?.controlEffectiveness?.score ?? earliestSnapshot.vytlControl)!
-                  : null,
+              then: earliestSnapshot.vytlControl,
+              now: latestSnapshot.vytlControl,
+              change: latestSnapshot.vytlControl != null && earliestSnapshot.vytlControl != null
+                ? latestSnapshot.vytlControl - earliestSnapshot.vytlControl
+                : null,
             },
             maturity: {
-              then: eBreakdown?.maturity?.score ?? earliestSnapshot.vytlMaturity,
-              now: lBreakdown?.maturity?.score ?? latestSnapshot.vytlMaturity,
-              change:
-                (lBreakdown?.maturity?.score ?? latestSnapshot.vytlMaturity) != null &&
-                (eBreakdown?.maturity?.score ?? earliestSnapshot.vytlMaturity) != null
-                  ? (lBreakdown?.maturity?.score ?? latestSnapshot.vytlMaturity)! -
-                    (eBreakdown?.maturity?.score ?? earliestSnapshot.vytlMaturity)!
-                  : null,
+              then: earliestSnapshot.vytlMaturity,
+              now: latestSnapshot.vytlMaturity,
+              change: latestSnapshot.vytlMaturity != null && earliestSnapshot.vytlMaturity != null
+                ? latestSnapshot.vytlMaturity - earliestSnapshot.vytlMaturity
+                : null,
             },
             trend: {
-              then: eBreakdown?.trend?.score ?? earliestSnapshot.vytlTrend,
-              now: lBreakdown?.trend?.score ?? latestSnapshot.vytlTrend,
-              change:
-                (lBreakdown?.trend?.score ?? latestSnapshot.vytlTrend) != null &&
-                (eBreakdown?.trend?.score ?? earliestSnapshot.vytlTrend) != null
-                  ? (lBreakdown?.trend?.score ?? latestSnapshot.vytlTrend)! -
-                    (eBreakdown?.trend?.score ?? earliestSnapshot.vytlTrend)!
-                  : null,
+              then: earliestSnapshot.vytlTrend,
+              now: latestSnapshot.vytlTrend,
+              change: latestSnapshot.vytlTrend != null && earliestSnapshot.vytlTrend != null
+                ? latestSnapshot.vytlTrend - earliestSnapshot.vytlTrend
+                : null,
             },
           },
         },

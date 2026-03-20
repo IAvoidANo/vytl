@@ -15,6 +15,7 @@ const CATEGORIES = [
   { value: 'REPUTATIONAL', label: 'Reputational' },
   { value: 'ENVIRONMENTAL', label: 'Environmental' },
   { value: 'PEOPLE', label: 'People' },
+  { value: 'HEALTH_SAFETY', label: 'Health & Safety' },
 ] as const
 
 const RESPONSES = [

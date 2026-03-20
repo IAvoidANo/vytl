@@ -71,7 +71,7 @@ export function SnapshotSettings() {
                   value={freq}
                   checked={(org?.snapshotFrequency ?? 'WEEKLY') === freq}
                   onChange={() => handleFrequencyChange(freq)}
-                  disabled={updateOrg.isLoading}
+                  disabled={updateOrg.isPending}
                   className="accent-teal-500"
                 />
                 <span className="text-sm text-slate-300">
@@ -95,7 +95,7 @@ export function SnapshotSettings() {
               value={org?.snapshotMateriality ?? 2}
               onChange={(e) => handleMaterialityChange(e.target.value)}
               onBlur={(e) => handleMaterialityChange(e.target.value)}
-              disabled={updateOrg.isLoading}
+              disabled={updateOrg.isPending}
               className={inputClass}
             />
             <span className="text-sm text-slate-400">points</span>

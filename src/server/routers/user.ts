@@ -5,6 +5,8 @@ import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import { createAuditLog } from '@/lib/audit'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { sendEmail } from '@/lib/email'
+import { inviteUserEmail, passwordResetEmail, verifyEmailTemplate } from '@/lib/email-templates'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
@@ -122,13 +124,23 @@ export const userRouter = router({
         },
       })
 
-      // TODO: Send invite email with link /accept-invite?token=${inviteToken}
-      const inviteUrl = `${process.env.NEXTAUTH_URL}/accept-invite?token=${inviteToken}`
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const inviteUrl = `${appUrl}/accept-invite?token=${inviteToken}`
 
-      return {
-        user,
-        inviteUrl, // Return for now since email isn't implemented
-      }
+      // Fire-and-forget invite email
+      const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
+      sendEmail({
+        to: input.email,
+        subject: `You've been invited to join ${org?.name ?? 'Vytl'}`,
+        html: inviteUserEmail({
+          orgName: org?.name ?? 'Vytl',
+          inviterName: ctx.user.name ?? ctx.user.email ?? 'A team member',
+          inviteUrl,
+          appUrl,
+        }),
+      }).catch(() => {})
+
+      return { user, inviteUrl }
     }),
 
   // Update user role (ADMIN+, cannot update OWNER or self to lower)
@@ -385,9 +397,20 @@ export const userRouter = router({
         data: { inviteToken, inviteTokenExpires },
       })
 
-      const inviteUrl = `${process.env.NEXTAUTH_URL}/accept-invite?token=${inviteToken}`
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const inviteUrl = `${appUrl}/accept-invite?token=${inviteToken}`
 
-      // TODO: Send invite email
+      const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
+      sendEmail({
+        to: user.email,
+        subject: `Your invitation to join ${org?.name ?? 'Vytl'} — resent`,
+        html: inviteUserEmail({
+          orgName: org?.name ?? 'Vytl',
+          inviterName: ctx.user.name ?? ctx.user.email ?? 'A team member',
+          inviteUrl,
+          appUrl,
+        }),
+      }).catch(() => {})
 
       return { inviteUrl }
     }),
@@ -503,13 +526,16 @@ export const userRouter = router({
         data: { resetToken, resetTokenExpires },
       })
 
-      const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const resetUrl = `${appUrl}/reset-password?token=${resetToken}`
 
-      // TODO: Send email with reset link
-      // For now, log the URL (in production this would be sent via email)
-      console.log(`[Password Reset] URL for ${input.email}: ${resetUrl}`)
+      sendEmail({
+        to: user.email,
+        subject: 'Reset your Vytl password',
+        html: passwordResetEmail({ recipientName: user.name, resetUrl, appUrl }),
+      }).catch(() => {})
 
-      return { success: true, resetUrl } // Return resetUrl temporarily until email is set up
+      return { success: true }
     }),
 
   // Verify reset token (public)
@@ -570,6 +596,156 @@ export const userRouter = router({
       })
 
       return { success: true }
+    }),
+
+  // Self-service registration — creates a new Organisation + OWNER user (public)
+  register: publicProcedure
+    .input(z.object({
+      name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+      email: z.string().email('Invalid email address'),
+      password: z.string().min(8, 'Password must be at least 8 characters').max(128),
+      orgName: z.string().min(2, 'Organisation name must be at least 2 characters').max(100),
+    }))
+    .mutation(async ({ input }) => {
+      // Rate limit registrations to prevent abuse
+      checkRateLimit(`register:${input.email}`, RATE_LIMITS.auth)
+
+      // Check for duplicate email
+      const existing = await db.user.findUnique({ where: { email: input.email } })
+      if (existing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'An account with this email address already exists',
+        })
+      }
+
+      // Generate a URL-safe slug from the org name
+      const baseSlug = input.orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 40)
+
+      // Ensure slug uniqueness by appending a short random suffix if needed
+      let slug = baseSlug
+      const taken = await db.organisation.findUnique({ where: { slug } })
+      if (taken) {
+        slug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
+      }
+
+      const passwordHash = await bcrypt.hash(input.password, 12)
+
+      // Create organisation + owner user in a transaction
+      const result = await db.$transaction(async (tx) => {
+        const org = await tx.organisation.create({
+          data: {
+            name: input.orgName,
+            slug,
+          },
+        })
+
+        const user = await tx.user.create({
+          data: {
+            name: input.name,
+            email: input.email,
+            passwordHash,
+            role: 'OWNER',
+            status: 'ACTIVE',
+            orgId: org.id,
+            emailVerified: null,
+          },
+        })
+
+        return { org, user }
+      })
+
+      await createAuditLog({
+        action: 'CREATE',
+        entityType: 'USER',
+        entityId: result.user.id,
+        userId: result.user.id,
+        orgId: result.org.id,
+        newValues: { email: input.email, orgName: input.orgName, method: 'self_register' },
+      })
+
+      // Send verification email instead of welcome email
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const verificationToken = crypto.randomBytes(32).toString('hex')
+      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+      await db.user.update({
+        where: { id: result.user.id },
+        data: { verificationToken, verificationTokenExpires },
+      })
+
+      const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
+      sendEmail({
+        to: input.email,
+        subject: 'Verify your email — VYTL',
+        html: verifyEmailTemplate({ recipientName: input.name, verifyUrl, appUrl }),
+      }).catch(() => {})
+
+      return { success: true, email: input.email }
+    }),
+
+  // Verify email with token
+  verifyEmail: publicProcedure
+    .input(z.object({ token: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const user = await db.user.findFirst({
+        where: {
+          verificationToken: input.token,
+          verificationTokenExpires: { gt: new Date() },
+        },
+      })
+      if (!user) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired verification link.' })
+      }
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: new Date(),
+          verificationToken: null,
+          verificationTokenExpires: null,
+        },
+      })
+      return { success: true, email: user.email }
+    }),
+
+  // Resend verification email
+  resendVerification: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const user = await db.user.findUnique({ where: { email: input.email } })
+      // Always return success (don't leak whether email exists)
+      if (!user || user.emailVerified) return { success: true }
+
+      const verificationToken = crypto.randomBytes(32).toString('hex')
+      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      await db.user.update({
+        where: { id: user.id },
+        data: { verificationToken, verificationTokenExpires },
+      })
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
+      sendEmail({
+        to: input.email,
+        subject: 'Verify your email — VYTL',
+        html: verifyEmailTemplate({ recipientName: user.name ?? 'there', verifyUrl, appUrl }),
+      }).catch(() => {})
+      return { success: true }
+    }),
+
+  // Check if email is verified (used by login page)
+  checkVerification: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(async ({ input }) => {
+      const user = await db.user.findUnique({
+        where: { email: input.email },
+        select: { emailVerified: true },
+      })
+      if (!user) return { verified: true } // don't leak user existence
+      return { verified: !!user.emailVerified }
     }),
 
   // Get dashboard layout

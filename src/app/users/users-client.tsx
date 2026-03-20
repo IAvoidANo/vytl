@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc-client'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -69,9 +70,10 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
   })
 
   const resendInvite = trpc.user.resendInvite.useMutation({
-    onSuccess: (data) => {
-      alert(`Invite link: ${data.inviteUrl}`)
+    onSuccess: () => {
+      toast.success('Invitation resent — the user will receive an email shortly')
     },
+    onError: (err) => toast.error(err.message),
   })
 
   const handleInvite = (e: React.FormEvent) => {

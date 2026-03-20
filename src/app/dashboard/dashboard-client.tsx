@@ -18,7 +18,14 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
   const { data: session } = useSession()
   const userRole = (session?.user as { role?: string })?.role
   const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
-  const firstName = userName?.split(' ')[0] || 'there'
+  const firstName = userName?.trim().split(/\s+/)[0] || 'there'
+
+  const greeting = (() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    return 'Good evening'
+  })()
 
   const { data: riskStats, isLoading: riskLoading } = trpc.risk.stats.useQuery(undefined, {
     initialData: {
@@ -41,7 +48,7 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
       {/* Page header — compact single line */}
       <div className="flex items-baseline justify-between flex-shrink-0">
         <h1 className="text-xl font-bold text-slate-900">
-          Good morning, {firstName}
+          {greeting}, {firstName}
         </h1>
         <p className="text-xs text-slate-400 hidden sm:block">{orgName}</p>
       </div>

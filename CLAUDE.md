@@ -130,6 +130,58 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 
 ## Sprint Status
 
+### Sprint B — Day 15 COMPLETE (AI JSON Extraction — INC-AI)
+- [x] **New module** — `src/lib/excel-import/json-extraction.ts` (pure, testable, no API dependency)
+  - Types: `ExtractionStrategy`, `ExtractionSuccess`, `ExtractionFailure`, `ExtractionResult`
+  - Functions: `extractJsonArray()` (4-strategy escalation), `filterValidItems()` (Zod-compatible validator)
+  - Strategy 1 — **raw**: parse trimmed text directly + unwrap `{ risks: [...] }` object wrappers
+  - Strategy 2 — **markdown-fence**: strip ` ```json ` or ` ``` ` fences, handles preamble before fence
+  - Strategy 3 — **boundary**: `text[indexOf('[') … lastIndexOf(']')]` for plain prose wrapping
+  - Strategy 4 — **array-scan**: try all `[` positions sorted longest-first; records skipped char warnings
+  - Returns `success: false` with `attempts[]` and actionable error on complete failure
+- [x] **Import router updated** — `src/server/routers/import.ts` now uses `extractJsonArray()` (replaced 20-line inline parse block)
+- [x] **Tests** — `tests/excel-import/json-extraction.test.ts` (27 tests, all passing)
+  - raw (6 tests: bare array, whitespace, empty, single, `{ risks }` wrapper, `{ data }` wrapper)
+  - markdown-fence (3 tests: `\`\`\`json`, plain `\`\`\``, preamble + fence)
+  - boundary (4 tests: preamble, postamble, both, nested object)
+  - failures (5 tests: empty, whitespace-only, prose, no-array object, attempt reporting)
+  - filterValidItems (4 tests)
+  - real-world scenarios (5 tests: intro text, fence+preamble, pretty-print, wrapped object, scan warnings)
+- [x] **Test count** — 1205 passing across 37 files (was 1178/36)
+
+### Sprint B — Day 14 COMPLETE (Self-Registration, Email Wiring, appliedTemplate)
+- [x] **Self-service registration** — `user.register` public tRPC mutation (creates Org + OWNER user, rate-limited, duplicate-email check, bcrypt)
+- [x] `/register` page — name, orgName, email, password form; auto-signs in and redirects to `/onboarding` after creation
+- [x] Root redirect — unauthenticated `/` now redirects to `/register` (was `/login`)
+- [x] Login page — "Create one free" link to `/register`; removed dev test-credentials hint
+- [x] **Welcome email** — `welcomeEmail()` template + fire-and-forget on registration
+- [x] **Invite email** — `inviteUserEmail()` template wired to `user.invite` and `user.resendInvite` (was TODO comment)
+- [x] **Password reset email** — `passwordResetEmail()` template wired to `user.requestPasswordReset` (was console.log)
+- [x] **Forgot-password page** — cleaned up dev scaffold (removed resetUrl display), matches dark teal theme
+- [x] **Users page** — replaced `alert()` on resend invite with `toast.success()`
+- [x] **`appliedTemplate` field** — `Organisation.appliedTemplate String?` added to schema + migration `20260307000001_add_applied_template`; stored in `template.applyTemplate` + exposed in `getSampleModeStatus`
+- [x] **Tests** — `tests/server/routers/registration.test.ts` (17 tests: slug generation, input validation, isolation invariants)
+- [x] **Test count** — 1178 passing across 36 files (was 1161/35)
+
+### Sprint B — Day 12-13 COMPLETE (Email Notifications, Digest Cron, INC-006/007, HEALTH_SAFETY)
+- [x] **Email infrastructure** — `src/lib/email.ts` (Resend SDK, dev fallback), `src/lib/email-templates.ts` (5 HTML templates)
+- [x] **Notification triggers** — `src/lib/notification-triggers.ts` (appetite breach, risk assigned, KRI red, incident created)
+- [x] **Wired fire-and-forget calls**:
+  - `risk.create` → `maybeNotifyAppetiteBreach().catch(() => {})`
+  - `risk.update` → appetite breach + owner change notification
+  - `kri.update` + `kri.updateValue` → `maybeNotifyKriRed().catch(() => {})`
+  - `incident.create` → `maybeNotifyIncidentCreated().catch(() => {})`
+- [x] **Weekly digest cron** — `src/app/api/cron/digest/route.ts` (Mondays 7AM UTC, sends to ADMIN+ users)
+- [x] **vercel.json** — added `/api/cron/digest` schedule + production env docs
+- [x] **.env.production.example** — documented `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`
+- [x] **INC-006** — `src/lib/excel-import/score-validation.ts` (validateScore, validateResidualNotExceedsInherent, validateCombinedScore)
+- [x] **INC-007** — `src/lib/excel-import/duplicate-detection.ts` (Levenshtein fuzzy matching, wired to real DB via `listForWorkspace`)
+- [x] **HEALTH_SAFETY** — 9th RiskCategory enum added to: Prisma schema, all Zod enums, CATEGORY_LABELS, risk form/filter, AI prompts, regulatory frameworks, scoring files
+  - Migration: `20260306105957_add_health_safety_category`
+  - Prisma client regenerated with new enum
+- [x] **Build fix** — `risk.list` now uses `select` (not `include`) + `.map()` to serialize Decimal fields; preserves `owner`/`register`/`createdBy` relations in TypeScript inference
+- [x] **Tests** — 1161 passing across 35 files (was 1120/33)
+
 ### Sprint 1 - COMPLETE
 - [x] Database connection (Supabase PostgreSQL)
 - [x] Authentication (NextAuth v5 Credentials)
@@ -334,6 +386,99 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - AppetiteBreachWidget on dashboard
   - 50 new tests
 
+### Sprint B — Day 10-11 COMPLETE (Excel Enum Normalization Fix — INC-005)
+- [x] **New module** — `src/lib/excel-import/enum-mapping.ts` (pure, testable, no DOM/XLSX dependency)
+  - Types: `RiskCategory`, `RiskStatus`, `WorkflowStatus`, `MappingConfidence`, `MappingResult<T>`, `StatusPair`
+  - Helpers: `normalizeText()`, `levenshteinDistance()`
+  - Tables: `CATEGORY_MAPPINGS` (150+ entries × 9 categories incl. HEALTH_SAFETY), `STATUS_MAPPINGS` (50+ entries × 5 statuses), `WORKFLOW_STATUS_MAPPINGS` (20+ entries × 4 statuses)
+  - Functions: `normalizeCategory()`, `normalizeStatus()`, `normalizeWorkflowStatus()`, `normalizeCategories()`, `normalizeStatuses()`
+  - Resolution order: direct enum → exact alias → fuzzy Levenshtein (≤3) → prefix → fallback
+- [x] **Modal updated** — `src/components/excel-import-modal.tsx`
+  - Removed: `CATEGORY_ALIASES`, `STATUS_ALIASES`, local `parseCategory()`, local `parseStatus()`, `STATUSES` const (~130 lines)
+  - Added import: `normalizeCategory`, `normalizeStatus` from `@/lib/excel-import/enum-mapping`
+  - Updated call sites: `normalizeCategory(...)` and `normalizeStatus(...)` replace old local functions
+- [x] **Tests** — `tests/excel-import/enum-normalization.test.ts` (65 tests, all passing)
+  - `normalizeText` (6 tests), `levenshteinDistance` (7 tests)
+  - `normalizeCategory` exact (12), fuzzy/fallback (5)
+  - `normalizeStatus` exact (11), fuzzy/keyword (7)
+  - `normalizeWorkflowStatus` (8 tests)
+  - Batch functions (4 tests), mapping table integrity (6 tests)
+- [x] **Docs** — `docs/EXCEL_IMPORT_MAPPINGS.md` (category/status/workflow reference tables)
+- [x] **Test count** — 1161 passing across 35 files (was 1055/32)
+
+### Sprint B — Day 8-9 COMPLETE (Excel Header Detection Fix — INC-004)
+- [x] **New module** — `src/lib/excel-import/header-detection.ts` (pure, testable, no DOM/XLSX dependency)
+  - Exports: `ColumnMapping`, `HeaderDetectionResult`, `FIELD_PATTERNS`, `COMBINED_PATTERNS`
+  - Functions: `looksLikeHeaderCell`, `scoreHeaderCell`, `scoreRow`, `detectHeaderRow`, `smartAutoMap`, `extractDataRows`
+  - `detectHeaderRow`: scans first N rows, scores by field-pattern matching (dominant) + text-cell heuristic; requires ≥2 matched fields to avoid false positives
+  - `COMBINED_PATTERNS` updated: handles unicode `×`, space-separated `L x I`, abbreviated `Res L×I`
+  - Category patterns: added `^cat$` abbreviation
+- [x] **Modal updated** — `src/components/excel-import-modal.tsx`
+  - Imports `ColumnMapping`, `detectHeaderRow`, `smartAutoMap` from module (removed duplicates)
+  - Replaced old heuristic (textCells×3 + colCount) with field-pattern-based detection
+  - New `detectedHeaderRowIndex` state; mapping step shows "Header row detected at row N — skipped X title rows above"
+- [x] **Tests** — `tests/excel-import/header-detection.test.ts` (47 tests, all passing)
+  - `looksLikeHeaderCell` (5 tests), `scoreHeaderCell` (8 tests), `scoreRow` (5 tests)
+  - `detectHeaderRow` (14 tests): row 0/1/3/4, UPPERCASE/lowercase, separators, combined L×I, maxRows, tie-breaking
+  - `smartAutoMap` (9 tests): field mapping, auto-copy residual, confidence, debug output
+  - `extractDataRows` (5 tests), end-to-end scenarios (3 tests)
+- [x] **Test count** — 1055 passing across 32 files (was 1008/31)
+
+### Sprint A — Day 7 COMPLETE (Testing & Integration)
+- [x] **Integration Tests** — `tests/integration/onboarding-flow.test.ts` (49 tests)
+  - Template Application: all 3 templates, register creation, sample mode flag, Vytl Score, audit logs, guard (duplicate), unique refCodes, score integrity
+  - exitSampleMode: flag cleared, data preserved, audit logged
+  - clearSampleData: all data deleted, flag cleared, PRECONDITION_FAILED guard
+  - Auto-exit on edit: flag clears on first risk update, data preserved
+  - Data Integrity: residualScore ≤ inherentScore, controls/descriptions populated, category diversity, multi-tenant isolation
+  - Edge Cases: empty-org guard, duplicate apply guard, getSampleModeStatus state transitions, refCode format
+- [x] **Bug Fix** — 3 stale test expectations in `appetite-validation.test.ts` (MEDIUM=amber not yellow; `bandToHeatmapTextClass` always returns `text-white`)
+- [x] **Docs** — `SPRINT_A_BUGS.md`, `SPRINT_A_COMPLETION_CHECKLIST.md`
+- [x] **Test Count** — 1008 tests passing across 31 files (was 956/29 before Day 7)
+
+### Sprint A — Day 5-6 COMPLETE (Sample Data Mode Toggle)
+- [x] **Schema** — `Organisation` model: `isInSampleMode Boolean @default(false)`, `sampleDataAppliedAt DateTime?`, `sampleDataExitedAt DateTime?`
+  - Migration: `20260305173555_add_sample_data_mode`
+- [x] **Template Router** — 3 new tRPC procedures added to `template.ts`:
+  - `template.exitSampleMode` — clears flag, keeps all risks (converts sample → live)
+  - `template.clearSampleData` — deletes all risks + registers + assessments, exits mode
+  - `template.getSampleModeStatus` — returns `{ isInSampleMode, sampleDataAppliedAt, industry }`
+  - `template.apply` updated to set `isInSampleMode = true` + `sampleDataAppliedAt`
+- [x] **SampleDataBanner** — `src/components/sample-data-banner.tsx`
+  - Self-querying client component using `trpc.template.getSampleModeStatus.useQuery()`
+  - "Make This My Data" → `exitSampleMode` mutation (keeps risks)
+  - "Start Fresh" → confirmation dialog → `clearSampleData` mutation
+  - Dismiss button (session-only, not persistent)
+  - Integrated into `AppLayout` above the `Header` (visible on all pages)
+- [x] **Auto-Exit on Risk Edit** — `risk.ts` update mutation checks `isInSampleMode` and auto-exits on first edit
+- [x] **Confirmation Screen** — sample mode info block added (amber styled, with Info icon)
+- [x] **Tests** — 21 new tests in `tests/sample-data-mode/sample-mode.test.ts` (all passing)
+
+### Sprint A — Day 3-4 COMPLETE (FTUE Onboarding Wizard)
+- [x] **Onboarding Route** — `/onboarding` (3-screen wizard, shown only when org has 0 risks)
+  - `src/app/onboarding/page.tsx`: server component, auth + risk-count guard, redirects populated orgs to dashboard
+  - `src/app/onboarding/onboarding-client.tsx`: state machine (welcome→industry→confirmation), tRPC mutation
+  - `src/app/onboarding/welcome-screen.tsx`: 3 CTAs (Template primary, Import secondary, Start Fresh tertiary)
+  - `src/app/onboarding/industry-selector.tsx`: 3 industry cards with icons, sample risks, loading overlay
+  - `src/app/onboarding/confirmation-screen.tsx`: Vytl Score display, what's included checklist, next steps
+- [x] **Template tRPC Router** — `src/server/routers/template.ts`
+  - `template.apply` mutation: creates named `RiskRegister`, bulk-inserts 15 risks, runs initial Vytl Score, audit logs
+  - Guard: PRECONDITION_FAILED if org already has risks
+  - Sets `source: 'TEMPLATE'` (new enum value), `workflowStatus: 'APPROVED'`
+- [x] **Schema Migration** — `20260305150016_add_template_source`: added `TEMPLATE` to `RiskSource` enum
+- [x] **Dashboard Redirect** — `/dashboard` now redirects to `/onboarding` when riskCount === 0
+- [x] **Root Router** — `template` registered in `src/server/routers/index.ts`
+- [x] **Tests** — 13 new tests in `tests/onboarding/template-application.test.ts` (all passing)
+
+### Sprint A — Day 1-2 COMPLETE (Industry Templates)
+- [x] **Industry Templates Library** — Pre-built SA risk libraries for 3 industry verticals
+  - `src/lib/industry-templates.ts`: types (`IndustryCode`, `TemplateRisk`, `IndustryTemplate`), 45 SA-contextual risks across 3 templates, 4 helper functions
+  - **MANUFACTURING** (benchmarkScore 58): 15 risks — load shedding, OHS Act, B-BBEE, POPIA, supply chain, skills, FX, labour, equipment, NEMA, water, commodities, product liability, OT/SCADA, export market
+  - **FINANCIAL_SERVICES** (benchmarkScore 62): 15 risks — FICA/AML, POPIA, FSCA, credit/NPL, cyber fraud, NCA, SARB prudential, exchange control, key person, IRRBB, reputation, vendor, liquidity, PRECCA, BCP/loadshedding
+  - **RETAIL** (benchmarkScore 54): 15 risks — e-commerce disruption, shrinkage, supply chain, CIT, CPA, seasonal concentration, leases, POS outage, food safety, supplier dependency, turnover, load shedding, debtors, CNP fraud, reputational
+  - Helper functions: `getTemplateByCode`, `getAllTemplates`, `calculateTemplateRiskScores`, `validateTemplate`
+  - Tests: 32 new tests in `tests/utils/industry-templates.test.ts` (all passing)
+
 ### Sprint 15 - COMPLETE (Movement & Trends + Report Improvements)
 - [x] **Risk Snapshots** — Temporal portfolio capture
   - Prisma: `RiskSnapshot`, `RiskSnapshotDetail` models; `SnapshotType`, `SnapshotFrequency` enums
@@ -390,7 +535,9 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | Route | Status | Description |
 |-------|--------|-------------|
 | `/` | ✅ | Auth redirect |
-| `/login` | ✅ | Login form with forgot password link |
+| `/onboarding` | ✅ | 3-screen FTUE wizard (shown only for orgs with 0 risks) |
+| `/register` | ✅ | Self-service signup (name, org, email, password → auto-login → /onboarding) |
+| `/login` | ✅ | Login form with forgot password link + "Create account" link |
 | `/dashboard` | ✅ | Bento grid dashboard with draggable widgets + Board Report |
 | `/risks` | ✅ | Risk register (table/heatmap) with sparklines + register filter |
 | `/risks/[id]` | ✅ | Risk detail (8 tabs: Overview, AI Analysis, Treatment, Compliance, Incidents, Risk Intelligence, History, Documents) |
@@ -440,6 +587,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `SnapshotSettings` - Settings Snapshots tab: frequency, materiality, manual capture, history
 - `MovementAlertWidget` - Optional dashboard widget: shows material risk movements since last snapshot
 - `DashboardHeatmap` - Dashboard heatmap: solid band colours, count badges, appetite-aware legend
+- `SampleDataBanner` - Self-querying amber banner: "Make This My Data" / "Start Fresh" / dismiss (Sprint A Day 5-6)
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -550,7 +698,14 @@ src/
 │   ├── incident-validation.ts   # Incident schemas + severity sort + status cycle
 │   ├── snapshot-validation.ts   # Snapshot pure functions (buildSeverityCounts, detectRiskMovers, etc.)
 │   ├── snapshot-utils.ts        # captureSnapshot, hasBaselineSnapshot, getEarliestSnapshotDate
-│   └── risk-colour-mapping.ts   # Canonical L×I → colour mapping (getRiskColour, BAND_PRINT_COLOURS)
+│   ├── risk-colour-mapping.ts   # Canonical L×I → colour mapping (getRiskColour, BAND_PRINT_COLOURS)
+│   └── industry-templates.ts    # Sprint A: 45 SA risks across 3 industry templates (Manufacturing, FS, Retail)
+├── app/onboarding/              # Sprint A Day 3-4: FTUE wizard
+│   ├── page.tsx                 # Server: auth + risk-count guard + redirect
+│   ├── onboarding-client.tsx    # Client: step state machine + tRPC mutation
+│   ├── welcome-screen.tsx       # Screen 1: 3 CTA options
+│   ├── industry-selector.tsx    # Screen 2: industry cards + loading overlay
+│   └── confirmation-screen.tsx  # Screen 3: Vytl Score + next steps
 └── server/routers/
     ├── index.ts         # Root router (16 sub-routers)
     ├── risk.ts          # Risk CRUD + bulkCreate + stats + topRisks + workspace + VaR calc
@@ -567,9 +722,10 @@ src/
     ├── regulatory.ts    # Regulatory mapping CRUD + coverage
     ├── appetite.ts      # Risk appetite config + breach summary
     ├── incident.ts      # Incident CRUD + stats
-    └── snapshots.ts     # Snapshot CRUD + compare + checkDataAvailability
+    ├── snapshots.ts     # Snapshot CRUD + compare + checkDataAvailability
+    └── template.ts      # template.apply/exitSampleMode/clearSampleData/getSampleModeStatus (Sprint A)
 
-tests/                                   # 890 tests across 26 files (all passing)
+tests/                                   # 1161 tests across 35 files (all passing)
 ├── setup.ts
 ├── e2e/
 │   └── user-journeys.test.ts
@@ -592,6 +748,11 @@ tests/                                   # 890 tests across 26 files (all passin
     ├── appetite-validation.test.ts
     ├── incident-validation.test.ts
     ├── snapshot-validation.test.ts      # Sprint 15 — pure function tests
+    ├── industry-templates.test.ts       # Sprint A Day 1-2 — 32 tests for 3 industry templates
+├── onboarding/
+│   └── template-application.test.ts     # Sprint A Day 3-4 — 13 tests for onboarding prerequisites
+├── sample-data-mode/
+│   └── sample-mode.test.ts              # Sprint A Day 5-6 — 21 tests for sample mode business logic
     ├── phase-a-scoring.test.ts          # Scoring Architecture Phase A
     ├── phase-b-scoring-ui.test.ts       # Scoring Architecture Phase B
     ├── risk-scoring.test.ts

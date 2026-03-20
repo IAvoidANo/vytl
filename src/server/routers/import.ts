@@ -3,6 +3,7 @@ import { router, editorProcedure } from '@/lib/trpc'
 import { TRPCError } from '@trpc/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
+import { extractJsonArray } from '@/lib/excel-import/json-extraction'
 
 // Check for API key at startup
 const apiKey = process.env.ANTHROPIC_API_KEY
@@ -19,7 +20,7 @@ const extractedRiskSchema = z.object({
   description: z.string(),
   category: z.enum([
     'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-    'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
+    'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY',
   ]),
   inherentLikelihood: z.number().min(1).max(5),
   inherentImpact: z.number().min(1).max(5),
@@ -37,7 +38,7 @@ const EXTRACTION_PROMPT = `You are a risk management expert. Analyse the followi
 For each risk, provide:
 1. title: A concise risk title (max 100 chars)
 2. description: Detailed description of the risk
-3. category: One of STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, TECHNOLOGY, REPUTATIONAL, ENVIRONMENTAL, PEOPLE
+3. category: One of STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, TECHNOLOGY, REPUTATIONAL, ENVIRONMENTAL, PEOPLE, HEALTH_SAFETY
 4. inherentLikelihood: Likelihood before controls (1=Rare, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain)
 5. inherentImpact: Impact before controls (1=Insignificant, 2=Minor, 3=Moderate, 4=Major, 5=Catastrophic)
 6. residualLikelihood: Likelihood after controls (same scale, usually lower or equal to inherent)
@@ -113,43 +114,24 @@ export const importRouter = router({
         }
 
         const rawText = textContent.text.trim()
-        let jsonText = rawText
 
-        // 1. Strip markdown code fences wherever they appear (handles preamble before the fence)
-        const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]+?)\s*```/)
-        if (fenceMatch) {
-          jsonText = fenceMatch[1].trim()
-        } else if (jsonText.startsWith('```')) {
-          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
-        }
-
-        // 2. Seek the first '[' in case the model added preamble text before the array
-        const arrayStart = jsonText.indexOf('[')
-        if (arrayStart > 0) {
-          jsonText = jsonText.substring(arrayStart)
-        }
-
-        let parsed: unknown
-        try {
-          parsed = JSON.parse(jsonText)
-        } catch {
-          console.error('[AI Extract] JSON parse failed. Raw response (first 400 chars):', rawText.slice(0, 400))
+        // Resilient extraction — tries 4 strategies before giving up
+        const extraction = extractJsonArray(rawText)
+        if (!extraction.success) {
+          console.error('[AI Extract] JSON extraction failed. Raw response (first 400 chars):', rawText.slice(0, 400))
           throw new TRPCError({
             code: 'PARSE_ERROR',
             message: 'AI could not return structured data from this document. The file may be too short, unclear, or in an unsupported format. Try the Excel/CSV import instead.',
           })
         }
 
-        if (!Array.isArray(parsed)) {
-          throw new TRPCError({
-            code: 'PARSE_ERROR',
-            message: 'AI response is not an array'
-          })
+        if (extraction.warnings.length > 0) {
+          console.warn('[AI Extract] Extraction warnings:', extraction.warnings, `(strategy: ${extraction.strategy})`)
         }
 
         // Validate and clean each risk
         const risks: ExtractedRisk[] = []
-        for (const item of parsed) {
+        for (const item of extraction.data) {
           try {
             const validated = extractedRiskSchema.parse(item)
             risks.push(validated)
@@ -161,7 +143,7 @@ export const importRouter = router({
 
         return {
           risks,
-          totalFound: parsed.length,
+          totalFound: extraction.data.length,
           validCount: risks.length,
         }
       } catch (error) {

@@ -39,6 +39,14 @@ model Organisation {
   snapshotFrequency   SnapshotFrequency @default(WEEKLY)
   snapshotMateriality Int               @default(2)
 
+  // Sample data mode (Sprint A Day 5-6)
+  isInSampleMode      Boolean   @default(false)
+  sampleDataAppliedAt DateTime?
+  sampleDataExitedAt  DateTime?
+
+  // Template tracking (Sprint A — which industry template was applied)
+  appliedTemplate     String?   // 'MANUFACTURING' | 'FINANCIAL_SERVICES' | 'RETAIL'
+
   // Relationships
   users         User[]
   riskRegisters RiskRegister[]
@@ -78,6 +86,10 @@ model User {
   // Password reset
   resetToken        String?   @unique
   resetTokenExpires DateTime?
+
+  // Email verification
+  verificationToken        String?   @unique
+  verificationTokenExpires DateTime?
 
   // Dashboard customization
   dashboardLayout   Json?     // Stores react-grid-layout configuration
@@ -247,6 +259,7 @@ enum RiskCategory {
   REPUTATIONAL
   ENVIRONMENTAL
   PEOPLE
+  HEALTH_SAFETY
 }
 
 enum RiskResponse {
@@ -269,6 +282,7 @@ enum RiskSource {
   EMAIL
   EXCEL
   API
+  TEMPLATE
 }
 
 enum WorkflowStatus {

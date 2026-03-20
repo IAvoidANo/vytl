@@ -151,6 +151,7 @@ export function RisksClient() {
           <option value="REPUTATIONAL">Reputational</option>
           <option value="ENVIRONMENTAL">Environmental</option>
           <option value="PEOPLE">People</option>
+          <option value="HEALTH_SAFETY">Health &amp; Safety</option>
         </select>
         <select
           value={statusFilter}

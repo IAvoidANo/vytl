@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { router, protectedProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
+import { maybeNotifyKriRed } from '@/lib/notification-triggers'
 
 const kriDirectionEnum = z.enum(['HIGHER_IS_WORSE', 'LOWER_IS_WORSE'])
 
@@ -169,6 +170,8 @@ export const kriRouter = router({
         },
       })
 
+      maybeNotifyKriRed(ctx.user.orgId, kri.id, existing.status).catch(() => {})
+
       return kri
     }),
 
@@ -203,6 +206,8 @@ export const kriRouter = router({
           lastUpdated: new Date(),
         },
       })
+
+      maybeNotifyKriRed(ctx.user.orgId, kri.id, existing.status).catch(() => {})
 
       return kri
     }),

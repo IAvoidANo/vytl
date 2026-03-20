@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 export const RISK_CATEGORIES = [
   'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-  'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
+  'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY',
 ] as const
 
 export type RiskCategory = (typeof RISK_CATEGORIES)[number]
@@ -26,6 +26,7 @@ export const CATEGORY_LABELS: Record<RiskCategory, string> = {
   REPUTATIONAL: 'Reputational',
   ENVIRONMENTAL: 'Environmental',
   PEOPLE: 'People',
+  HEALTH_SAFETY: 'Health & Safety',
 }
 
 // ============================================
@@ -169,6 +170,7 @@ export function bandToBadgeClasses(band: AppetiteBand): string {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function bandToHeatmapTextClass(_band: AppetiteBand): string {
   // Always white — heatmap cells use solid coloured backgrounds
   return 'text-white'

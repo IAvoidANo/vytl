@@ -79,6 +79,52 @@ export function sortByPriority<T extends { priority: string; createdAt: Date | s
 }
 
 // ============================================
+// ORG-WIDE LIST SCHEMA
+// ============================================
+
+export const actionSortByEnum = z.enum(['dueDate', 'priority', 'createdAt', 'riskTitle'])
+
+export const listAllActionsSchema = z.object({
+  status: actionStatusEnum.optional(),
+  priority: actionPriorityEnum.optional(),
+  assigneeId: z.string().optional(),
+  overdueOnly: z.boolean().optional(),
+  sortBy: actionSortByEnum.optional(),
+  sortDir: z.enum(['asc', 'desc']).optional(),
+})
+
+// ============================================
+// OVERDUE HELPERS
+// ============================================
+
+/**
+ * Returns true when an action is past its due date and not yet completed/cancelled.
+ */
+export function isOverdue(action: { dueDate: Date | string | null; status: string }): boolean {
+  if (!action.dueDate) return false
+  if (action.status === 'COMPLETED' || action.status === 'CANCELLED') return false
+  return new Date(action.dueDate) < new Date()
+}
+
+/**
+ * Builds an overdue summary from a list of actions (pure, no DB).
+ */
+export function buildOverdueSummary(
+  actions: Array<{ dueDate: Date | string | null; status: string; priority: string }>
+): {
+  total: number
+  overdue: number
+  byPriority: Record<string, number>
+} {
+  const overdue = actions.filter(isOverdue)
+  const byPriority: Record<string, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 }
+  for (const a of overdue) {
+    if (a.priority in byPriority) byPriority[a.priority]++
+  }
+  return { total: actions.length, overdue: overdue.length, byPriority }
+}
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -86,3 +132,4 @@ export type CreateTreatmentActionInput = z.infer<typeof createTreatmentActionSch
 export type UpdateTreatmentActionInput = z.infer<typeof updateTreatmentActionSchema>
 export type ActionPriority = z.infer<typeof actionPriorityEnum>
 export type ActionStatus = z.infer<typeof actionStatusEnum>
+export type ListAllActionsInput = z.infer<typeof listAllActionsSchema>

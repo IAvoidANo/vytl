@@ -182,7 +182,7 @@ function detectMissingCategories(
 
   const allCategories = [
     'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-    'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE',
+    'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY',
   ]
 
   // Get industry-important categories

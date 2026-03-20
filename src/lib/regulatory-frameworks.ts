@@ -73,7 +73,7 @@ const KING_V_REQUIREMENTS: RegulatoryRequirement[] = [
   { code: 'KING_V_P7_2', frameworkId: 'KING_V', principle: 'Principle 7: Management Delegation', title: 'Clear delegation of authority framework with accountability', riskCategories: ['OPERATIONAL', 'COMPLIANCE'] },
 
   // Principle 8: Risk Management
-  { code: 'KING_V_P8_1', frameworkId: 'KING_V', principle: 'Principle 8: Risk Management', title: 'Risk management embedded in day-to-day operations and decision-making', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE'] },
+  { code: 'KING_V_P8_1', frameworkId: 'KING_V', principle: 'Principle 8: Risk Management', title: 'Risk management embedded in day-to-day operations and decision-making', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY'] },
   { code: 'KING_V_P8_2', frameworkId: 'KING_V', principle: 'Principle 8: Risk Management', title: 'Risk register established and regularly reviewed', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'COMPLIANCE'] },
   { code: 'KING_V_P8_3', frameworkId: 'KING_V', principle: 'Principle 8: Risk Management', title: 'Risk appetite defined and communicated organisation-wide', riskCategories: ['STRATEGIC', 'FINANCIAL', 'COMPLIANCE'] },
   { code: 'KING_V_P8_4', frameworkId: 'KING_V', principle: 'Principle 8: Risk Management', title: 'Board risk committee with majority non-executive members', riskCategories: ['COMPLIANCE', 'STRATEGIC'] },
@@ -108,7 +108,7 @@ const KING_V_REQUIREMENTS: RegulatoryRequirement[] = [
 
 const ISO_31000_REQUIREMENTS: RegulatoryRequirement[] = [
   // 8 Principles (Clause 4)
-  { code: 'ISO_31000_PR1', frameworkId: 'ISO_31000', principle: 'Principles', title: 'Integrated: Risk management integral to all organisational activities', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE'] },
+  { code: 'ISO_31000_PR1', frameworkId: 'ISO_31000', principle: 'Principles', title: 'Integrated: Risk management integral to all organisational activities', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY'] },
   { code: 'ISO_31000_PR2', frameworkId: 'ISO_31000', principle: 'Principles', title: 'Customised: Framework tailored to external and internal context', riskCategories: ['STRATEGIC', 'OPERATIONAL'] },
   { code: 'ISO_31000_PR3', frameworkId: 'ISO_31000', principle: 'Principles', title: 'Inclusive: Appropriate engagement of stakeholders throughout', riskCategories: ['REPUTATIONAL', 'PEOPLE', 'STRATEGIC'] },
   { code: 'ISO_31000_PR4', frameworkId: 'ISO_31000', principle: 'Principles', title: 'Dynamic: Anticipates, detects, acknowledges, and responds to change', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'TECHNOLOGY'] },
@@ -120,7 +120,7 @@ const ISO_31000_REQUIREMENTS: RegulatoryRequirement[] = [
   // Process Steps (Clause 6)
   { code: 'ISO_31000_PS1', frameworkId: 'ISO_31000', principle: 'Process', title: 'Communication and consultation with stakeholders at all levels', riskCategories: ['REPUTATIONAL', 'PEOPLE', 'STRATEGIC'] },
   { code: 'ISO_31000_PS2', frameworkId: 'ISO_31000', principle: 'Process', title: 'Scope, context, and criteria established for risk management', riskCategories: ['STRATEGIC', 'COMPLIANCE', 'OPERATIONAL'] },
-  { code: 'ISO_31000_PS3', frameworkId: 'ISO_31000', principle: 'Process', title: 'Risk identification: Recognising what could happen and why', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE'] },
+  { code: 'ISO_31000_PS3', frameworkId: 'ISO_31000', principle: 'Process', title: 'Risk identification: Recognising what could happen and why', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE', 'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY'] },
   { code: 'ISO_31000_PS4', frameworkId: 'ISO_31000', principle: 'Process', title: 'Risk analysis: Determining likelihood, impact, and velocity', riskCategories: ['STRATEGIC', 'OPERATIONAL', 'FINANCIAL'] },
   { code: 'ISO_31000_PS5', frameworkId: 'ISO_31000', principle: 'Process', title: 'Risk evaluation: Comparing against risk appetite to determine action', riskCategories: ['STRATEGIC', 'FINANCIAL', 'COMPLIANCE'] },
   { code: 'ISO_31000_PS6', frameworkId: 'ISO_31000', principle: 'Process', title: 'Risk treatment: Modifying risk through mitigation strategies', riskCategories: ['OPERATIONAL', 'FINANCIAL', 'TECHNOLOGY'] },

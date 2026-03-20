@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/lib/db'
-import { type Prisma, SnapshotType } from '@prisma/client'
+import { Prisma, SnapshotType } from '@prisma/client'
 import { createAuditLog } from '@/lib/audit'
 import {
   buildSeverityCounts,
@@ -166,7 +166,7 @@ export async function captureSnapshot(
                   varValue: risk.varValue?.toString() ?? null,
                   treatmentCount: risk.treatmentActions.length,
                 } as Prisma.JsonObject)
-              : null,
+              : Prisma.JsonNull,
           }
         }),
       },

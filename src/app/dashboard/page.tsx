@@ -24,6 +24,11 @@ export default async function DashboardPage() {
     },
   })
 
+  // New organisations with no risks go through the onboarding wizard
+  if (riskCount === 0) {
+    redirect('/onboarding')
+  }
+
   return (
     <AppLayout userName={user?.name} userRole={user?.role}>
       <DashboardClient

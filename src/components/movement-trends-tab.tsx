@@ -2,11 +2,28 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc-client'
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, Plus, CheckCircle2 } from 'lucide-react'
+import { TrendingUp, ArrowUp, ArrowDown, Plus, CheckCircle2 } from 'lucide-react'
 
 interface MovementTrendsTabProps {
   // orgId comes from session — no prop needed; included for future flexibility
   className?: string
+}
+
+interface RiskMover {
+  riskId: string
+  refCode: string
+  title: string
+  category: string
+  scoreThen: number
+  scoreNow: number
+  scoreDelta: number
+}
+
+interface CategoryChange {
+  category: string
+  countThen: number
+  countNow: number
+  countDelta: number
 }
 
 const PERIOD_OPTIONS = [
@@ -190,7 +207,7 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
                   <span className="text-sm font-medium text-red-400">Increased (Concerning)</span>
                 </div>
                 <div className="space-y-2">
-                  {mv.riskMovers.increased.map((m: any) => (
+                  {mv.riskMovers.increased.map((m: RiskMover) => (
                     <div key={m.riskId} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-white">{m.refCode}: {m.title}</p>
@@ -213,7 +230,7 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
                   <span className="text-sm font-medium text-green-400">Decreased (Improving)</span>
                 </div>
                 <div className="space-y-2">
-                  {mv.riskMovers.decreased.map((m: any) => (
+                  {mv.riskMovers.decreased.map((m: RiskMover) => (
                     <div key={m.riskId} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-white">{m.refCode}: {m.title}</p>
@@ -236,7 +253,7 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
                   <span className="text-sm font-medium text-slate-300">New Risks</span>
                 </div>
                 <div className="space-y-2">
-                  {mv.riskMovers.new.map((m: any) => (
+                  {mv.riskMovers.new.map((m: RiskMover) => (
                     <div key={m.riskId} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-white">{m.refCode}: {m.title}</p>
@@ -256,7 +273,7 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
                   <span className="text-sm font-medium text-green-400">Closed / Resolved</span>
                 </div>
                 <div className="space-y-2">
-                  {mv.riskMovers.closed.map((m: any) => (
+                  {mv.riskMovers.closed.map((m: RiskMover) => (
                     <div key={m.riskId} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-white">{m.refCode}: {m.title}</p>
@@ -331,7 +348,7 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
         <div className={cardClass}>
           <h3 className={sectionTitle}>Category Evolution</h3>
           <div className="space-y-2">
-            {mv.categoryChanges.map((cat: any) => (
+            {mv.categoryChanges.map((cat: CategoryChange) => (
               <div key={cat.category} className="flex items-center justify-between text-sm">
                 <span className={labelMuted}>{cat.category}</span>
                 <div className="flex items-center gap-4">

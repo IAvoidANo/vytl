@@ -8,6 +8,7 @@ import { TRPCError } from '@trpc/server'
 import { createAuditLog, pickAuditFields, hasChanges } from '@/lib/audit'
 import Anthropic from '@anthropic-ai/sdk'
 import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
+import { maybeNotifyAppetiteBreach, maybeNotifyRiskAssigned } from '@/lib/notification-triggers'
 
 const riskCategoryEnum = z.enum([
   'STRATEGIC',
@@ -17,6 +18,7 @@ const riskCategoryEnum = z.enum([
   'TECHNOLOGY',
   'REPUTATIONAL',
   'ENVIRONMENTAL',
+  'HEALTH_SAFETY',
   'PEOPLE',
 ])
 
@@ -97,14 +99,44 @@ export const riskRouter = router({
           ...(input?.status && { status: input.status }),
           ...(input?.category && { category: input.category }),
         },
-        include: {
+        select: {
+          id: true,
+          refCode: true,
+          title: true,
+          description: true,
+          category: true,
+          inherentLikelihood: true,
+          inherentImpact: true,
+          inherentScore: true,
+          residualLikelihood: true,
+          residualImpact: true,
+          residualScore: true,
+          response: true,
+          controls: true,
+          controlEffectiveness: true,
+          rootCause: true,
+          varValue: true,
+          financialExposure: true,
+          status: true,
+          workflowStatus: true,
+          registerId: true,
+          ownerId: true,
+          createdById: true,
+          dueDate: true,
+          isOngoing: true,
+          createdAt: true,
+          updatedAt: true,
           register: { select: { name: true } },
           owner: { select: { id: true, name: true, email: true } },
           createdBy: { select: { id: true, name: true } },
         },
         orderBy: CANONICAL_SORT,
       })
-      return risks
+      return risks.map(r => ({
+        ...r,
+        varValue: r.varValue?.toString() ?? null,
+        financialExposure: r.financialExposure?.toString() ?? null,
+      }))
     }),
 
   // Get a single risk by ID
@@ -292,6 +324,8 @@ export const riskRouter = router({
         }
       }
 
+      maybeNotifyAppetiteBreach(ctx.user.orgId, risk.id).catch(() => {})
+
       return risk
     }),
 
@@ -306,6 +340,18 @@ export const riskRouter = router({
 
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Risk not found' })
+      }
+
+      // Auto-exit sample mode on first edit — user intent is clear
+      const org = await db.organisation.findUnique({
+        where: { id: ctx.user.orgId },
+        select: { isInSampleMode: true },
+      })
+      if (org?.isInSampleMode) {
+        await db.organisation.update({
+          where: { id: ctx.user.orgId },
+          data: { isInSampleMode: false, sampleDataExitedAt: new Date() },
+        })
       }
 
       const auditFields = [
@@ -363,6 +409,11 @@ export const riskRouter = router({
           oldValues,
           newValues,
         })
+      }
+
+      maybeNotifyAppetiteBreach(ctx.user.orgId, risk.id, existing.residualScore).catch(() => {})
+      if (input.ownerId && input.ownerId !== existing.ownerId) {
+        maybeNotifyRiskAssigned(ctx.user.orgId, risk.id, ctx.user.id).catch(() => {})
       }
 
       return risk
@@ -712,7 +763,7 @@ Extract the risk information from this email and respond with ONLY a JSON object
 {
   "title": "Concise risk title (max 100 chars)",
   "description": "Full description of the risk based on the email content",
-  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE",
+  "category": "STRATEGIC|OPERATIONAL|FINANCIAL|COMPLIANCE|TECHNOLOGY|REPUTATIONAL|ENVIRONMENTAL|PEOPLE|HEALTH_SAFETY",
   "inherentLikelihood": 1-5,
   "inherentImpact": 1-5,
   "residualLikelihood": 1-5,
@@ -774,7 +825,7 @@ If the email doesn't clearly describe a risk, still extract the most relevant ri
         // Validate category
         const validCategories = [
           'STRATEGIC', 'OPERATIONAL', 'FINANCIAL', 'COMPLIANCE',
-          'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE'
+          'TECHNOLOGY', 'REPUTATIONAL', 'ENVIRONMENTAL', 'PEOPLE', 'HEALTH_SAFETY'
         ]
         const category = validCategories.includes(parsed.category) ? parsed.category : 'OPERATIONAL'
 
@@ -800,7 +851,7 @@ If the email doesn't clearly describe a risk, still extract the most relevant ri
             refCode,
             title: parsed.title.substring(0, 100),
             description: parsed.description + `\n\n---\n*Source email from: ${input.fromEmail || 'Unknown'}*\n*Subject: ${input.subject}*`,
-            category: category as 'STRATEGIC' | 'OPERATIONAL' | 'FINANCIAL' | 'COMPLIANCE' | 'TECHNOLOGY' | 'REPUTATIONAL' | 'ENVIRONMENTAL' | 'PEOPLE',
+            category: category as 'STRATEGIC' | 'OPERATIONAL' | 'FINANCIAL' | 'COMPLIANCE' | 'TECHNOLOGY' | 'REPUTATIONAL' | 'ENVIRONMENTAL' | 'PEOPLE' | 'HEALTH_SAFETY',
             inherentLikelihood,
             inherentImpact,
             inherentScore: inherentLikelihood * inherentImpact,

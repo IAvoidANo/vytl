@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
@@ -8,6 +8,8 @@ import { trpc } from '@/lib/trpc-client'
 import { Toaster } from 'sonner'
 import { ErrorBoundary } from './error-boundary'
 import { ThemeProvider } from '@/lib/theme-context'
+import { CrispWidget } from './crisp-widget'
+import { PostHogProvider } from './posthog-provider'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return ''
@@ -41,6 +43,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <SessionProvider>
             <ThemeProvider>
               {children}
+              <Suspense fallback={null}><PostHogProvider /></Suspense>
+              <CrispWidget />
               <Toaster
                 position="bottom-right"
                 richColors

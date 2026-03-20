@@ -14,6 +14,7 @@ import { regulatoryRouter } from './regulatory'
 import { appetiteRouter } from './appetite'
 import { incidentRouter } from './incident'
 import { snapshotsRouter } from './snapshots'
+import { templateRouter } from './template'
 
 export const appRouter = router({
   risk: riskRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   appetite: appetiteRouter,
   incident: incidentRouter,
   snapshots: snapshotsRouter,
+  template: templateRouter,
 })
 
 export type AppRouter = typeof appRouter
