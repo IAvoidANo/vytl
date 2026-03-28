@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -250,7 +250,7 @@ export function CommandPalette({ isAdmin = false, hideTrigger = false }: Command
                   close
                 </span>
               </div>
-              <span className="text-teal-400">Vytl</span>
+              <span className="text-teal-400">VytlRx</span>
             </div>
           </div>
         </div>

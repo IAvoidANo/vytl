@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Privacy Notice | VYTL',
-  description: 'POPIA-compliant privacy notice for the VYTL risk management platform. Learn how we collect, use, and protect your personal information.',
+  title: 'Privacy Notice | VytlRx',
+  description: 'POPIA-compliant privacy notice for the VytlRx risk management platform. Learn how we collect, use, and protect your personal information.',
 }
 
 export default function PrivacyPage() {
@@ -17,17 +17,17 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Introduction</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL (Pty) Ltd (&ldquo;VYTL&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;)
+              VytlRx (Pty) Ltd (&ldquo;VytlRx&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;)
               respects your privacy and is committed to protecting your personal information. This Privacy
               Notice describes how we collect, use, share, and safeguard your personal information in
-              connection with the VYTL risk management platform (&ldquo;Platform&rdquo;) and our related
+              connection with the VytlRx risk management platform (&ldquo;Platform&rdquo;) and our related
               services, website, and communications.
             </p>
             <p>
               This notice is issued in compliance with the Protection of Personal Information Act 4 of 2013
-              (POPIA) and its regulations. It applies to all personal information processed by VYTL in
+              (POPIA) and its regulations. It applies to all personal information processed by VytlRx in
               its capacity as a responsible party, as well as personal information processed on behalf of
-              our customers (where VYTL acts as an operator). If you are a customer of VYTL, a separate
+              our customers (where VytlRx acts as an operator). If you are a customer of VytlRx, a separate
               Data Processing Agreement governs our processing of personal information on your behalf.
             </p>
           </div>
@@ -37,14 +37,14 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Information Officer</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              In terms of section 55 of POPIA, VYTL has appointed an Information Officer who is responsible
+              In terms of section 55 of POPIA, VytlRx has appointed an Information Officer who is responsible
               for ensuring compliance with POPIA and for handling requests from data subjects. Our Information
               Officer can be contacted as follows:
             </p>
             <ul className="list-none pl-0 space-y-1">
-              <li><strong>Name:</strong> Information Officer, VYTL (Pty) Ltd</li>
-              <li><strong>Email:</strong> privacy@vytl.app</li>
-              <li><strong>Postal Address:</strong> VYTL (Pty) Ltd, Western Cape, South Africa</li>
+              <li><strong>Name:</strong> Information Officer, VytlRx (Pty) Ltd</li>
+              <li><strong>Email:</strong> privacy@vytlrx.app</li>
+              <li><strong>Postal Address:</strong> VytlRx (Pty) Ltd, Western Cape, South Africa</li>
             </ul>
             <p>
               Complaints regarding our processing of personal information may also be submitted to the
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
             <p>
               <strong>Risk and business data:</strong> risk descriptions, assessments, treatment plans,
               KRI values, incident reports, and other content you upload or create within the Platform.
-              This is your data; VYTL processes it as an operator on your instructions.
+              This is your data; VytlRx processes it as an operator on your instructions.
             </p>
             <p>
               <strong>Communication data:</strong> the content of support requests, feedback, and other
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
             <p>
               Where we rely on consent as our lawful basis, you have the right to withdraw your consent
               at any time without affecting the lawfulness of processing carried out before withdrawal.
-              To withdraw consent, please contact us at privacy@vytl.app or use the unsubscribe link
+              To withdraw consent, please contact us at privacy@vytlrx.app or use the unsubscribe link
               in any marketing email.
             </p>
           </div>
@@ -140,8 +140,8 @@ export default function PrivacyPage() {
             </p>
             <p>
               Our principal subprocessors are: <strong>Vercel Inc.</strong> (Platform hosting,
-              serverless compute, and edge delivery â€” servers in the United States with EU/regional
-              options); <strong>Neon Inc.</strong> (managed PostgreSQL database hosting â€” data region
+              serverless compute, and edge delivery — servers in the United States with EU/regional
+              options); <strong>Neon Inc.</strong> (managed PostgreSQL database hosting — data region
               configurable per account); <strong>Resend Inc.</strong> (transactional email delivery);
               and <strong>Anthropic PBC</strong> (AI analysis features, used only when you invoke
               AI-powered functionality). Each subprocessor is bound by contractual terms that require
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
               (to receive your personal information in a structured, commonly used format).
             </p>
             <p>
-              To exercise any of these rights, please submit a written request to privacy@vytl.app. We
+              To exercise any of these rights, please submit a written request to privacy@vytlrx.app. We
               will acknowledge your request within five (5) business days and respond fully within thirty
               (30) days. If your request is complex or numerous, we may extend this period by a further
               thirty (30) days with prior notice. We may need to verify your identity before processing
@@ -206,7 +206,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Cookies and Tracking Technologies</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              The VYTL Platform uses strictly necessary cookies and session tokens to authenticate your
+              The VytlRx Platform uses strictly necessary cookies and session tokens to authenticate your
               session and maintain your login state. These are essential for the Platform to function and
               cannot be disabled. We use JSON Web Tokens (JWT) stored in secure, HttpOnly cookies for
               authentication.
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
             </p>
             <p>
               For any questions or concerns about this Privacy Notice or our data practices, please
-              contact our Information Officer at privacy@vytl.app.
+              contact our Information Officer at privacy@vytlrx.app.
             </p>
           </div>
         </section>

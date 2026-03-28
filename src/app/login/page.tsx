@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">V</span>
-            <span className="text-xl font-bold text-slate-800">VYTL</span>
+            <span className="text-xl font-bold text-slate-800">VytlRx</span>
           </div>
           <p className="text-slate-500 text-sm">Sign in to your account</p>
         </div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           </Link>
         ))}
       </nav>
-      <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VYTL (Pty) Ltd</p>
+      <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VytlRx (Pty) Ltd</p>
     </div>
   )
 }

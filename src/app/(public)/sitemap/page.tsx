@@ -1,18 +1,18 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Sitemap | VYTL',
-  description: 'HTML sitemap for the VYTL risk management platform — navigate all pages and application sections.',
+  title: 'Sitemap | VytlRx',
+  description: 'HTML sitemap for the VytlRx risk management platform — navigate all pages and application sections.',
 }
 
 const sitemapGroups = [
   {
     title: 'Getting Started',
-    description: 'Create an account and get your organisation set up with VYTL.',
+    description: 'Create an account and get your organisation set up with VytlRx.',
     links: [
-      { href: '/register', label: 'Create account', description: 'Sign up for a free VYTL account for your organisation' },
-      { href: '/login', label: 'Sign in', description: 'Log in to your existing VYTL account' },
+      { href: '/register', label: 'Create account', description: 'Sign up for a free VytlRx account for your organisation' },
+      { href: '/login', label: 'Sign in', description: 'Log in to your existing VytlRx account' },
       { href: '/onboarding', label: 'Onboarding wizard', description: 'Set up your risk register with an industry template' },
       { href: '/forgot-password', label: 'Forgot password', description: 'Request a password reset link' },
       { href: '/accept-invite', label: 'Accept invitation', description: 'Accept a team invitation to join an organisation' },
@@ -34,13 +34,13 @@ const sitemapGroups = [
   },
   {
     title: 'Legal & Company',
-    description: 'Legal notices, policies, and information about VYTL (Pty) Ltd.',
+    description: 'Legal notices, policies, and information about VytlRx (Pty) Ltd.',
     links: [
       { href: '/legal', label: 'Legal notice', description: 'Intellectual property, disclaimers, limitation of liability, and governing law' },
       { href: '/privacy', label: 'Privacy notice', description: 'POPIA-compliant privacy notice — how we collect, use, and protect your personal information' },
       { href: '/terms', label: 'Terms of service', description: 'Subscription terms, acceptable use, data ownership, and governing law' },
       { href: '/accessibility', label: 'Accessibility statement', description: 'Our WCAG 2.1 AA commitment, conformance status, and how to report barriers' },
-      { href: '/sitemap', label: 'Sitemap', description: 'This page — an overview of all pages on the VYTL platform' },
+      { href: '/sitemap', label: 'Sitemap', description: 'This page — an overview of all pages on the VytlRx platform' },
     ],
   },
 ]

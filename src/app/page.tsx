@@ -5,9 +5,9 @@ import { PublicFooter } from '@/components/public-footer'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'VYTL — Intelligent Risk Management for South African Business',
+  title: 'VytlRx � Intelligent Risk Management for South African Business',
   description:
-    'VYTL is the risk management platform built for South African enterprises. King IV, POPIA and ISO 31000 compliant. Start free in minutes.',
+    'VytlRx is the risk management platform built for South African enterprises. King IV, POPIA and ISO 31000 compliant. Start free in minutes.',
 }
 
 export default async function HomePage() {
@@ -16,14 +16,14 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[hsl(210,33%,95%)]">
-      {/* ── Nav ─────────────────────────────────────────────── */}
+      {/* -- Nav ----------------------------------------------- */}
       <header className="bg-white border-b border-[hsl(210,20%,87%)] sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg text-slate-800">
             <span className="w-7 h-7 rounded-md bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
               V
             </span>
-            VYTL
+            VytlRx
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
             <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
@@ -47,12 +47,12 @@ export default async function HomePage() {
 
       <main className="flex-1">
 
-        {/* ── Hero ────────────────────────────────────────────── */}
+        {/* -- Hero ---------------------------------------------- */}
         <section className="pt-20 pb-24 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-              Built for South African enterprises · King IV · POPIA · ISO 31000
+              Built for South African enterprises � King IV � POPIA � ISO 31000
             </div>
 
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
@@ -62,8 +62,8 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
-              VYTL gives risk and compliance teams one place to identify, score, monitor and
-              report on risk — with built-in King IV, POPIA and ISO 31000 alignment. Ready in
+              VytlRx gives risk and compliance teams one place to identify, score, monitor and
+              report on risk � with built-in King IV, POPIA and ISO 31000 alignment. Ready in
               minutes, not months.
             </p>
 
@@ -72,7 +72,7 @@ export default async function HomePage() {
                 href="/register"
                 className="px-8 py-3.5 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg text-base transition-colors shadow-sm"
               >
-                Start free — no credit card required
+                Start free � no credit card required
               </Link>
               <a
                 href="#how-it-works"
@@ -83,7 +83,7 @@ export default async function HomePage() {
             </div>
 
             <p className="text-sm text-slate-400 mt-5">
-              Set up in under 5 minutes · Your data stays in South Africa
+              Set up in under 5 minutes � Your data stays in South Africa
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export default async function HomePage() {
                 <span className="w-3 h-3 rounded-full bg-red-400"></span>
                 <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
                 <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                <span className="ml-3 text-slate-400 text-xs">app.vytl.co.za/dashboard</span>
+                <span className="ml-3 text-slate-400 text-xs">app.vytlrx.ai/dashboard</span>
               </div>
               <div className="p-6 bg-[hsl(210,33%,96%)]">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -143,7 +143,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Trust bar ───────────────────────────────────────── */}
+        {/* -- Trust bar ----------------------------------------- */}
         <section className="py-10 bg-white border-y border-slate-200">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <p className="text-sm text-slate-400 mb-6 uppercase tracking-widest font-medium">
@@ -157,7 +157,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Features ────────────────────────────────────────── */}
+        {/* -- Features ------------------------------------------ */}
         <section id="features" className="py-24 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -165,7 +165,7 @@ export default async function HomePage() {
                 Everything your risk team needs
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                From first risk entry to board presentation — VYTL covers the full risk management
+                From first risk entry to board presentation � VytlRx covers the full risk management
                 lifecycle without the complexity of legacy GRC tools.
               </p>
             </div>
@@ -173,47 +173,47 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: '🎯',
+                  icon: '??',
                   title: 'AI-Powered Risk Scoring',
                   desc: 'Five-dimension composite scoring across Base Risk, Control Quality, Velocity, Correlation and KRI Alignment. Automatic Value-at-Risk (VaR) calculated per risk.',
                 },
                 {
-                  icon: '📋',
+                  icon: '??',
                   title: 'Regulatory Compliance',
                   desc: 'Built-in mapping to King IV (35 principles), ISO 31000:2018 (16 requirements), POPIA, FICA and B-BBEE. Track your coverage percentage per framework.',
                 },
                 {
-                  icon: '📊',
+                  icon: '??',
                   title: 'Board-Ready Reports',
-                  desc: 'Generate multi-page PDF board packs in one click — heatmap, top-10 risks, VaR table, KRI status and trend analysis included.',
+                  desc: 'Generate multi-page PDF board packs in one click � heatmap, top-10 risks, VaR table, KRI status and trend analysis included.',
                 },
                 {
-                  icon: '⚡',
+                  icon: '?',
                   title: 'Industry Templates',
                   desc: 'Start instantly with 15 pre-built, SA-contextual risks for Manufacturing, Financial Services or Retail. Customise from day one.',
                 },
                 {
-                  icon: '🔔',
+                  icon: '??',
                   title: 'KRI Monitoring & Alerts',
                   desc: 'Define key risk indicators with green/amber/red thresholds. Automatic email alerts when KRIs breach, with a weekly digest for leadership.',
                 },
                 {
-                  icon: '👥',
+                  icon: '??',
                   title: 'Team Collaboration',
                   desc: 'Role-based access (Owner, Admin, Risk Manager, Editor, Viewer). Kanban workflow, treatment action tracking, and full audit trail.',
                 },
                 {
-                  icon: '📈',
+                  icon: '??',
                   title: 'Movement & Trends',
                   desc: 'Weekly portfolio snapshots show which risks improved or deteriorated. Period-over-period comparison for quarterly risk reviews.',
                 },
                 {
-                  icon: '🔒',
+                  icon: '??',
                   title: 'POPIA Compliant by Design',
                   desc: 'Configurable data retention, consent tracking, information officer designation, and right-to-erasure support built into the platform.',
                 },
                 {
-                  icon: '📥',
+                  icon: '??',
                   title: 'Bulk Import',
                   desc: 'Upload Excel, CSV, PDF or Word files. AI extracts and maps risk data automatically, with smart header detection and enum normalisation.',
                 },
@@ -228,7 +228,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── How it works ────────────────────────────────────── */}
+        {/* -- How it works -------------------------------------- */}
         <section id="how-it-works" className="py-24 px-6 bg-white border-y border-slate-200">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
@@ -247,19 +247,19 @@ export default async function HomePage() {
                   {
                     step: '01',
                     title: 'Create your account',
-                    desc: 'Register with your name, organisation and email. Choose your industry — Manufacturing, Financial Services or Retail — and VYTL loads 15 SA-contextual risks instantly. Or start with a blank register.',
+                    desc: 'Register with your name, organisation and email. Choose your industry � Manufacturing, Financial Services or Retail � and VytlRx loads 15 SA-contextual risks instantly. Or start with a blank register.',
                     side: 'left',
                   },
                   {
                     step: '02',
                     title: 'Score and monitor your risks',
-                    desc: 'Rate each risk on likelihood and impact. VYTL calculates your Vytl Score, flags appetite breaches, tracks KRIs and suggests AI-driven improvements. Link incidents, map to regulations, assign treatment actions.',
+                    desc: 'Rate each risk on likelihood and impact. VytlRx calculates your Vytl Score, flags appetite breaches, tracks KRIs and suggests AI-driven improvements. Link incidents, map to regulations, assign treatment actions.',
                     side: 'right',
                   },
                   {
                     step: '03',
                     title: 'Report with confidence',
-                    desc: 'Generate your board risk report in one click — a professional PDF with heatmap, top-10 risks, VaR table and trend commentary. Export for audit, regulators or exco.',
+                    desc: 'Generate your board risk report in one click � a professional PDF with heatmap, top-10 risks, VaR table and trend commentary. Export for audit, regulators or exco.',
                     side: 'left',
                   },
                 ].map((s) => (
@@ -280,7 +280,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Compliance ──────────────────────────────────────── */}
+        {/* -- Compliance ---------------------------------------- */}
         <section id="compliance" className="py-24 px-6">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
@@ -288,7 +288,7 @@ export default async function HomePage() {
                 Built for the South African regulatory landscape
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                VYTL is designed from the ground up for SA compliance requirements — not retrofitted
+                VytlRx is designed from the ground up for SA compliance requirements � not retrofitted
                 from an international tool.
               </p>
             </div>
@@ -316,7 +316,7 @@ export default async function HomePage() {
                 {
                   badge: 'FICA & B-BBEE',
                   title: 'FICA, B-BBEE, NCA & More',
-                  desc: 'Regulatory risk categories covering FICA/AML, B-BBEE compliance, NCA obligations, FSCA requirements and OHS Act — with pre-built risk examples for each.',
+                  desc: 'Regulatory risk categories covering FICA/AML, B-BBEE compliance, NCA obligations, FSCA requirements and OHS Act � with pre-built risk examples for each.',
                   color: 'bg-amber-50 border-amber-200 text-amber-700',
                 },
               ].map((c) => (
@@ -334,7 +334,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Testimonials ────────────────────────────────────── */}
+        {/* -- Testimonials -------------------------------------- */}
         <section className="py-24 px-6 bg-white border-y border-slate-200">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
@@ -351,12 +351,12 @@ export default async function HomePage() {
                   org: 'JSE-listed Financial Services Group',
                 },
                 {
-                  quote: 'The industry template gave us 15 risks we\'d actually identified ourselves — load shedding, POPIA, OHS Act. It felt like the platform understood our business from day one.',
+                  quote: 'The industry template gave us 15 risks we\'d actually identified ourselves � load shedding, POPIA, OHS Act. It felt like the platform understood our business from day one.',
                   name: 'Risk Manager',
                   org: 'Large Manufacturing Company, Gauteng',
                 },
                 {
-                  quote: 'Our external auditors were impressed by the audit trail and regulatory mapping. VYTL made our ISO 31000 certification review significantly easier to evidence.',
+                  quote: 'Our external auditors were impressed by the audit trail and regulatory mapping. VytlRx made our ISO 31000 certification review significantly easier to evidence.',
                   name: 'Head of Compliance',
                   org: 'Healthcare Group, Western Cape',
                 },
@@ -375,7 +375,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Pricing ─────────────────────────────────────────── */}
+        {/* -- Pricing ------------------------------------------- */}
         <section id="pricing" className="py-24 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
@@ -422,7 +422,7 @@ export default async function HomePage() {
                     'Custom onboarding',
                   ],
                   cta: 'Get in touch',
-                  href: 'mailto:hello@vytl.app',
+                  href: 'mailto:hello@vytlrx.app',
                   highlight: true,
                 },
               ].map((plan) => (
@@ -476,15 +476,15 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Final CTA ───────────────────────────────────────── */}
+        {/* -- Final CTA ----------------------------------------- */}
         <section className="py-24 px-6 bg-slate-900">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to simplify your risk management?
             </h2>
             <p className="text-slate-400 text-lg mb-10">
-              Join SA risk teams already using VYTL to meet their King IV, POPIA and ISO 31000
-              obligations — without the spreadsheet chaos.
+              Join SA risk teams already using VytlRx to meet their King IV, POPIA and ISO 31000
+              obligations � without the spreadsheet chaos.
             </p>
             <Link
               href="/register"
@@ -492,7 +492,7 @@ export default async function HomePage() {
             >
               Start free today
             </Link>
-            <p className="text-slate-500 text-sm mt-5">No credit card · Set up in 5 minutes · Cancel anytime</p>
+            <p className="text-slate-500 text-sm mt-5">No credit card � Set up in 5 minutes � Cancel anytime</p>
           </div>
         </section>
       </main>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -70,7 +70,7 @@ function AcceptInviteContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome to Vytl!</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome to VytlRx!</h1>
           <p className="text-slate-600">
             Your account has been created. Redirecting to login...
           </p>
@@ -85,7 +85,7 @@ function AcceptInviteContent() {
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-slate-900">Complete Your Account</h1>
           <p className="text-slate-600 mt-2">
-            You&apos;ve been invited to join Vytl. Please set up your account.
+            You&apos;ve been invited to join VytlRx. Please set up your account.
           </p>
         </div>
 

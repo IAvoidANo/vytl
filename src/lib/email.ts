@@ -1,4 +1,4 @@
-/**
+﻿/**
  * email.ts — Thin wrapper around Resend for transactional email.
  *
  * Falls back to console logging when RESEND_API_KEY is not set,
@@ -22,7 +22,7 @@ function getResend(): Resend | null {
   return _resend
 }
 
-const FROM = process.env.EMAIL_FROM ?? 'Vytl <noreply@hbdadvisory.com>'
+const FROM = process.env.EMAIL_FROM ?? 'VytlRx <noreply@hbdadvisory.com>'
 
 export async function sendEmail(opts: EmailOptions): Promise<{ success: boolean; error?: string }> {
   const resend = getResend()

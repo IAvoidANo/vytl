@@ -1,4 +1,4 @@
-/**
+﻿/**
  * notification-triggers.ts — Fire-and-forget email notifications.
  *
  * Each function checks conditions and sends email if warranted.
@@ -70,7 +70,7 @@ export async function maybeNotifyAppetiteBreach(
 
     await sendEmail({
       to: risk.owner.email,
-      subject: `[Vytl] Risk Appetite Breach — ${risk.refCode}`,
+      subject: `[VytlRx] Risk Appetite Breach — ${risk.refCode}`,
       html: appetiteBreachEmail({
         orgName: org.name,
         recipientName: risk.owner.name ?? 'Risk Owner',
@@ -120,7 +120,7 @@ export async function maybeNotifyRiskAssigned(
 
     await sendEmail({
       to: risk.owner.email,
-      subject: `[Vytl] Risk Assigned — ${risk.refCode}`,
+      subject: `[VytlRx] Risk Assigned — ${risk.refCode}`,
       html: riskAssignedEmail({
         orgName: org.name,
         recipientName: risk.owner.name ?? 'Risk Owner',
@@ -167,7 +167,7 @@ export async function maybeNotifyKriRed(
 
     await sendEmail({
       to: kri.owner.email,
-      subject: `[Vytl] KRI Alert: Red Status — ${kri.name}`,
+      subject: `[VytlRx] KRI Alert: Red Status — ${kri.name}`,
       html: kriRedAlertEmail({
         orgName: org.name,
         recipientName: kri.owner.name ?? 'KRI Owner',
@@ -216,7 +216,7 @@ export async function maybeNotifyIncidentCreated(
 
     await sendEmail({
       to: incident.risk.owner.email,
-      subject: `[Vytl] New Incident — ${incident.risk.refCode}`,
+      subject: `[VytlRx] New Incident — ${incident.risk.refCode}`,
       html: incidentCreatedEmail({
         orgName: org.name,
         recipientName: incident.risk.owner.name ?? 'Risk Owner',

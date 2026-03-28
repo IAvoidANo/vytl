@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -72,7 +72,7 @@ export function TopNav() {
             <Shield className="w-4 h-4 text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Vytl</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">VytlRx</span>
             <p className="text-[9px] text-slate-500 dark:text-slate-500 uppercase tracking-wider -mt-0.5 leading-none">Risk Intelligence</p>
           </div>
         </Link>

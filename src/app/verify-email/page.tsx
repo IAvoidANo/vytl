@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -33,7 +33,7 @@ function VerifyEmailContent() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 w-full max-w-md text-center">
         <div className="inline-flex items-center gap-2 mb-8">
           <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">V</span>
-          <span className="text-xl font-bold text-slate-800">VYTL</span>
+          <span className="text-xl font-bold text-slate-800">VytlRx</span>
         </div>
 
         {status === 'verifying' && (

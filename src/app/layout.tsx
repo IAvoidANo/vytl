@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Open_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Vytl - Active Strategic Risk Intelligence',
+  title: 'VytlRx - Active Strategic Risk Intelligence',
   description: 'AI-powered enterprise risk management for South African SMEs',
 }
 

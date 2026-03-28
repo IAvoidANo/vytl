@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Sidebar } from './sidebar'
 import { Header } from './header'
@@ -27,7 +27,7 @@ export function AppLayout({ children, userName, userRole }: AppLayoutProps) {
           {children}
         </main>
         <footer className="py-2 px-4 border-t border-slate-800 flex-shrink-0 flex items-center justify-between">
-          <span className="text-[10px] text-slate-600">Vytl v1.0.0 Beta</span>
+          <span className="text-[10px] text-slate-600">VytlRx v1.0.0 Beta</span>
           <nav className="flex items-center gap-4">
             {[
               { href: '/legal', label: 'Legal' },

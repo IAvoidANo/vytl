@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export function PublicFooter() {
   const currentYear = new Date().getFullYear()
@@ -9,7 +9,7 @@ export function PublicFooter() {
         {/* Top row: copyright + region */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <p className="text-sm text-slate-600 max-w-sm leading-relaxed">
-            © {currentYear} VYTL (Pty) Ltd. All rights reserved. &ldquo;VYTL&rdquo; and &ldquo;Intelligent Risk, Simplified&rdquo; are trademarks of VYTL (Pty) Ltd.
+            © {currentYear} VytlRx (Pty) Ltd. All rights reserved. &ldquo;VytlRx&rdquo; and &ldquo;Intelligent Risk, Simplified&rdquo; are trademarks of VytlRx (Pty) Ltd.
           </p>
           <div className="flex items-center gap-2 text-sm text-slate-600 shrink-0">
             <span className="text-lg">🇿🇦</span>

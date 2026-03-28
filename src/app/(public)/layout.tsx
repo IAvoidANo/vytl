@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+﻿import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { PublicFooter } from '@/components/public-footer'
 
@@ -10,7 +10,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg text-slate-800">
             <span className="w-7 h-7 rounded-md bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">V</span>
-            VYTL
+            VytlRx
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/login" className="text-slate-600 hover:text-slate-900 transition-colors">Sign in</Link>

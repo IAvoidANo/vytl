@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -47,7 +47,7 @@ export function Sidebar() {
             <div className="absolute inset-0 w-10 h-10 rounded-xl bg-teal-500 opacity-0 group-hover:opacity-20 group-hover:animate-ping" />
           </div>
           <div>
-            <span className="text-xl font-bold text-white tracking-tight">Vytl</span>
+            <span className="text-xl font-bold text-white tracking-tight">VytlRx</span>
             <p className="text-[10px] text-slate-500 uppercase tracking-wider -mt-0.5">Risk Intelligence</p>
           </div>
         </Link>
@@ -98,7 +98,7 @@ export function Sidebar() {
           <p className="text-[10px] text-slate-500">All systems operational</p>
         </div>
         <p className="text-[10px] text-slate-600 text-center mt-3">
-          Vytl v1.0.0 Beta
+          VytlRx v1.0.0 Beta
         </p>
       </div>
     </aside>

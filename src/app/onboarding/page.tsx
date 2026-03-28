@@ -1,10 +1,10 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import OnboardingClient from './onboarding-client'
 
 export const metadata = {
-  title: 'Get Started - Vytl',
+  title: 'Get Started - VytlRx',
   description: 'Set up your risk management dashboard in 5 minutes',
 }
 

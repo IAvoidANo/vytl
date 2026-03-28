@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc-client'
@@ -536,7 +536,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
           <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-md">
             <h4 className="font-medium text-teal-400 mb-1">Risk Scoring Methodology</h4>
             <p className="text-sm text-slate-300">
-              Vytl follows an ISO 31000-aligned, three-tier scoring framework. The methodology
+              VytlRx follows an ISO 31000-aligned, three-tier scoring framework. The methodology
               below is applied consistently across all risks in your organisation.
             </p>
           </div>

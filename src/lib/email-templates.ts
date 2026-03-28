@@ -1,5 +1,5 @@
-/**
- * email-templates.ts — HTML email templates for Vytl notifications.
+﻿/**
+ * email-templates.ts — HTML email templates for VytlRx notifications.
  *
  * All templates return plain HTML strings (no React Email dependency).
  * Design: white background, teal (#0d9488) accent, system fonts, CTA button.
@@ -17,7 +17,7 @@ function baseLayout(content: string, appUrl: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vytl Notification</title>
+  <title>VytlRx Notification</title>
 </head>
 <body style="margin:0;padding:0;background:${BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:${BG};padding:32px 16px;">
@@ -26,7 +26,7 @@ function baseLayout(content: string, appUrl: string): string {
         <!-- Header -->
         <tr>
           <td style="background:${TEAL};padding:24px 32px;border-radius:8px 8px 0 0;">
-            <span style="color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">Vytl</span>
+            <span style="color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">VytlRx</span>
             <span style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:8px;">Risk Management</span>
           </td>
         </tr>
@@ -40,7 +40,7 @@ function baseLayout(content: string, appUrl: string): string {
         <tr>
           <td style="padding:20px 32px;text-align:center;border:1px solid ${BORDER};border-top:none;border-radius:0 0 8px 8px;background:#ffffff;">
             <p style="margin:0;font-size:12px;color:${MUTED_TEXT};">
-              Vytl — Risk Management for South African Businesses<br/>
+              VytlRx — Risk Management for South African Businesses<br/>
               <a href="${appUrl}/settings" style="color:${TEAL};text-decoration:none;">Manage notification preferences</a>
             </p>
           </td>
@@ -198,10 +198,10 @@ export function inviteUserEmail(data: {
   appUrl: string
 }): string {
   const content = `
-    <p style="margin:0 0 4px;font-size:13px;color:${MUTED_TEXT};">You&rsquo;ve been invited to Vytl</p>
-    <h1 style="margin:0 0 24px;font-size:20px;color:${DARK_TEXT};font-weight:700;">Join ${data.orgName} on Vytl</h1>
+    <p style="margin:0 0 4px;font-size:13px;color:${MUTED_TEXT};">You&rsquo;ve been invited to VytlRx</p>
+    <h1 style="margin:0 0 24px;font-size:20px;color:${DARK_TEXT};font-weight:700;">Join ${data.orgName} on VytlRx</h1>
     <p style="margin:0 0 20px;font-size:15px;color:${DARK_TEXT};line-height:1.6;">
-      <strong>${data.inviterName}</strong> has invited you to collaborate on risk management in Vytl.
+      <strong>${data.inviterName}</strong> has invited you to collaborate on risk management in VytlRx.
     </p>
     <p style="margin:0 0 16px;font-size:14px;color:${MUTED_TEXT};">
       Click the button below to set up your account. This invitation link expires in 7 days.
@@ -224,7 +224,7 @@ export function passwordResetEmail(data: {
     <h1 style="margin:0 0 24px;font-size:20px;color:${DARK_TEXT};font-weight:700;">Reset your password</h1>
     <p style="margin:0 0 16px;font-size:15px;color:${DARK_TEXT};">Hi ${name},</p>
     <p style="margin:0 0 20px;font-size:15px;color:${DARK_TEXT};line-height:1.6;">
-      We received a request to reset your Vytl password. Click the button below to choose a new password.
+      We received a request to reset your VytlRx password. Click the button below to choose a new password.
       This link expires in 1 hour.
     </p>
     ${ctaButton('Reset Password', data.resetUrl)}
@@ -241,11 +241,11 @@ export function welcomeEmail(data: {
   appUrl: string
 }): string {
   const content = `
-    <p style="margin:0 0 4px;font-size:13px;color:${MUTED_TEXT};">Welcome to Vytl</p>
+    <p style="margin:0 0 4px;font-size:13px;color:${MUTED_TEXT};">Welcome to VytlRx</p>
     <h1 style="margin:0 0 24px;font-size:20px;color:${DARK_TEXT};font-weight:700;">Your account is ready</h1>
     <p style="margin:0 0 16px;font-size:15px;color:${DARK_TEXT};">Hi ${data.recipientName},</p>
     <p style="margin:0 0 20px;font-size:15px;color:${DARK_TEXT};line-height:1.6;">
-      Welcome to <strong>Vytl</strong> — AI-powered risk management built for South African businesses.
+      Welcome to <strong>VytlRx</strong> — AI-powered risk management built for South African businesses.
       Your organisation <strong>${data.orgName}</strong> is now set up and ready to go.
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:${BG};border:1px solid ${BORDER};border-radius:6px;padding:20px;margin-bottom:24px;">
@@ -278,11 +278,11 @@ export function verifyEmailTemplate({ recipientName, verifyUrl, appUrl }: {
   return baseLayout(`
     <tr><td style="padding:32px;">
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:${DARK_TEXT};">Verify your email address</h1>
-      <p style="margin:0 0 24px;color:${MUTED_TEXT};line-height:1.6;">Hi ${recipientName}, thanks for signing up for Vytl! Please verify your email address to activate your account.</p>
+      <p style="margin:0 0 24px;color:${MUTED_TEXT};line-height:1.6;">Hi ${recipientName}, thanks for signing up for VytlRx! Please verify your email address to activate your account.</p>
       <table cellpadding="0" cellspacing="0"><tr><td style="background:#0d9488;border-radius:8px;">
         <a href="${verifyUrl}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;">Verify my email address</a>
       </td></tr></table>
-      <p style="margin:24px 0 0;color:${MUTED_TEXT};font-size:13px;">This link expires in 24 hours. If you didn't create a Vytl account, you can safely ignore this email.</p>
+      <p style="margin:24px 0 0;color:${MUTED_TEXT};font-size:13px;">This link expires in 24 hours. If you didn't create a VytlRx account, you can safely ignore this email.</p>
       <p style="margin:12px 0 0;color:${MUTED_TEXT};font-size:13px;">Or copy this link: <a href="${verifyUrl}" style="color:#0d9488;">${verifyUrl}</a></p>
     </td></tr>
   `, appUrl)
@@ -311,7 +311,7 @@ export function weeklyDigestEmail(data: {
     <table width="100%" cellpadding="16" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px;">
       <tr>
         <td style="background:${BG};border:1px solid ${BORDER};border-radius:6px;text-align:center;padding:20px;">
-          <p style="margin:0 0 4px;font-size:12px;color:${MUTED_TEXT};">VYTL SCORE</p>
+          <p style="margin:0 0 4px;font-size:12px;color:${MUTED_TEXT};">Vytl Score</p>
           <p style="margin:0;font-size:32px;font-weight:700;color:${scoreColor};">
             ${data.vytlScore ?? '—'}${data.vytlGrade ? `<span style="font-size:16px;margin-left:6px;">(${data.vytlGrade})</span>` : ''}
           </p>

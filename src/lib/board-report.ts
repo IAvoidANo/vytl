@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Board Report PDF Generation
  * Pure function that builds a multi-page PDF for governance reporting
  */
@@ -234,7 +234,7 @@ export function generateBoardReport(data: BoardReportData): jsPDF {
   // Branding
   doc.setFontSize(10)
   doc.setTextColor(...COLORS.medium)
-  doc.text('Powered by Vytl Risk Management', PAGE_WIDTH / 2, PAGE_HEIGHT - 30, {
+  doc.text('Powered by VytlRx Risk Management', PAGE_WIDTH / 2, PAGE_HEIGHT - 30, {
     align: 'center',
   })
 

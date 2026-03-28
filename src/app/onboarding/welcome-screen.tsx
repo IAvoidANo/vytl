@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { ArrowRight, Sparkles, FileSpreadsheet, PenTool } from 'lucide-react'
 
@@ -17,7 +17,7 @@ export default function WelcomeScreen({
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
       {/* Logo */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">VYTL</h1>
+        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">VytlRx</h1>
         <p className="text-sm text-slate-600 mt-1 tracking-wide">
           Active Strategic Risk Intelligence
         </p>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 max-w-md w-full text-center">
           <div className="inline-flex items-center gap-2 mb-8">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">V</span>
-            <span className="text-xl font-bold text-slate-800">VYTL</span>
+            <span className="text-xl font-bold text-slate-800">VytlRx</span>
           </div>
           <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
             </Link>
           ))}
         </nav>
-        <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VYTL (Pty) Ltd</p>
+        <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VytlRx (Pty) Ltd</p>
       </div>
     )
   }
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">V</span>
-            <span className="text-xl font-bold text-slate-800">VYTL</span>
+            <span className="text-xl font-bold text-slate-800">VytlRx</span>
           </div>
           <p className="text-slate-500 text-sm">Reset your password</p>
         </div>
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
           </Link>
         ))}
       </nav>
-      <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VYTL (Pty) Ltd</p>
+      <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VytlRx (Pty) Ltd</p>
     </div>
   )
 }

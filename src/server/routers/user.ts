@@ -1,4 +1,4 @@
-import { z } from 'zod'
+﻿import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { router, protectedProcedure, adminProcedure, ownerProcedure, publicProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
@@ -131,9 +131,9 @@ export const userRouter = router({
       const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
       sendEmail({
         to: input.email,
-        subject: `You've been invited to join ${org?.name ?? 'Vytl'}`,
+        subject: `You've been invited to join ${org?.name ?? 'VytlRx'}`,
         html: inviteUserEmail({
-          orgName: org?.name ?? 'Vytl',
+          orgName: org?.name ?? 'VytlRx',
           inviterName: ctx.user.name ?? ctx.user.email ?? 'A team member',
           inviteUrl,
           appUrl,
@@ -403,9 +403,9 @@ export const userRouter = router({
       const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
       sendEmail({
         to: user.email,
-        subject: `Your invitation to join ${org?.name ?? 'Vytl'} — resent`,
+        subject: `Your invitation to join ${org?.name ?? 'VytlRx'} — resent`,
         html: inviteUserEmail({
-          orgName: org?.name ?? 'Vytl',
+          orgName: org?.name ?? 'VytlRx',
           inviterName: ctx.user.name ?? ctx.user.email ?? 'A team member',
           inviteUrl,
           appUrl,
@@ -531,7 +531,7 @@ export const userRouter = router({
 
       sendEmail({
         to: user.email,
-        subject: 'Reset your Vytl password',
+        subject: 'Reset your VytlRx password',
         html: passwordResetEmail({ recipientName: user.name, resetUrl, appUrl }),
       }).catch(() => {})
 
@@ -681,7 +681,7 @@ export const userRouter = router({
       const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
       sendEmail({
         to: input.email,
-        subject: 'Verify your email — VYTL',
+        subject: 'Verify your email — VytlRx',
         html: verifyEmailTemplate({ recipientName: input.name, verifyUrl, appUrl }),
       }).catch(() => {})
 
@@ -730,7 +730,7 @@ export const userRouter = router({
       const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
       sendEmail({
         to: input.email,
-        subject: 'Verify your email — VYTL',
+        subject: 'Verify your email — VytlRx',
         html: verifyEmailTemplate({ recipientName: user.name ?? 'there', verifyUrl, appUrl }),
       }).catch(() => {})
       return { success: true }

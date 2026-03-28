@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Legal Notice | VYTL',
-  description: 'Legal notice, intellectual property rights, disclaimers, and governing law for the VYTL risk management platform.',
+  title: 'Legal Notice | VytlRx',
+  description: 'Legal notice, intellectual property rights, disclaimers, and governing law for the VytlRx risk management platform.',
 }
 
 export default function LegalPage() {
@@ -17,16 +17,16 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Company Information</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL (Pty) Ltd is a private company incorporated under the laws of the Republic of South Africa
+              VytlRx (Pty) Ltd is a private company incorporated under the laws of the Republic of South Africa
               (Registration Number: 2024/000000/07). Our registered office is situated in the Western Cape
-              Province, South Africa. VYTL operates the risk management platform available at vytl.app and
+              Province, South Africa. VytlRx operates the risk management platform available at vytl.app and
               associated subdomains (the &ldquo;Platform&rdquo;).
             </p>
             <p>
-              Correspondence may be directed to our registered address or by email to legal@vytl.app. For
-              general enquiries, product support, or billing matters, please contact support@vytl.app.
+              Correspondence may be directed to our registered address or by email to legal@vytlrx.app. For
+              general enquiries, product support, or billing matters, please contact support@vytlrx.app.
               For data privacy matters, including requests under the Protection of Personal Information Act,
-              please contact privacy@vytl.app.
+              please contact privacy@vytlrx.app.
             </p>
           </div>
         </section>
@@ -36,23 +36,23 @@ export default function LegalPage() {
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
               All content, software, source code, algorithms, databases, documentation, user interfaces,
-              graphic design, trade dress, and other materials on or forming part of the VYTL Platform are
-              the exclusive property of VYTL (Pty) Ltd or its licensors, and are protected by copyright,
+              graphic design, trade dress, and other materials on or forming part of the VytlRx Platform are
+              the exclusive property of VytlRx (Pty) Ltd or its licensors, and are protected by copyright,
               trade secret, trade mark, and other intellectual property laws of South Africa and applicable
               international conventions.
             </p>
             <p>
-              &ldquo;VYTL&rdquo;, &ldquo;Intelligent Risk, Simplified&rdquo;, the VYTL logo, and all related
-              product and service names are trademarks or registered trade marks of VYTL (Pty) Ltd. You may
+              &ldquo;VytlRx&rdquo;, &ldquo;Intelligent Risk, Simplified&rdquo;, the VytlRx logo, and all related
+              product and service names are trademarks or registered trade marks of VytlRx (Pty) Ltd. You may
               not use these marks without our prior written consent. All other trade marks referenced on the
               Platform are the property of their respective owners.
             </p>
             <p>
-              Subject to your compliance with these terms and any applicable subscription agreement, VYTL
+              Subject to your compliance with these terms and any applicable subscription agreement, VytlRx
               grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the
               Platform for your internal business purposes. No other rights are granted. You may not copy,
               reproduce, modify, create derivative works from, distribute, publicly display, or otherwise
-              exploit any part of the Platform except as expressly permitted in writing by VYTL.
+              exploit any part of the Platform except as expressly permitted in writing by VytlRx.
             </p>
           </div>
         </section>
@@ -61,7 +61,7 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Disclaimers</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              The VYTL Platform is provided as a risk management tool to assist organisations in identifying,
+              The VytlRx Platform is provided as a risk management tool to assist organisations in identifying,
               assessing, and documenting risks. It does not constitute legal advice, compliance advice,
               auditing services, or any form of professional advisory service. The outputs generated by the
               Platform, including risk scores, AI-generated analysis, board reports, and regulatory mapping
@@ -69,7 +69,7 @@ export default function LegalPage() {
               legal or regulatory compliance.
             </p>
             <p>
-              VYTL makes no warranty, express or implied, that use of the Platform will ensure compliance
+              VytlRx makes no warranty, express or implied, that use of the Platform will ensure compliance
               with the King IV Report on Corporate Governance, the Protection of Personal Information Act 4
               of 2013 (POPIA), ISO 31000:2018, or any other applicable standard, law, or regulation. You
               remain solely responsible for your organisation&rsquo;s compliance obligations and the professional
@@ -77,7 +77,7 @@ export default function LegalPage() {
             </p>
             <p>
               References to third-party frameworks, standards bodies, or regulatory authorities are provided
-              for informational context only. VYTL (Pty) Ltd is not affiliated with, endorsed by, or
+              for informational context only. VytlRx (Pty) Ltd is not affiliated with, endorsed by, or
               officially recognised by the Institute of Directors in South Africa (IoDSA), the Information
               Regulator of South Africa, the International Organization for Standardization (ISO), or any
               other standards or regulatory body.
@@ -89,14 +89,14 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">No Warranties</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              To the fullest extent permitted by applicable law, the VYTL Platform is provided &ldquo;as is&rdquo;
+              To the fullest extent permitted by applicable law, the VytlRx Platform is provided &ldquo;as is&rdquo;
               and &ldquo;as available&rdquo; without warranties of any kind, whether express, implied, statutory,
               or otherwise, including but not limited to implied warranties of merchantability, fitness for
-              a particular purpose, title, and non-infringement. VYTL does not warrant that the Platform
+              a particular purpose, title, and non-infringement. VytlRx does not warrant that the Platform
               will be uninterrupted, error-free, secure, or free of viruses or other harmful components.
             </p>
             <p>
-              VYTL does not warrant the accuracy, completeness, reliability, or currency of any information
+              VytlRx does not warrant the accuracy, completeness, reliability, or currency of any information
               provided through the Platform, including AI-generated content, risk frameworks, regulatory
               summaries, and benchmarking data. Such content is provided for indicative purposes and may
               not reflect the most recent legislative or regulatory developments.
@@ -108,15 +108,15 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Limitation of Liability</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              To the maximum extent permitted by South African law, VYTL (Pty) Ltd, its directors, employees,
+              To the maximum extent permitted by South African law, VytlRx (Pty) Ltd, its directors, employees,
               contractors, agents, and licensors shall not be liable for any indirect, incidental, special,
               consequential, punitive, or exemplary damages arising out of or related to your use of or
               inability to use the Platform, including loss of profits, loss of data, loss of goodwill,
               business interruption, or the cost of substitute services.
             </p>
             <p>
-              In no event shall VYTL&rsquo;s aggregate liability to you for all claims arising out of or related
-              to the Platform exceed the total fees paid by you to VYTL in the twelve (12) months immediately
+              In no event shall VytlRx&rsquo;s aggregate liability to you for all claims arising out of or related
+              to the Platform exceed the total fees paid by you to VytlRx in the twelve (12) months immediately
               preceding the event giving rise to the claim, or ZAR 10,000 (ten thousand Rand), whichever is
               the lesser. This limitation applies whether the claim is based in contract, delict (including
               negligence), statute, or any other legal or equitable theory.
@@ -136,14 +136,14 @@ export default function LegalPage() {
             <p>
               The Platform may contain links to third-party websites, resources, or services. These links
               are provided for your convenience only and do not constitute an endorsement, sponsorship, or
-              recommendation by VYTL. We have no control over the content, privacy practices, or availability
+              recommendation by VytlRx. We have no control over the content, privacy practices, or availability
               of third-party sites and accept no responsibility or liability for them.
             </p>
             <p>
               The Platform integrates with third-party infrastructure providers including Vercel (hosting
               and serverless compute), Neon (managed PostgreSQL database), and Resend (transactional email
               delivery). Your use of the Platform is subject to the terms of service and privacy policies
-              of these providers, as described in our Privacy Notice. VYTL is not responsible for the
+              of these providers, as described in our Privacy Notice. VytlRx is not responsible for the
               acts or omissions of these subprocessors beyond the obligations described in our Data Processing
               Agreement.
             </p>
@@ -154,7 +154,7 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Governing Law and Jurisdiction</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              This legal notice and all matters arising out of or in connection with the VYTL Platform shall
+              This legal notice and all matters arising out of or in connection with the VytlRx Platform shall
               be governed by and construed in accordance with the laws of the Republic of South Africa,
               without regard to its conflict of law provisions. The Electronic Communications and Transactions
               Act 25 of 2002 (ECTA) applies to all electronic transactions conducted through the Platform.
@@ -162,7 +162,7 @@ export default function LegalPage() {
             <p>
               Any dispute arising out of or relating to this notice or the Platform shall be subject to the
               exclusive jurisdiction of the High Court of South Africa, Western Cape Division (Cape Town).
-              VYTL reserves the right to seek injunctive or other equitable relief in any competent court
+              VytlRx reserves the right to seek injunctive or other equitable relief in any competent court
               to prevent or restrain a breach of these terms or to protect its intellectual property rights.
             </p>
           </div>
@@ -172,7 +172,7 @@ export default function LegalPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Changes to This Notice</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL reserves the right to update or modify this legal notice at any time without prior notice.
+              VytlRx reserves the right to update or modify this legal notice at any time without prior notice.
               The date at the top of this page indicates when the notice was last revised. Your continued
               use of the Platform after any changes constitutes acceptance of the updated notice. We encourage
               you to review this page periodically to stay informed of any changes.

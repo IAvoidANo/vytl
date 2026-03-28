@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | VYTL',
-  description: 'Terms of Service for the VYTL risk management platform. Governing South African law, ECTA compliance, subscription terms, and acceptable use.',
+  title: 'Terms of Service | VytlRx',
+  description: 'Terms of Service for the VytlRx risk management platform. Governing South African law, ECTA compliance, subscription terms, and acceptable use.',
 }
 
 export default function TermsPage() {
@@ -18,10 +18,10 @@ export default function TermsPage() {
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
               These Terms of Service (&ldquo;Terms&rdquo;) constitute a binding legal agreement between you
-              (the individual or entity accessing or using the VYTL Platform) and VYTL (Pty) Ltd, a private
-              company registered under the laws of the Republic of South Africa (&ldquo;VYTL&rdquo;, &ldquo;we&rdquo;,
+              (the individual or entity accessing or using the VytlRx Platform) and VytlRx (Pty) Ltd, a private
+              company registered under the laws of the Republic of South Africa (&ldquo;VytlRx&rdquo;, &ldquo;we&rdquo;,
               &ldquo;us&rdquo;, or &ldquo;our&rdquo;). By registering for an account, accessing, or using the
-              VYTL Platform, you agree to be bound by these Terms.
+              VytlRx Platform, you agree to be bound by these Terms.
             </p>
             <p>
               If you are accepting these Terms on behalf of a company, organisation, or other legal entity,
@@ -38,7 +38,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">2. Service Description</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL provides a cloud-based enterprise risk management Software-as-a-Service (&ldquo;SaaS&rdquo;)
+              VytlRx provides a cloud-based enterprise risk management Software-as-a-Service (&ldquo;SaaS&rdquo;)
               platform designed to assist South African organisations in identifying, assessing, documenting,
               and managing risks. The Platform includes features such as risk registers, risk scoring and
               heatmaps, KRI monitoring, treatment plan management, incident tracking, regulatory mapping,
@@ -46,10 +46,10 @@ export default function TermsPage() {
               including the King IV Report on Corporate Governance, ISO 31000:2018, and POPIA.
             </p>
             <p>
-              VYTL reserves the right to modify, suspend, or discontinue any feature or functionality of
+              VytlRx reserves the right to modify, suspend, or discontinue any feature or functionality of
               the Platform at any time, with or without notice. We will use reasonable efforts to provide
               advance notice of material changes. New features, tools, or resources made available through
-              the Platform are subject to these Terms unless VYTL expressly indicates otherwise.
+              the Platform are subject to these Terms unless VytlRx expressly indicates otherwise.
             </p>
           </div>
         </section>
@@ -61,7 +61,7 @@ export default function TermsPage() {
               To access the Platform, you must create an account by providing accurate, complete, and
               current information including your name, organisation name, and a valid email address. You
               are responsible for maintaining the confidentiality of your account credentials and for all
-              activity that occurs under your account. You must notify VYTL immediately at support@vytl.app
+              activity that occurs under your account. You must notify VytlRx immediately at support@vytlrx.app
               of any unauthorised use of your account or any other security breach.
             </p>
             <p>
@@ -74,7 +74,7 @@ export default function TermsPage() {
             <p>
               You must be at least 18 years of age and have legal capacity to enter into binding agreements
               under South African law to create an account. Accounts may not be created for the purpose
-              of competitive intelligence gathering, benchmarking against VYTL, or any other purpose that
+              of competitive intelligence gathering, benchmarking against VytlRx, or any other purpose that
               conflicts with these Terms.
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function TermsPage() {
               or any applicable data protection law.
             </p>
             <p>
-              VYTL reserves the right to investigate and take appropriate action if you violate these
+              VytlRx reserves the right to investigate and take appropriate action if you violate these
               acceptable use requirements, including suspending or terminating your account, reporting
               conduct to law enforcement authorities, and seeking legal remedies.
             </p>
@@ -110,7 +110,7 @@ export default function TermsPage() {
               fees are set out in the pricing page on our website and may be updated from time to time
               with thirty (30) days&rsquo; notice. All fees are quoted in South African Rand (ZAR) and are
               exclusive of Value Added Tax (VAT) at the applicable rate. By subscribing, you authorise
-              VYTL to charge your selected payment method for the applicable subscription fees on a
+              VytlRx to charge your selected payment method for the applicable subscription fees on a
               recurring basis in accordance with your chosen billing cycle (monthly or annual).
             </p>
             <p>
@@ -118,7 +118,7 @@ export default function TermsPage() {
               protection law, including the Consumer Protection Act 68 of 2008 where applicable. If you
               cancel your subscription, you will retain access to the Platform until the end of your current
               billing period, after which your account will be downgraded or closed. Annual subscriptions
-              may be cancelled at the end of the annual term. VYTL may suspend access to your account for
+              may be cancelled at the end of the annual term. VytlRx may suspend access to your account for
               non-payment of fees after a grace period of seven (7) days following the due date.
             </p>
           </div>
@@ -128,16 +128,16 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">6. Intellectual Property Ownership</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              As between you and VYTL, VYTL retains all right, title, and interest in and to the Platform,
+              As between you and VytlRx, VytlRx retains all right, title, and interest in and to the Platform,
               including all software, algorithms, databases, designs, trade marks, and other intellectual
-              property. As between you and VYTL, you retain all right, title, and interest in and to the
+              property. As between you and VytlRx, you retain all right, title, and interest in and to the
               data and content that you upload or create within the Platform (&ldquo;Your Data&rdquo;).
             </p>
             <p>
-              You grant VYTL a limited, non-exclusive, royalty-free licence to access, use, copy, and
+              You grant VytlRx a limited, non-exclusive, royalty-free licence to access, use, copy, and
               process Your Data solely to provide and improve the Platform and related services, and as
-              otherwise described in our Privacy Notice. VYTL will not share Your Data with third parties
-              except as set out in our Privacy Notice or as required by law. VYTL may use aggregated,
+              otherwise described in our Privacy Notice. VytlRx will not share Your Data with third parties
+              except as set out in our Privacy Notice or as required by law. VytlRx may use aggregated,
               de-identified data derived from all customers to improve the Platform, provided that such
               data cannot be used to identify you or your organisation.
             </p>
@@ -168,14 +168,14 @@ export default function TermsPage() {
               Your use of the Platform involves the collection and processing of personal information as
               described in our Privacy Notice, which is incorporated into these Terms by reference. Where
               you use the Platform to process the personal information of your employees, contractors,
-              customers, or other individuals, you act as the responsible party under POPIA and VYTL acts
+              customers, or other individuals, you act as the responsible party under POPIA and VytlRx acts
               as an operator processing personal information on your instructions. You warrant that you
-              have obtained all necessary consents and have a lawful basis for directing VYTL to process
+              have obtained all necessary consents and have a lawful basis for directing VytlRx to process
               such personal information.
             </p>
             <p>
               You are responsible for ensuring that your use of the Platform complies with POPIA and all
-              other applicable data protection laws. VYTL will process personal information only in
+              other applicable data protection laws. VytlRx will process personal information only in
               accordance with your documented instructions, except where required to do otherwise by law.
               Our data processing obligations are further set out in our Data Processing Agreement, which
               is available on request and forms part of these Terms for enterprise customers.
@@ -187,13 +187,13 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">9. Service Availability</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL targets a monthly uptime of 99.5% for the Platform (excluding scheduled maintenance
+              VytlRx targets a monthly uptime of 99.5% for the Platform (excluding scheduled maintenance
               windows and circumstances beyond our reasonable control). Scheduled maintenance will be
               communicated at least 24 hours in advance where possible. We will publish our current
-              service status at status.vytl.app.
+              service status at status.vytlrx.app.
             </p>
             <p>
-              VYTL does not warrant that the Platform will be uninterrupted or error-free. In the event
+              VytlRx does not warrant that the Platform will be uninterrupted or error-free. In the event
               of a material service disruption lasting more than four (4) continuous hours, you may be
               eligible for a service credit, as set out in our Service Level Agreement (available to
               paid subscribers on request). Service credits are your sole and exclusive remedy for
@@ -207,17 +207,17 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">10. Limitation of Liability</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              To the maximum extent permitted by South African law, VYTL shall not be liable for any
+              To the maximum extent permitted by South African law, VytlRx shall not be liable for any
               indirect, incidental, special, consequential, or punitive damages, including loss of profits,
               loss of data, loss of goodwill, or business interruption, arising out of or in connection
-              with these Terms or your use of or inability to use the Platform, even if VYTL has been
+              with these Terms or your use of or inability to use the Platform, even if VytlRx has been
               advised of the possibility of such damages.
             </p>
             <p>
-              In no event shall VYTL&rsquo;s aggregate liability for all claims under these Terms exceed
+              In no event shall VytlRx&rsquo;s aggregate liability for all claims under these Terms exceed
               the total fees paid by you in the twelve (12) months immediately preceding the event giving
               rise to the claim, or ZAR 50,000, whichever is greater. Nothing in these Terms excludes or
-              limits VYTL&rsquo;s liability for death or personal injury caused by negligence, fraud, or
+              limits VytlRx&rsquo;s liability for death or personal injury caused by negligence, fraud, or
               fraudulent misrepresentation, or any other liability that cannot be excluded under applicable
               law.
             </p>
@@ -228,7 +228,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">11. Indemnification</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              You agree to indemnify, defend, and hold harmless VYTL, its directors, employees, contractors,
+              You agree to indemnify, defend, and hold harmless VytlRx, its directors, employees, contractors,
               agents, and licensors from and against any claims, damages, losses, liabilities, costs, and
               expenses (including reasonable attorneys&rsquo; fees) arising out of or relating to: (a) your
               breach of these Terms; (b) your use or misuse of the Platform; (c) Your Data or content you
@@ -243,15 +243,15 @@ export default function TermsPage() {
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
               You may terminate your account at any time by cancelling your subscription through the
-              Platform settings or by contacting us at support@vytl.app. VYTL may suspend or terminate
+              Platform settings or by contacting us at support@vytlrx.app. VytlRx may suspend or terminate
               your access to the Platform with immediate effect if: (a) you breach these Terms and fail
               to remedy the breach within fourteen (14) days of written notice; (b) you become insolvent
               or enter into business rescue, liquidation, or sequestration; (c) you use the Platform in
-              a manner that poses a security risk or legal liability to VYTL or other users; or (d) we
+              a manner that poses a security risk or legal liability to VytlRx or other users; or (d) we
               are required to do so by law.
             </p>
             <p>
-              Upon termination, your right to access the Platform ceases immediately. VYTL will retain
+              Upon termination, your right to access the Platform ceases immediately. VytlRx will retain
               Your Data for thirty (30) days after termination, during which time you may request an
               export of your data. After this period, Your Data will be deleted in accordance with our
               data retention policy. Clauses relating to intellectual property, confidentiality, limitation
@@ -264,7 +264,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">13. Changes to Terms</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL reserves the right to modify these Terms at any time. We will provide at least thirty
+              VytlRx reserves the right to modify these Terms at any time. We will provide at least thirty
               (30) days&rsquo; advance notice of material changes by email or by posting a notice on the Platform.
               Your continued use of the Platform after the effective date of the changes constitutes your
               acceptance of the updated Terms. If you do not agree to the updated Terms, you must stop

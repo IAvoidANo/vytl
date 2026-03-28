@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Accessibility Statement | VYTL',
-  description: 'VYTL accessibility statement â€” our commitment to WCAG 2.1 AA conformance, known limitations, and how to provide feedback.',
+  title: 'Accessibility Statement | VytlRx',
+  description: 'VytlRx accessibility statement — our commitment to WCAG 2.1 AA conformance, known limitations, and how to provide feedback.',
 }
 
 export default function AccessibilityPage() {
@@ -17,7 +17,7 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Our Commitment</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              VYTL (Pty) Ltd is committed to making the VYTL risk management platform accessible to all
+              VytlRx (Pty) Ltd is committed to making the VytlRx risk management platform accessible to all
               users, including people with disabilities. We believe that inclusive design benefits everyone,
               and we strive to ensure that our Platform can be used effectively by the broadest possible
               audience, regardless of ability or the technology used to access it.
@@ -36,7 +36,7 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Conformance Status</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              The VYTL Platform is <strong>partially conformant</strong> with WCAG 2.1 Level AA. Partially
+              The VytlRx Platform is <strong>partially conformant</strong> with WCAG 2.1 Level AA. Partially
               conformant means that some parts of the Platform do not yet fully conform to the accessibility
               standard. We are actively working to address known gaps and improve our conformance status.
               This statement reflects the current status of the Platform as of the date indicated above.
@@ -54,7 +54,7 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Technical Specifications</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              The VYTL Platform relies on the following technologies for conformance with WCAG 2.1:
+              The VytlRx Platform relies on the following technologies for conformance with WCAG 2.1:
               HTML5, CSS3, JavaScript, and WAI-ARIA (Accessible Rich Internet Applications). The Platform
               uses semantic HTML elements throughout, including landmark regions (&lt;header&gt;,
               &lt;main&gt;, &lt;nav&gt;, &lt;footer&gt;), headings in logical hierarchy (h1-h6), and form
@@ -117,7 +117,7 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Supported Browsers and Assistive Technologies</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              The VYTL Platform is designed to work with modern web browsers including Google Chrome
+              The VytlRx Platform is designed to work with modern web browsers including Google Chrome
               (version 110+), Mozilla Firefox (version 110+), Microsoft Edge (version 110+), and Apple
               Safari (version 16+) on desktop and mobile devices. We test with the following assistive
               technology combinations: NVDA 2024 with Chrome on Windows 11; VoiceOver with Safari on
@@ -135,12 +135,12 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">Feedback and Contact</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              We welcome feedback on the accessibility of the VYTL Platform. If you experience any barrier
+              We welcome feedback on the accessibility of the VytlRx Platform. If you experience any barrier
               that prevents you from accessing content or functionality, or if you require information in
               an alternative format, please contact us at:
             </p>
             <ul className="list-none pl-0 space-y-1">
-              <li><strong>Email:</strong> accessibility@vytl.app</li>
+              <li><strong>Email:</strong> accessibility@vytlrx.app</li>
               <li><strong>Response time:</strong> We aim to respond within five (5) business days</li>
             </ul>
             <p>
@@ -169,7 +169,7 @@ export default function AccessibilityPage() {
             <p>
               South African law, including the Promotion of Equality and Prevention of Unfair Discrimination
               Act 4 of 2000 (PEPUDA/Equality Act), prohibits unfair discrimination on grounds of disability.
-              VYTL is committed to reasonable accommodation and to continuously improving the accessibility
+              VytlRx is committed to reasonable accommodation and to continuously improving the accessibility
               of our Platform for all users.
             </p>
           </div>
