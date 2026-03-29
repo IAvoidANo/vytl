@@ -1,11 +1,11 @@
-import { auth } from '@/lib/auth'
+ï»¿import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { PublicFooter } from '@/components/public-footer'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'VytlRx — Intelligent Risk Management for South African Business',
+  title: 'VytlRx â€” Intelligent Risk Management for South African Business',
   description:
     'VytlRx is the risk management platform built for South African enterprises. King IV, POPIA and ISO 31000 compliant. Start free in minutes.',
 }
@@ -52,7 +52,7 @@ export default async function HomePage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-              Built for South African enterprises · King IV · POPIA · ISO 31000
+              Built for South African enterprises â€” King IV â€” POPIA â€” ISO 31000
             </div>
 
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
@@ -63,7 +63,7 @@ export default async function HomePage() {
 
             <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
               VytlRx gives risk and compliance teams one place to identify, score, monitor and
-              report on risk — with built-in King IV, POPIA and ISO 31000 alignment. Ready in
+              report on risk â€” with built-in King IV, POPIA and ISO 31000 alignment. Ready in
               minutes, not months.
             </p>
 
@@ -72,7 +72,7 @@ export default async function HomePage() {
                 href="/register"
                 className="px-8 py-3.5 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg text-base transition-colors shadow-sm"
               >
-                Start free — no credit card required
+                Start free â€” no credit card required
               </Link>
               <a
                 href="#how-it-works"
@@ -83,7 +83,7 @@ export default async function HomePage() {
             </div>
 
             <p className="text-sm text-slate-400 mt-5">
-              Set up in under 5 minutes · Your data stays in South Africa
+              Set up in under 5 minutes â€” Your data stays in South Africa
             </p>
           </div>
 
@@ -165,7 +165,7 @@ export default async function HomePage() {
                 Everything your risk team needs
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                From first risk entry to board presentation — VytlRx covers the full risk management
+                From first risk entry to board presentation â€” VytlRx covers the full risk management
                 lifecycle without the complexity of legacy GRC tools.
               </p>
             </div>
@@ -185,7 +185,7 @@ export default async function HomePage() {
                 {
                   icon: '??',
                   title: 'Board-Ready Reports',
-                  desc: 'Generate multi-page PDF board packs in one click — heatmap, top-10 risks, VaR table, KRI status and trend analysis included.',
+                  desc: 'Generate multi-page PDF board packs in one click â€” heatmap, top-10 risks, VaR table, KRI status and trend analysis included.',
                 },
                 {
                   icon: '?',
@@ -247,7 +247,7 @@ export default async function HomePage() {
                   {
                     step: '01',
                     title: 'Create your account',
-                    desc: 'Register with your name, organisation and email. Choose your industry — Manufacturing, Financial Services or Retail — and VytlRx loads 15 SA-contextual risks instantly. Or start with a blank register.',
+                    desc: 'Register with your name, organisation and email. Choose your industry â€” Manufacturing, Financial Services or Retail â€” and VytlRx loads 15 SA-contextual risks instantly. Or start with a blank register.',
                     side: 'left',
                   },
                   {
@@ -259,7 +259,7 @@ export default async function HomePage() {
                   {
                     step: '03',
                     title: 'Report with confidence',
-                    desc: 'Generate your board risk report in one click — a professional PDF with heatmap, top-10 risks, VaR table and trend commentary. Export for audit, regulators or exco.',
+                    desc: 'Generate your board risk report in one click â€” a professional PDF with heatmap, top-10 risks, VaR table and trend commentary. Export for audit, regulators or exco.',
                     side: 'left',
                   },
                 ].map((s) => (
@@ -288,7 +288,7 @@ export default async function HomePage() {
                 Built for the South African regulatory landscape
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                VytlRx is designed from the ground up for SA compliance requirements — not retrofitted
+                VytlRx is designed from the ground up for SA compliance requirements â€” not retrofitted
                 from an international tool.
               </p>
             </div>
@@ -316,7 +316,7 @@ export default async function HomePage() {
                 {
                   badge: 'FICA & B-BBEE',
                   title: 'FICA, B-BBEE, NCA & More',
-                  desc: 'Regulatory risk categories covering FICA/AML, B-BBEE compliance, NCA obligations, FSCA requirements and OHS Act — with pre-built risk examples for each.',
+                  desc: 'Regulatory risk categories covering FICA/AML, B-BBEE compliance, NCA obligations, FSCA requirements and OHS Act â€” with pre-built risk examples for each.',
                   color: 'bg-amber-50 border-amber-200 text-amber-700',
                 },
               ].map((c) => (
@@ -351,7 +351,7 @@ export default async function HomePage() {
                   org: 'JSE-listed Financial Services Group',
                 },
                 {
-                  quote: 'The industry template gave us 15 risks we\'d actually identified ourselves — load shedding, POPIA, OHS Act. It felt like the platform understood our business from day one.',
+                  quote: 'The industry template gave us 15 risks we\'d actually identified ourselves â€” load shedding, POPIA, OHS Act. It felt like the platform understood our business from day one.',
                   name: 'Risk Manager',
                   org: 'Large Manufacturing Company, Gauteng',
                 },
@@ -484,7 +484,7 @@ export default async function HomePage() {
             </h2>
             <p className="text-slate-400 text-lg mb-10">
               Join SA risk teams already using VytlRx to meet their King IV, POPIA and ISO 31000
-              obligations — without the spreadsheet chaos.
+              obligations â€” without the spreadsheet chaos.
             </p>
             <Link
               href="/register"
@@ -492,7 +492,7 @@ export default async function HomePage() {
             >
               Start free today
             </Link>
-            <p className="text-slate-500 text-sm mt-5">No credit card · Set up in 5 minutes · Cancel anytime</p>
+            <p className="text-slate-500 text-sm mt-5">No credit card â€” Set up in 5 minutes â€” Cancel anytime</p>
           </div>
         </section>
       </main>

@@ -36,7 +36,7 @@
     "jspdf": "^4.1.0",
     "lucide-react": "^0.563.0",
     "mammoth": "^1.11.0",
-    "next": "14.2.35",
+    "next": "^16.2.1",
     "next-auth": "^5.0.0-beta.25",
     "pdf-parse": "^2.4.5",
     "posthog-js": "^1.360.1",
@@ -65,16 +65,16 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^4.2.0",
-    "@vitest/coverage-v8": "^1.6.0",
-    "@vitest/ui": "^1.6.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/ui": "^4.1.2",
     "eslint": "^8",
-    "eslint-config-next": "14.2.35",
-    "happy-dom": "^12.10.3",
+    "eslint-config-next": "^16.2.1",
+    "happy-dom": "^20.8.9",
     "postcss": "^8",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
     "typescript": "^5",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.2"
   }
 }
