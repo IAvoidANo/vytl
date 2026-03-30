@@ -251,7 +251,7 @@ export function generateBoardReport(data: BoardReportData): jsPDF {
 
   doc.setFontSize(12)
   doc.setTextColor(...COLORS.dark)
-  doc.text('Vytl Score', MARGIN + 10, y + 10)
+  doc.text('VytlRx Score', MARGIN + 10, y + 10)
 
   if (data.vytlScore) {
     doc.setFontSize(28)

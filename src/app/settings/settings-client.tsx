@@ -417,6 +417,23 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
       {/* Organisation Tab */}
       {activeTab === 'organisation' && isAdmin && (
         <div className="max-w-lg">
+          {/* Plan badge */}
+          {org && (
+            <div className="mb-6 flex items-center justify-between p-4 rounded-xl border border-slate-700 bg-slate-800/50">
+              <div>
+                <p className="text-xs text-slate-400 mb-0.5">Current plan</p>
+                <p className="text-sm font-semibold text-white">{(org as { plan?: string }).plan === 'PRO' ? 'Professional' : (org as { plan?: string }).plan === 'ENTERPRISE' ? 'Enterprise' : 'Free'}</p>
+              </div>
+              {(org as { plan?: string }).plan === 'FREE' && (
+                <a
+                  href="mailto:hello@vytlrx.com?subject=Upgrade%20to%20Professional"
+                  className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                >
+                  Upgrade →
+                </a>
+              )}
+            </div>
+          )}
           <form onSubmit={handleOrgSave} className="space-y-4">
             <div>
               <label className={labelClass}>Organisation Name</label>
@@ -609,16 +626,16 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
             </div>
           </div>
 
-          {/* Tier 3: Vytl Score */}
+          {/* Tier 3: VytlRx Score */}
           <div>
-            <h3 className="text-lg font-medium text-white mb-3">Tier 3 — Vytl Score</h3>
+            <h3 className="text-lg font-medium text-white mb-3">Tier 3 — VytlRx Score</h3>
             <div className="p-4 bg-slate-800 border border-slate-700 rounded-md">
               <p className="text-sm text-slate-300 mb-2">
                 Organisation-level score (0–100) summarising overall risk posture. Graded A–F.
               </p>
               <p className="text-xs text-slate-400">
                 Dimensions: Coverage (25), Control Effectiveness (25), Maturity (25), Trend (25).
-                Recalculate from the dashboard Vytl Score widget.
+                Recalculate from the dashboard VytlRx Score widget.
               </p>
             </div>
           </div>

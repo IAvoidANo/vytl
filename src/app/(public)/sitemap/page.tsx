@@ -22,7 +22,7 @@ const sitemapGroups = [
     title: 'Application',
     description: 'Core platform features available after signing in.',
     links: [
-      { href: '/dashboard', label: 'Dashboard', description: 'Organisation risk overview, Vytl Score, and key widgets' },
+      { href: '/dashboard', label: 'Dashboard', description: 'Organisation risk overview, VytlRx Score, and key widgets' },
       { href: '/risks', label: 'Risk Register', description: 'View, create, and manage all risks in your organisation' },
       { href: '/workspace', label: 'Risk Workspace', description: 'Kanban board for managing risk workflow (Inbox → Triage → Assigned → Approved)' },
       { href: '/reports', label: 'Reports', description: 'Board governance reports, heatmaps, category trends, and movement analysis' },

@@ -114,7 +114,7 @@ export function SampleDataBanner() {
             <ul className="text-sm text-slate-600 list-disc list-inside space-y-1 mb-4">
               <li>All 15 sample risks (and their incidents, treatments, mappings)</li>
               <li>Risk register and snapshot data</li>
-              <li>Your current Vytl Score assessment</li>
+              <li>Your current VytlRx Score assessment</li>
             </ul>
             <p className="text-sm font-medium text-slate-900 mb-6">
               You&rsquo;ll return to an empty dashboard to add your own data.

@@ -6,13 +6,14 @@ import { trpc } from '@/lib/trpc-client'
 import WelcomeScreen from './welcome-screen'
 import IndustrySelector from './industry-selector'
 import ConfirmationScreen from './confirmation-screen'
+import FirstRiskScreen from './first-risk-screen'
 import { type IndustryCode } from '@/lib/industry-templates'
 
 interface OnboardingClientProps {
   organisationName: string
 }
 
-type OnboardingStep = 'welcome' | 'industry' | 'confirmation'
+type OnboardingStep = 'welcome' | 'industry' | 'confirmation' | 'first-risk'
 
 interface TemplateResult {
   registerId: string
@@ -49,7 +50,7 @@ export default function OnboardingClient({ organisationName }: OnboardingClientP
         <WelcomeScreen
           organisationName={organisationName}
           onNext={() => setStep('industry')}
-          onStartFresh={() => router.push('/dashboard')}
+          onStartFresh={() => setStep('first-risk')}
         />
       )}
 
@@ -59,6 +60,13 @@ export default function OnboardingClient({ organisationName }: OnboardingClientP
           onBack={() => setStep('welcome')}
           isApplying={applyMutation.isPending}
           selectedCode={selectedIndustry}
+        />
+      )}
+
+      {step === 'first-risk' && (
+        <FirstRiskScreen
+          onBack={() => setStep('welcome')}
+          onDone={() => router.push('/dashboard')}
         />
       )}
 

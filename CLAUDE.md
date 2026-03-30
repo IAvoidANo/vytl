@@ -25,7 +25,7 @@ npm run test         # Run Vitest tests
 npm run test:ui      # Run Vitest with UI
 npx prisma studio    # Database GUI
 npx prisma migrate dev   # Run migrations
-npx prisma db seed   # Seed test data (admin@acme.com / Password123!)
+npx prisma db seed   # Seed test data (admin@demo.vytlrx.com / Demo2026!)
 ```
 
 ## Architecture

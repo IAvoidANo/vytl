@@ -178,7 +178,7 @@ export function ReportsClient() {
           {/* Executive Summary */}
           {activeTab === 'executive' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-white">Executive Summary & Vytl Score</h2>
+              <h2 className="text-lg font-semibold text-white">Executive Summary & VytlRx Score</h2>
 
               <div className={sumCard}>
                 <p className={sumPara}>
@@ -186,7 +186,7 @@ export function ReportsClient() {
                 </p>
                 {vytlScore !== null ? (
                   <p className={sumPara}>
-                    The organisation&apos;s current <strong className="text-white">Vytl Score is {vytlScore} (Grade {vytlGrade})</strong>, reflecting a{' '}
+                    The organisation&apos;s current <strong className="text-white">VytlRx Score is {vytlScore} (Grade {vytlGrade})</strong>, reflecting a{' '}
                     {scoreHealth === 'strong'     && 'strong and well-governed risk environment. Controls are operating effectively and the portfolio is well-monitored. Continued focus on maintaining coverage and maturity is recommended.'}
                     {scoreHealth === 'acceptable' && 'generally sound risk posture with room for improvement. Core governance practices are in place; however, targeted enhancements to control effectiveness and risk coverage would further strengthen the position.'}
                     {scoreHealth === 'moderate'   && 'risk posture that warrants management attention. While foundational governance structures are present, material gaps in control effectiveness, maturity, or risk coverage have been identified and should be addressed as a priority.'}
@@ -194,7 +194,7 @@ export function ReportsClient() {
                   </p>
                 ) : (
                   <p className={sumPara}>
-                    No Vytl Score has been calculated yet. An assessment should be run to establish the organisation&apos;s baseline risk governance score.
+                    No VytlRx Score has been calculated yet. An assessment should be run to establish the organisation&apos;s baseline risk governance score.
                   </p>
                 )}
                 <p className={sumPara}>
@@ -206,11 +206,11 @@ export function ReportsClient() {
                 </p>
               </div>
 
-              {/* Vytl Score Card */}
+              {/* VytlRx Score Card */}
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-400 mb-1">Vytl Score</p>
+                    <p className="text-sm text-slate-400 mb-1">VytlRx Score</p>
                     {assessment?.vytlScore ? (
                       <div className="flex items-baseline gap-3">
                         <span className="text-5xl font-bold text-teal-400">{assessment.vytlScore}</span>
@@ -517,7 +517,7 @@ export function ReportsClient() {
                   </p>
                 )}
                 <p className={sumPara}>
-                  Addressing recommendations — particularly at the critical and warning levels — typically yields measurable improvements to the organisation&apos;s Vytl Score, as they directly target the dimensions of coverage, control quality, and maturity that underpin the score calculation.
+                  Addressing recommendations — particularly at the critical and warning levels — typically yields measurable improvements to the organisation&apos;s VytlRx Score, as they directly target the dimensions of coverage, control quality, and maturity that underpin the score calculation.
                 </p>
               </div>
 
@@ -555,7 +555,7 @@ export function ReportsClient() {
                   Risk snapshots are captured automatically on a scheduled basis and may also be triggered manually. The analysis compares the most recent snapshot against the earliest snapshot within the selected time window (3, 6, or 12 months). Material movements are flagged where residual risk scores have changed by a defined threshold — risks that have increased, decreased, been newly added, or closed during the period are highlighted separately for ease of review.
                 </p>
                 <p className={sumPara}>
-                  The board should use this report to assess whether treatment plans are reducing residual risk over time, to identify risks that are escalating despite management intervention, and to evaluate the organisation&apos;s overall risk trajectory. A consistent pattern of improvement in the Vytl Score trajectory, declining KRI breaches, and increasing treatment completion rates indicates an effective and maturing risk management function.
+                  The board should use this report to assess whether treatment plans are reducing residual risk over time, to identify risks that are escalating despite management intervention, and to evaluate the organisation&apos;s overall risk trajectory. A consistent pattern of improvement in the VytlRx Score trajectory, declining KRI breaches, and increasing treatment completion rates indicates an effective and maturing risk management function.
                 </p>
               </div>
 

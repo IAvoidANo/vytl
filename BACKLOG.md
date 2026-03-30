@@ -339,8 +339,122 @@
 
 ---
 
+---
+
+## Sprint A — COMPLETE ✅
+
+### Industry Templates + FTUE Onboarding Wizard
+- [x] **Industry Templates Library** (`src/lib/industry-templates.ts`) — 45 SA-contextual risks across 3 verticals
+  - MANUFACTURING (benchmarkScore 58), FINANCIAL_SERVICES (62), RETAIL (54)
+  - All risks: SA context (load shedding, B-BBEE, FICA, OHS Act, POPIA, NCA, CPA, Transnet)
+- [x] **Onboarding Route** `/onboarding` — 3-screen wizard, server auth + risk-count guard
+  - welcome-screen, industry-selector, confirmation-screen
+- [x] **Template tRPC Router** — `template.apply` mutation (RiskRegister, 15 risks, Vytl Score, audit)
+- [x] **RiskSource enum** — added `TEMPLATE` value (migration `20260305150016_add_template_source`)
+- [x] **Dashboard Redirect** — `/dashboard` redirects to `/onboarding` when riskCount === 0
+- [x] **Sample Data Mode Toggle** — `isInSampleMode`, `sampleDataAppliedAt`, `sampleDataExitedAt` on Organisation
+  - `template.exitSampleMode` (keep risks), `template.clearSampleData` (delete all), `template.getSampleModeStatus`
+  - `SampleDataBanner` — self-querying amber banner in AppLayout
+  - Auto-exit on first risk edit
+- [x] **Tests** — 113 new tests (1008 total, 31 files): industry-templates, template-application, sample-mode, onboarding-flow integration
+
+---
+
+## Sprint B — COMPLETE ✅
+
+### Self-Registration, Email Wiring, Excel Import Hardening
+- [x] **Self-service registration** — `user.register` public tRPC mutation (Org + OWNER, rate-limited, bcrypt)
+- [x] `/register` page — auto-login → `/onboarding`; root `/` redirects unauthenticated users to `/register`
+- [x] **Email templates** — `inviteUserEmail`, `passwordResetEmail`, `welcomeEmail` wired (fire-and-forget)
+- [x] **Email infrastructure** — `src/lib/email.ts` (Resend SDK), `src/lib/email-templates.ts` (5 HTML templates)
+- [x] **Notification triggers** — appetite breach, risk assigned, KRI red, incident created
+- [x] **Weekly digest cron** — Mondays 7AM UTC, CRON_SECRET protected
+- [x] **`Organisation.appliedTemplate`** field (migration `20260307000001_add_applied_template`)
+- [x] **Excel Header Detection** (`header-detection.ts`) — field-pattern scoring, COMBINED_PATTERNS for L×I variants (47 tests)
+- [x] **Excel Enum Normalization** (`enum-mapping.ts`) — 150+ category mappings, Levenshtein fuzzy, HEALTH_SAFETY (65 tests)
+- [x] **Excel Score Validation** (`score-validation.ts`) — validateScore, validateResidualNotExceedsInherent
+- [x] **Duplicate Detection** (`duplicate-detection.ts`) — Levenshtein fuzzy matching
+- [x] **AI JSON Extraction** (`json-extraction.ts`) — 4-strategy escalation: raw → fence → boundary → array-scan (27 tests)
+- [x] **HEALTH_SAFETY** — 9th RiskCategory enum added throughout (migration `20260306105957_add_health_safety_category`)
+- [x] **Tests** — 1,205 tests across 37 files (all passing)
+
+---
+
+## Design Refresh Phase 1 — COMPLETE ✅
+
+### Visual Design System
+- [x] **Feature flag** `USE_TOP_NAV` in `src/lib/feature-flags.ts` (env: NEXT_PUBLIC_USE_TOP_NAV, default false)
+- [x] **New files**: `src/lib/utils.ts` (cn helper), `src/components/ui/card-modern.tsx`, `src/components/top-nav.tsx`, `src/components/app-layout-v2.tsx`
+- [x] **Design tokens** added to globals.css + tailwind.config.ts: radius-card/panel/hero, shadow-card/panel/modal/overlay, spacing-card/section/page, max-w-content, h-nav
+- [x] **Font**: Plus Jakarta Sans (heading) + Open Sans (body) via next/font/google
+- [x] **HeroMetric component** — full-width teal VytlRx Score panel replacing VytlScoreCard on dashboard
+- [x] **DashboardHeatmap** — solid band colours, white pill count badges, appetite-aware legend
+- [x] **Tailwind content path fix** — `src/lib/**/*.ts` added to content array (fixes heatmap colour purging)
+
+---
+
+## Scoring Architecture Refactor — Phases A & B COMPLETE ✅
+
+### Phase A: Schema & Server-Side (ISO 31000 Alignment)
+- [x] **ControlEffectiveness enum** — EFFECTIVE, PARTIALLY_EFFECTIVE, INEFFECTIVE, NOT_TESTED, NOT_APPLICABLE
+- [x] **financialExposure** — Decimal(15,2), user-editable (labelled "Estimated Financial Exposure (ZAR)")
+- [x] **varValue** — Decimal(15,2), server-calculated only (`financialExposure × residualLikelihood/5`)
+- [x] **Canonical sort** — residualScore DESC → varValue DESC (nulls last) → inherentScore DESC → createdAt DESC
+- [x] **Stored assessment pattern** — `assessment.current` reads stored record; `assessment.create` triggers recalc
+- [x] **Tests** — 27 new Phase A tests (794 total)
+
+### Phase B: UI, Copy & Engine Demotion
+- [x] **ControlEffectivenessBadge** — 5-value colour-coded badge (compact + full modes)
+- [x] **VaR display** — 5 locations (risk detail, risk table, top risks, board report PDF, reports page)
+- [x] **Risk Intelligence panel** — Renamed Scoring tab → "Risk Intelligence" with ISO 31000 summary grid
+- [x] **Settings → Methodology** — Read-only three-tier methodology panel (replaced interactive Scoring config)
+- [x] **VytlRx Score staleness** — badge when assessment > 30 days old
+- [x] **Widget rename** — "Scoring Recommendations" → "Risk Intelligence Alerts"
+- [x] **Tests** — 19 new Phase B tests (813 total across 23 files)
+
+---
+
+## Sprint 15 — COMPLETE ✅
+
+### Movement & Trends + Report Improvements
+- [x] **Risk Snapshots** — `RiskSnapshot`, `RiskSnapshotDetail`, `SnapshotType`/`SnapshotFrequency` enums
+- [x] **Snapshot pure helpers** (`snapshot-validation.ts`) — buildSeverityCounts, detectRiskMovers, etc.
+- [x] **Snapshot capture util** (`snapshot-utils.ts`) — captureSnapshot, hasBaselineSnapshot
+- [x] **Auto-baseline** on first risk creation; weekly Vercel Cron (Sundays 2am UTC)
+- [x] **Snapshots tRPC Router** — 6 procedures (capture, list, getById, checkDataAvailability, compare, delete)
+- [x] **Settings → Snapshots tab** — frequency, materiality, manual capture, history
+- [x] **Movement & Trends tab** (8th Reports tab) — score trajectory, risk movers, KRI breach, treatment velocity
+- [x] **Report Executive Summaries** — data-driven narrative paragraphs on all 8 report tabs
+- [x] **Tests** — 43 new tests (890 total)
+
+---
+
+## Sprint Pre-C: VytlRx Score Hardening + SA Seed Data + Rename — COMPLETE ✅
+
+### Rename: Vytl → VytlRx
+- [x] All user-facing strings updated to "VytlRx" across UI, email templates, board report, notifications
+- [x] Internal code identifiers (file names, function names, variables, DB fields) unchanged
+- [x] Page titles, sidebar brand, footer, command palette, score widgets all updated
+
+### VytlRx Score Hardening
+- [x] **Trend dimension** — Returns neutral baseline (12/25) when insufficient history (<1 prior assessment), not 15
+- [x] **Maturity dimension** — `isOngoing` flag now counts toward date-management score (alongside `dueDate`)
+- [x] **New tests** — 6 template-org scenario tests added to `vytl-score.test.ts`
+  - Template org score in 45–70 range, no NaN in any dimension, isOngoing credit verified
+
+### SA Seed Data (Redefine Properties Demo)
+- [x] **Organisation**: "Redefine Properties (Demo)", Real Estate, 350 employees, appetite statement configured
+- [x] **Admin user**: `admin@demo.vytlrx.com` / `Demo2026!`
+- [x] **15 SA commercial property risks** across 8 categories (STRATEGIC, OPERATIONAL, FINANCIAL, COMPLIANCE, REPUTATIONAL, TECHNOLOGY, ENVIRONMENTAL, HEALTH_SAFETY)
+  - Realistic inherent/residual scoring, documented controls, SA-contextual descriptions (load shedding, POPIA, B-BBEE, OHS Act, SARB, CDP)
+  - Average ~50% inherent→residual reduction demonstrating control effectiveness
+- [x] **5 KRIs** with SA property company metrics (vacancy %, WALE, debt/equity, tenant satisfaction, OHS LTIFR)
+  - 2 RED (vacancy 11.2%, OHS LTIFR 1.2), 2 AMBER (WALE 3.8y, debt 42%), 1 AMBER (satisfaction 6.8)
+- [x] **Seed is idempotent** — upsert on org slug, check-before-create on risks/KRIs
+
+---
+
 ## Future Backlog
-- [ ] Action item tracking
 - [ ] Custom fields per organisation
 - [ ] Bulk risk updates
 - [ ] Risk templates library
@@ -481,7 +595,7 @@
 
 ## MVP Complete - Ready for Beta Deployment
 
-The Vytl Risk Management platform is feature-complete for beta release with:
+The VytlRx Risk Management platform is feature-complete for beta release with:
 - Full risk lifecycle management (CRUD, scoring, analysis)
 - AI-powered risk analysis and form suggestions
 - 5-dimension composite scoring engine with configurable profiles (Sprint 9)
@@ -505,5 +619,11 @@ The Vytl Risk Management platform is feature-complete for beta release with:
 - Command palette for power users
 - POPIA compliance settings
 - Incident linking for risk-event tracking (Sprint 14)
-- Scoring Architecture Refactor Phase A: ControlEffectiveness enum, financialExposure/VaR fields, canonical sort order, stored assessment pattern
-- 794 tests across 22 test files (all passing)
+- Scoring Architecture Refactor Phase A + B: ControlEffectiveness enum, VaR fields, Risk Intelligence panel, canonical sort, stored assessment pattern
+- Sprint 15: Risk Snapshots, Movement & Trends report tab, executive summaries
+- Sprint A: Industry Templates, FTUE onboarding wizard, sample data mode
+- Sprint B: Self-registration, email wiring, Excel import hardening (header detection, enum normalization, AI JSON extraction)
+- Design Refresh Phase 1: Plus Jakarta Sans, HeroMetric, design tokens, feature-flagged top nav
+- VytlRx Score hardening: trend baseline fix, isOngoing maturity credit, template-org integration tests
+- Realistic SA seed data: Redefine Properties Demo (15 property risks, 5 KRIs, appetite configured)
+- 1,205+ tests across 37+ test files (all passing)

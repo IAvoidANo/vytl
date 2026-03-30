@@ -144,9 +144,9 @@ export function MovementTrendsTab({ className = '' }: MovementTrendsTabProps) {
         </div>
       </div>
 
-      {/* Vytl Score Trajectory */}
+      {/* VytlRx Score Trajectory */}
       <div className={cardClass}>
-        <h3 className={sectionTitle}>Vytl Score Trajectory</h3>
+        <h3 className={sectionTitle}>VytlRx Score Trajectory</h3>
         <div className="flex items-start gap-8 flex-wrap">
           <div>
             <div className="flex items-baseline gap-3 mb-4">

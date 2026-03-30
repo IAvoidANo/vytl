@@ -55,7 +55,7 @@ export function VytlScoreWidget() {
 
   if (isLoading) {
     return (
-      <WidgetWrapper title="Vytl Score">
+      <WidgetWrapper title="VytlRx Score">
         <div className="animate-pulse h-full flex items-center justify-center">
           <div className="w-24 h-24 bg-slate-700 rounded-full"></div>
         </div>
@@ -65,7 +65,7 @@ export function VytlScoreWidget() {
 
   if (!scoreData) {
     return (
-      <WidgetWrapper title="Vytl Score">
+      <WidgetWrapper title="VytlRx Score">
         <div className="h-full flex items-center justify-center">
           <p className="text-slate-400 text-sm">Unable to calculate score</p>
         </div>
@@ -135,7 +135,7 @@ export function VytlScoreWidget() {
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-white">Vytl Score</h3>
+          <h3 className="text-sm font-semibold text-white">VytlRx Score</h3>
           {isStale && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
               {daysSinceAssessment}d ago

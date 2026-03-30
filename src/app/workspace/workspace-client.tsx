@@ -229,7 +229,7 @@ export function WorkspaceClient() {
           <span className="text-sm text-slate-400">
             <span className="text-teal-400 font-medium">Coming soon:</span> Forward emails directly to{' '}
             <code className="text-xs bg-slate-700 px-1.5 py-0.5 rounded font-mono text-teal-400">
-              risks@acme.vytl.app
+              risks@acme.vytlrx.com
             </code>
           </span>
         </div>

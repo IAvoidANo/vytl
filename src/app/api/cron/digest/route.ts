@@ -5,7 +5,7 @@ import { weeklyDigestEmail } from '@/lib/email-templates'
 
 export const dynamic = 'force-dynamic'
 
-const APP_URL = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+const APP_URL = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
 
 /**
  * Vercel Cron endpoint for weekly digest emails.
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
           await sendEmail({
             to: user.email,
-            subject: `[Vytl] Weekly Risk Digest — ${org.name}`,
+            subject: `[VytlRx] Weekly Risk Digest — ${org.name}`,
             html: weeklyDigestEmail({
               orgName: org.name,
               recipientName: user.name ?? 'Risk Manager',

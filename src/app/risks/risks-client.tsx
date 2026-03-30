@@ -7,6 +7,7 @@ import { RiskForm } from '@/components/risk-form'
 import { RiskHeatmap } from '@/components/risk-heatmap'
 import { ExcelImportModal } from '@/components/excel-import-modal'
 import { CreateRegisterModal } from '@/components/create-register-modal'
+import { RiskExportButton } from '@/components/risk-export-button'
 import { trpc } from '@/lib/trpc-client'
 import type { RiskCategory, RiskStatus } from '@prisma/client'
 
@@ -93,6 +94,7 @@ export function RisksClient() {
             <Upload className="w-5 h-5" />
             Import
           </button>
+          <RiskExportButton registerId={registerFilter || undefined} />
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors"

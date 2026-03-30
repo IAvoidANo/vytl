@@ -71,7 +71,7 @@ export default function ConfirmationScreen({
         {/* Vytl Score */}
         <div className="text-center mb-6 pb-6 border-b border-slate-200">
           <p className="text-sm font-medium text-slate-600 uppercase tracking-wide mb-2">
-            Your Vytl Score
+            Your VytlRx Score
           </p>
           <div className="flex items-center justify-center gap-4 mb-2">
             <span className={cn('text-6xl font-bold', scoreColor(vytlScore))}>{vytlScore}</span>

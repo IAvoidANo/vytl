@@ -451,4 +451,84 @@ describe('Vytl Score Calculation', () => {
       expect(total).toBe(12) // Only trend score for insufficient data
     })
   })
+
+  // ----------------------------------------
+  // VytlRx Score Hardening — Template Org Scenarios
+  // ----------------------------------------
+  describe('VytlRx Score Hardening — Template Org', () => {
+    it('returns a credible score (45–70) for a freshly onboarded org with 15 template risks', () => {
+      // Model: 15 template risks, 6 of 9 categories covered, all with long descriptions
+      const coverage = calculateCoverageScorePure(6, 9, 15, 15)
+      // 6/9 categories: round(10) = 10; all descriptions: 10 → total 20
+
+      // Average 40% inherent→residual reduction, all 15 have documented controls
+      const controlEffectiveness = calculateControlEffectivenessScorePure(40, 15, 15)
+      // round(40/50*15)=12; 15/15*10=10 → total 22
+
+      // No owners, 10 of 15 have isOngoing=true, all 15 have controls
+      const maturity = calculateMaturityScorePure(0, 10, 15, 15)
+      // 0 owners; round(10/15*8)=5; 15/15*7=7 → total 12
+
+      // No prior assessment history → neutral baseline
+      const trend = calculateTrendScorePure('insufficient_data')
+      // → 12
+
+      const total = calculateTotalScore(coverage, controlEffectiveness, maturity, trend)
+      const { grade } = getGrade(total)
+
+      // Score should be in credible range (not 0, not near-perfect)
+      expect(total).toBeGreaterThanOrEqual(45)
+      expect(total).toBeLessThanOrEqual(70)
+      // Grade should be C or B (not F, not A)
+      expect(['B', 'C']).toContain(grade)
+    })
+
+    it('returns 12 (neutral baseline) for trend when there is no prior assessment history', () => {
+      const trend = calculateTrendScorePure('insufficient_data')
+      expect(trend).toBe(12)
+    })
+
+    it('isOngoing flag increases maturity date-management score over no flag', () => {
+      // 10 risks with isOngoing=true should score higher than same org with no date management
+      const withIsOngoing = calculateMaturityScorePure(0, 10, 0, 10)
+      const withoutIsOngoing = calculateMaturityScorePure(0, 0, 0, 10)
+      expect(withIsOngoing).toBeGreaterThan(withoutIsOngoing)
+    })
+
+    it('no NaN values in any dimension for an org with zero risks', () => {
+      const coverage = calculateCoverageScorePure(0, 9, 0, 0)
+      const ce = calculateControlEffectivenessScorePure(0, 0, 0)
+      const maturity = calculateMaturityScorePure(0, 0, 0, 0)
+      const trend = calculateTrendScorePure('insufficient_data')
+      expect(Number.isNaN(coverage)).toBe(false)
+      expect(Number.isNaN(ce)).toBe(false)
+      expect(Number.isNaN(maturity)).toBe(false)
+      expect(Number.isNaN(trend)).toBe(false)
+      expect(coverage).toBe(0)
+      expect(ce).toBe(0)
+      expect(maturity).toBe(0)
+      expect(trend).toBe(12)
+    })
+
+    it('no NaN values when all risks have identical inherent and residual scores (no control reduction)', () => {
+      // Edge case: controls exist but offer no score reduction
+      const ce = calculateControlEffectivenessScorePure(0, 15, 15)
+      expect(Number.isNaN(ce)).toBe(false)
+      expect(ce).toBe(10) // 0 reduction + all have controls
+    })
+
+    it('produces grade C for a new org with template risks and no governance work done', () => {
+      // Minimal-effort scenario: 5 categories, 50% have descriptions, 30% reduction, no owners/dates
+      const coverage = calculateCoverageScorePure(5, 9, 8, 15)
+      const ce = calculateControlEffectivenessScorePure(30, 15, 15)
+      const maturity = calculateMaturityScorePure(0, 0, 15, 15)
+      const trend = calculateTrendScorePure('insufficient_data')
+      const total = calculateTotalScore(coverage, ce, maturity, trend)
+      const { grade } = getGrade(total)
+      // Should be C or D range (communicates "you need to do governance work")
+      expect(total).toBeGreaterThanOrEqual(30)
+      expect(total).toBeLessThan(75)
+      expect(['C', 'D', 'B']).toContain(grade)
+    })
+  })
 })

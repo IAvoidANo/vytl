@@ -3,6 +3,7 @@ import { router, protectedProcedure, riskManagerProcedure } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import { TRPCError } from '@trpc/server'
 import { maybeNotifyKriRed } from '@/lib/notification-triggers'
+import { notifyAdmins } from '@/lib/in-app-notifications'
 
 const kriDirectionEnum = z.enum(['HIGHER_IS_WORSE', 'LOWER_IS_WORSE'])
 
@@ -171,6 +172,11 @@ export const kriRouter = router({
       })
 
       maybeNotifyKriRed(ctx.user.orgId, kri.id, existing.status).catch(() => {})
+      if (status === 'RED' && existing.status !== 'RED') {
+        notifyAdmins(ctx.user.orgId, 'KRI_RED', `KRI Alert: ${kri.name}`, `${kri.name} has breached its red threshold.`, 'KRI', kri.id).catch(() => {})
+      } else if (status === 'AMBER' && existing.status === 'GREEN') {
+        notifyAdmins(ctx.user.orgId, 'KRI_AMBER', `KRI Warning: ${kri.name}`, `${kri.name} has entered the amber warning zone.`, 'KRI', kri.id).catch(() => {})
+      }
 
       return kri
     }),
@@ -207,7 +213,20 @@ export const kriRouter = router({
         },
       })
 
+      // Record value history
+      await db.kriValueEntry.create({
+        data: {
+          kriId: input.id,
+          value: input.value,
+          status,
+          recordedBy: ctx.user.id,
+        },
+      }).catch(() => {})
+
       maybeNotifyKriRed(ctx.user.orgId, kri.id, existing.status).catch(() => {})
+      if (status === 'RED' && existing.status !== 'RED') {
+        notifyAdmins(ctx.user.orgId, 'KRI_RED', `KRI Alert: ${existing.name}`, `${existing.name} has breached its red threshold.`, 'KRI', input.id).catch(() => {})
+      }
 
       return kri
     }),
@@ -227,6 +246,31 @@ export const kriRouter = router({
       await db.kri.delete({ where: { id: input.id } })
 
       return { success: true }
+    }),
+
+  // Get value history for a KRI (last N entries)
+  getHistory: protectedProcedure
+    .input(z.object({ id: z.string(), limit: z.number().min(1).max(100).default(30) }))
+    .query(async ({ ctx, input }) => {
+      // Verify KRI belongs to org
+      const kri = await db.kri.findFirst({
+        where: { id: input.id, orgId: ctx.user.orgId },
+        select: { id: true },
+      })
+      if (!kri) throw new TRPCError({ code: 'NOT_FOUND', message: 'KRI not found' })
+
+      const entries = await db.kriValueEntry.findMany({
+        where: { kriId: input.id },
+        orderBy: { recordedAt: 'desc' },
+        take: input.limit,
+        select: { value: true, status: true, recordedAt: true },
+      })
+
+      return entries.reverse().map((e) => ({
+        value: e.value.toNumber(),
+        status: e.status,
+        recordedAt: e.recordedAt.toISOString(),
+      }))
     }),
 
   // Get summary stats

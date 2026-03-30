@@ -48,7 +48,7 @@ export default function WelcomeScreen({
           <span className="text-5xl font-bold text-slate-900">58</span>
           <span className="text-2xl font-semibold text-amber-600">C</span>
         </div>
-        <p className="text-sm text-slate-600 mb-4">Your Vytl Score</p>
+        <p className="text-sm text-slate-600 mb-4">Your VytlRx Score</p>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="bg-slate-50 rounded p-2">
             <div className="text-slate-600">Risks</div>

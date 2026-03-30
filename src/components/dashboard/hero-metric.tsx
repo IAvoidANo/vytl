@@ -64,7 +64,7 @@ export function HeroMetric() {
   if (!scoreData) {
     return (
       <div className="rounded-panel bg-gradient-to-br from-teal-600 to-teal-700 p-8 flex items-center justify-center">
-        <p className="text-white/70 text-sm">Run your first assessment to see your Vytl Score</p>
+        <p className="text-white/70 text-sm">Run your first assessment to see your VytlRx Score</p>
       </div>
     )
   }
@@ -112,7 +112,7 @@ export function HeroMetric() {
               </span>
             </div>
 
-            <p className="text-white/50 text-xs mt-1.5 font-medium tracking-wide uppercase">Vytl Score · out of 100</p>
+            <p className="text-white/50 text-xs mt-1.5 font-medium tracking-wide uppercase">VytlRx Score · out of 100</p>
 
             {/* Trend row */}
             <div className="flex items-center gap-2.5 mt-5">

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | VytlRx',
+  title: 'Terms of Service | VYTL',
   description: 'Terms of Service for the VytlRx risk management platform. Governing South African law, ECTA compliance, subscription terms, and acceptable use.',
 }
 
@@ -19,7 +19,7 @@ export default function TermsPage() {
             <p>
               These Terms of Service (&ldquo;Terms&rdquo;) constitute a binding legal agreement between you
               (the individual or entity accessing or using the VytlRx Platform) and VytlRx (Pty) Ltd, a private
-              company registered under the laws of the Republic of South Africa (&ldquo;VytlRx&rdquo;, &ldquo;we&rdquo;,
+              company registered under the laws of the Republic of South Africa (&ldquo;VYTL&rdquo;, &ldquo;we&rdquo;,
               &ldquo;us&rdquo;, or &ldquo;our&rdquo;). By registering for an account, accessing, or using the
               VytlRx Platform, you agree to be bound by these Terms.
             </p>
@@ -61,7 +61,7 @@ export default function TermsPage() {
               To access the Platform, you must create an account by providing accurate, complete, and
               current information including your name, organisation name, and a valid email address. You
               are responsible for maintaining the confidentiality of your account credentials and for all
-              activity that occurs under your account. You must notify VytlRx immediately at support@vytlrx.app
+              activity that occurs under your account. You must notify VytlRx immediately at support@vytlrx.com
               of any unauthorised use of your account or any other security breach.
             </p>
             <p>
@@ -74,7 +74,7 @@ export default function TermsPage() {
             <p>
               You must be at least 18 years of age and have legal capacity to enter into binding agreements
               under South African law to create an account. Accounts may not be created for the purpose
-              of competitive intelligence gathering, benchmarking against VytlRx, or any other purpose that
+              of competitive intelligence gathering, benchmarking against VYTL, or any other purpose that
               conflicts with these Terms.
             </p>
           </div>
@@ -128,9 +128,9 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">6. Intellectual Property Ownership</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              As between you and VytlRx, VytlRx retains all right, title, and interest in and to the Platform,
+              As between you and VYTL, VytlRx retains all right, title, and interest in and to the Platform,
               including all software, algorithms, databases, designs, trade marks, and other intellectual
-              property. As between you and VytlRx, you retain all right, title, and interest in and to the
+              property. As between you and VYTL, you retain all right, title, and interest in and to the
               data and content that you upload or create within the Platform (&ldquo;Your Data&rdquo;).
             </p>
             <p>
@@ -190,7 +190,7 @@ export default function TermsPage() {
               VytlRx targets a monthly uptime of 99.5% for the Platform (excluding scheduled maintenance
               windows and circumstances beyond our reasonable control). Scheduled maintenance will be
               communicated at least 24 hours in advance where possible. We will publish our current
-              service status at status.vytlrx.app.
+              service status at status.vytlrx.com.
             </p>
             <p>
               VytlRx does not warrant that the Platform will be uninterrupted or error-free. In the event
@@ -214,10 +214,10 @@ export default function TermsPage() {
               advised of the possibility of such damages.
             </p>
             <p>
-              In no event shall VytlRx&rsquo;s aggregate liability for all claims under these Terms exceed
+              In no event shall VYTL&rsquo;s aggregate liability for all claims under these Terms exceed
               the total fees paid by you in the twelve (12) months immediately preceding the event giving
               rise to the claim, or ZAR 50,000, whichever is greater. Nothing in these Terms excludes or
-              limits VytlRx&rsquo;s liability for death or personal injury caused by negligence, fraud, or
+              limits VYTL&rsquo;s liability for death or personal injury caused by negligence, fraud, or
               fraudulent misrepresentation, or any other liability that cannot be excluded under applicable
               law.
             </p>
@@ -228,7 +228,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-slate-800 mb-3">11. Indemnification</h2>
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
-              You agree to indemnify, defend, and hold harmless VytlRx, its directors, employees, contractors,
+              You agree to indemnify, defend, and hold harmless VYTL, its directors, employees, contractors,
               agents, and licensors from and against any claims, damages, losses, liabilities, costs, and
               expenses (including reasonable attorneys&rsquo; fees) arising out of or relating to: (a) your
               breach of these Terms; (b) your use or misuse of the Platform; (c) Your Data or content you
@@ -243,7 +243,7 @@ export default function TermsPage() {
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
               You may terminate your account at any time by cancelling your subscription through the
-              Platform settings or by contacting us at support@vytlrx.app. VytlRx may suspend or terminate
+              Platform settings or by contacting us at support@vytlrx.com. VytlRx may suspend or terminate
               your access to the Platform with immediate effect if: (a) you breach these Terms and fail
               to remedy the breach within fourteen (14) days of written notice; (b) you become insolvent
               or enter into business rescue, liquidation, or sequestration; (c) you use the Platform in

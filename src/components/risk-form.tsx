@@ -5,6 +5,7 @@ import { X, Sparkles, Check } from 'lucide-react'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
 import { useDebounce } from '@/lib/use-debounce'
+import { UpgradePrompt } from './upgrade-prompt'
 
 const CATEGORIES = [
   { value: 'STRATEGIC', label: 'Strategic' },
@@ -96,6 +97,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
   })
 
   const [error, setError] = useState('')
+  const [showUpgrade, setShowUpgrade] = useState<'risks' | null>(null)
 
   // AI Suggestions state
   const [aiSuggestion, setAiSuggestion] = useState<{
@@ -120,7 +122,13 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
       utils.risk.list.invalidate()
       onSuccess()
     },
-    onError: (err) => setError(err.message),
+    onError: (err) => {
+      if (err.message.startsWith('PLAN_LIMIT:risks')) {
+        setShowUpgrade('risks')
+      } else {
+        setError(err.message)
+      }
+    },
   })
 
   const updateMutation = trpc.risk.update.useMutation({
@@ -244,6 +252,8 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
   const isLoading = createMutation.isPending || updateMutation.isPending
 
   return (
+    <>
+    {showUpgrade && <UpgradePrompt type={showUpgrade} onClose={() => setShowUpgrade(null)} />}
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
@@ -616,5 +626,6 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
         </form>
       </div>
     </div>
+    </>
   )
 }

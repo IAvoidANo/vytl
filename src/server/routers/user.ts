@@ -9,6 +9,7 @@ import { sendEmail } from '@/lib/email'
 import { inviteUserEmail, passwordResetEmail, verifyEmailTemplate } from '@/lib/email-templates'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { isAtUserLimit } from '@/lib/plan-limits'
 
 const roleEnum = z.enum(['OWNER', 'ADMIN', 'RISK_MANAGER', 'EDITOR', 'VIEWER'])
 
@@ -74,6 +75,19 @@ export const userRouter = router({
         })
       }
 
+      // Check plan limits
+      const org = await db.organisation.findUnique({
+        where: { id: ctx.user.orgId },
+        select: { plan: true, name: true },
+      })
+      const userCount = await db.user.count({ where: { orgId: ctx.user.orgId } })
+      if (org && isAtUserLimit(org.plan as 'FREE' | 'PRO' | 'ENTERPRISE', userCount)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `PLAN_LIMIT:users:${userCount}`,
+        })
+      }
+
       // Check if user already exists
       const existing = await db.user.findUnique({
         where: { email: input.email },
@@ -124,11 +138,10 @@ export const userRouter = router({
         },
       })
 
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
       const inviteUrl = `${appUrl}/accept-invite?token=${inviteToken}`
 
       // Fire-and-forget invite email
-      const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
       sendEmail({
         to: input.email,
         subject: `You've been invited to join ${org?.name ?? 'VytlRx'}`,
@@ -397,7 +410,7 @@ export const userRouter = router({
         data: { inviteToken, inviteTokenExpires },
       })
 
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
       const inviteUrl = `${appUrl}/accept-invite?token=${inviteToken}`
 
       const org = await db.organisation.findUnique({ where: { id: ctx.user.orgId }, select: { name: true } })
@@ -526,7 +539,7 @@ export const userRouter = router({
         data: { resetToken, resetTokenExpires },
       })
 
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
       const resetUrl = `${appUrl}/reset-password?token=${resetToken}`
 
       sendEmail({
@@ -669,7 +682,7 @@ export const userRouter = router({
       })
 
       // Send verification email instead of welcome email
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
       const verificationToken = crypto.randomBytes(32).toString('hex')
       const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -726,7 +739,7 @@ export const userRouter = router({
         where: { id: user.id },
         data: { verificationToken, verificationTokenExpires },
       })
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytl.io'
+      const appUrl = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
       const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
       sendEmail({
         to: input.email,

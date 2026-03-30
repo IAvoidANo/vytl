@@ -47,6 +47,10 @@ model Organisation {
   // Template tracking (Sprint A — which industry template was applied)
   appliedTemplate     String?   // 'MANUFACTURING' | 'FINANCIAL_SERVICES' | 'RETAIL'
 
+  // Billing / plan
+  plan          PlanType  @default(FREE)
+  planExpiresAt DateTime?
+
   // Relationships
   users         User[]
   riskRegisters RiskRegister[]
@@ -56,6 +60,7 @@ model Organisation {
   emailSubmissions EmailSubmission[]
   scoringProfiles  ScoringProfile[]
   snapshots        RiskSnapshot[]
+  notifications    Notification[]
 
   @@map("organisations")
 }
@@ -109,6 +114,7 @@ model User {
   reportedIncidents    Incident[]    @relation("IncidentReportedBy")
   assignedIncidents    Incident[]    @relation("IncidentAssignee")
   triggeredAssessments Assessment[]  @relation("AssessmentTriggeredBy")
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -390,7 +396,21 @@ model Kri {
   ownerId      String?
   owner        User?        @relation(fields: [ownerId], references: [id])
 
+  valueHistory KriValueEntry[]
+
   @@map("kris")
+}
+
+model KriValueEntry {
+  id         String   @id @default(cuid())
+  kriId      String
+  kri        Kri      @relation(fields: [kriId], references: [id], onDelete: Cascade)
+  value      Decimal  @db.Decimal(15, 4)
+  status     KriStatus
+  recordedAt DateTime @default(now())
+  recordedBy String?
+
+  @@map("kri_value_entries")
 }
 
 enum KriDirection {
@@ -402,6 +422,45 @@ enum KriStatus {
   GREEN
   AMBER
   RED
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id         String           @id @default(cuid())
+  orgId      String
+  userId     String
+  type       NotificationType
+  title      String
+  message    String
+  entityType String?
+  entityId   String?
+  read       Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  APPETITE_BREACH
+  KRI_RED
+  KRI_AMBER
+  RISK_ASSIGNED
+  INCIDENT_CREATED
+  ACTION_OVERDUE
+  ASSESSMENT_COMPLETE
+  SYSTEM
+}
+
+enum PlanType {
+  FREE
+  PRO
+  ENTERPRISE
 }
 
 // ============================================

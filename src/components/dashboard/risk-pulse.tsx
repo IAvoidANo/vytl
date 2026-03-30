@@ -127,7 +127,7 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
       {/* Footer */}
       <div className="px-4 py-2.5 border-t border-slate-700/50 bg-slate-900/30">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">Based on Vytl Score</span>
+          <span className="text-xs text-slate-400">Based on VytlRx Score</span>
           <span className={`text-sm font-mono font-medium ${status.color}`}>
             {score}/100
           </span>

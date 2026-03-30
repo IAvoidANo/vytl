@@ -111,7 +111,7 @@ export async function generateScoringRecommendations(
         severity: 'warning',
         title: 'Assessment overdue',
         description: `Last assessment was ${daysSinceAssessment} days ago. Quarterly assessments are recommended.`,
-        actionable: 'Run a new Vytl Score assessment to capture current risk posture.',
+        actionable: 'Run a new VytlRx Score assessment to capture current risk posture.',
       })
     }
   }

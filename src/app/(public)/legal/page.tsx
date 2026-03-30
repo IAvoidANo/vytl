@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Legal Notice | VytlRx',
+  title: 'Legal Notice | VYTL',
   description: 'Legal notice, intellectual property rights, disclaimers, and governing law for the VytlRx risk management platform.',
 }
 
@@ -19,14 +19,14 @@ export default function LegalPage() {
             <p>
               VytlRx (Pty) Ltd is a private company incorporated under the laws of the Republic of South Africa
               (Registration Number: 2024/000000/07). Our registered office is situated in the Western Cape
-              Province, South Africa. VytlRx operates the risk management platform available at vytl.app and
+              Province, South Africa. VytlRx operates the risk management platform available at vytlrx.com and
               associated subdomains (the &ldquo;Platform&rdquo;).
             </p>
             <p>
-              Correspondence may be directed to our registered address or by email to legal@vytlrx.app. For
-              general enquiries, product support, or billing matters, please contact support@vytlrx.app.
+              Correspondence may be directed to our registered address or by email to legal@vytlrx.com. For
+              general enquiries, product support, or billing matters, please contact support@vytlrx.com.
               For data privacy matters, including requests under the Protection of Personal Information Act,
-              please contact privacy@vytlrx.app.
+              please contact privacy@vytlrx.com.
             </p>
           </div>
         </section>
@@ -42,17 +42,17 @@ export default function LegalPage() {
               international conventions.
             </p>
             <p>
-              &ldquo;VytlRx&rdquo;, &ldquo;Intelligent Risk, Simplified&rdquo;, the VytlRx logo, and all related
+              &ldquo;VYTL&rdquo;, &ldquo;Intelligent Risk, Simplified&rdquo;, the VytlRx logo, and all related
               product and service names are trademarks or registered trade marks of VytlRx (Pty) Ltd. You may
               not use these marks without our prior written consent. All other trade marks referenced on the
               Platform are the property of their respective owners.
             </p>
             <p>
-              Subject to your compliance with these terms and any applicable subscription agreement, VytlRx
+              Subject to your compliance with these terms and any applicable subscription agreement, VYTL
               grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the
               Platform for your internal business purposes. No other rights are granted. You may not copy,
               reproduce, modify, create derivative works from, distribute, publicly display, or otherwise
-              exploit any part of the Platform except as expressly permitted in writing by VytlRx.
+              exploit any part of the Platform except as expressly permitted in writing by VYTL.
             </p>
           </div>
         </section>
@@ -115,7 +115,7 @@ export default function LegalPage() {
               business interruption, or the cost of substitute services.
             </p>
             <p>
-              In no event shall VytlRx&rsquo;s aggregate liability to you for all claims arising out of or related
+              In no event shall VYTL&rsquo;s aggregate liability to you for all claims arising out of or related
               to the Platform exceed the total fees paid by you to VytlRx in the twelve (12) months immediately
               preceding the event giving rise to the claim, or ZAR 10,000 (ten thousand Rand), whichever is
               the lesser. This limitation applies whether the claim is based in contract, delict (including
@@ -136,7 +136,7 @@ export default function LegalPage() {
             <p>
               The Platform may contain links to third-party websites, resources, or services. These links
               are provided for your convenience only and do not constitute an endorsement, sponsorship, or
-              recommendation by VytlRx. We have no control over the content, privacy practices, or availability
+              recommendation by VYTL. We have no control over the content, privacy practices, or availability
               of third-party sites and accept no responsibility or liability for them.
             </p>
             <p>

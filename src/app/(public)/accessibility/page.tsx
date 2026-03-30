@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Accessibility Statement | VytlRx',
-  description: 'VytlRx accessibility statement — our commitment to WCAG 2.1 AA conformance, known limitations, and how to provide feedback.',
+  title: 'Accessibility Statement | VYTL',
+  description: 'VytlRx accessibility statement â€” our commitment to WCAG 2.1 AA conformance, known limitations, and how to provide feedback.',
 }
 
 export default function AccessibilityPage() {
@@ -140,7 +140,7 @@ export default function AccessibilityPage() {
               an alternative format, please contact us at:
             </p>
             <ul className="list-none pl-0 space-y-1">
-              <li><strong>Email:</strong> accessibility@vytlrx.app</li>
+              <li><strong>Email:</strong> accessibility@vytlrx.com</li>
               <li><strong>Response time:</strong> We aim to respond within five (5) business days</li>
             </ul>
             <p>

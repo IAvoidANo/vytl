@@ -204,6 +204,7 @@ async function calculateMaturityScore(orgId: string): Promise<ScoreBreakdown['ma
     select: {
       ownerId: true,
       dueDate: true,
+      isOngoing: true,
       controls: true,
     },
   })
@@ -223,7 +224,8 @@ async function calculateMaturityScore(orgId: string): Promise<ScoreBreakdown['ma
   }
 
   const risksWithOwners = risks.filter((r) => r.ownerId).length
-  const risksWithDueDates = risks.filter((r) => r.dueDate).length
+  // Credit both risks with explicit due dates and risks marked as ongoing (active monitoring)
+  const risksWithDueDates = risks.filter((r) => r.dueDate || r.isOngoing).length
   const risksWithControls = risks.filter((r) => r.controls && r.controls.length > 10).length
 
   const ownerScore = Math.round((risksWithOwners / totalRisks) * 10)
@@ -273,15 +275,15 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
   })
 
   if (!lastAssessment || !lastAssessment.scoreBreakdown) {
-    // First assessment - give benefit of the doubt
+    // Insufficient history — return neutral baseline (12/25)
     return {
-      score: 15,
+      score: 12,
       maxScore: 25,
       details: {
         improving: 0,
         stable: currentRisks.length,
         worsening: 0,
-        direction: 'stable',
+        direction: 'insufficient_data',
       },
     }
   }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { TrendingUp, TrendingDown, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 import { format } from 'date-fns'
+import { KriSparkline } from './kri-sparkline'
 
 const STATUS_STYLES = {
   GREEN: {
@@ -106,6 +107,7 @@ export function KriTable({
 
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-slate-700 bg-slate-900/50">
@@ -132,6 +134,9 @@ export function KriTable({
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">
               Thresholds
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">
+              Trend
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">
               Direction
@@ -238,6 +243,9 @@ export function KriTable({
                   </div>
                 </td>
                 <td className="px-4 py-3">
+                  <KriSparkline kriId={kri.id} currentStatus={kri.status} />
+                </td>
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-1 text-slate-400">
                     {kri.direction === 'HIGHER_IS_WORSE' ? (
                       <>
@@ -283,6 +291,7 @@ export function KriTable({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

@@ -20,6 +20,7 @@ export const organisationRouter = router({
         createdAt: true,
         snapshotFrequency: true,
         snapshotMateriality: true,
+        plan: true,
       },
     })
     return org

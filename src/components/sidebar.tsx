@@ -26,7 +26,11 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const userRole = (session?.user as { role?: string })?.role
@@ -34,7 +38,7 @@ export function Sidebar() {
   const isAdmin = userRole === 'OWNER' || userRole === 'ADMIN'
 
   return (
-    <aside className="w-64 bg-slate-800 border-r border-slate-700 min-h-screen flex flex-col">
+    <aside className="w-64 bg-slate-800 border-r border-slate-700 h-full min-h-screen flex flex-col">
       {/* Logo Section */}
       <div className="p-5 border-b border-slate-700/50">
         <Link href="/dashboard" className="flex items-center gap-3 group">
@@ -67,6 +71,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                   isActive
                     ? 'bg-teal-500/15 text-teal-400 shadow-sm'

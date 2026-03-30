@@ -159,7 +159,7 @@ export function SnapshotSettings() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    {snap.totalRisks} risks · Vytl Score:{' '}
+                    {snap.totalRisks} risks · VytlRx Score:{' '}
                     {snap.vytlScore != null ? `${snap.vytlScore} (${snap.vytlGrade ?? '–'})` : 'N/A'}
                     {snap.krisRed > 0 && (
                       <span className="ml-2 text-red-400">

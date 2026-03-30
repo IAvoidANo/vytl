@@ -9,6 +9,8 @@ import { createAuditLog, pickAuditFields, hasChanges } from '@/lib/audit'
 import Anthropic from '@anthropic-ai/sdk'
 import { checkRateLimit, createRateLimitKey, RATE_LIMITS } from '@/lib/rate-limit'
 import { maybeNotifyAppetiteBreach, maybeNotifyRiskAssigned } from '@/lib/notification-triggers'
+import { isAtRiskLimit } from '@/lib/plan-limits'
+import { notifyUser, notifyAdmins } from '@/lib/in-app-notifications'
 
 const riskCategoryEnum = z.enum([
   'STRATEGIC',
@@ -241,6 +243,19 @@ export const riskRouter = router({
   create: editorProcedure
     .input(createRiskSchema)
     .mutation(async ({ ctx, input }) => {
+      // Check plan limits
+      const org = await db.organisation.findUnique({
+        where: { id: ctx.user.orgId },
+        select: { plan: true },
+      })
+      const totalRiskCount = await db.risk.count({ where: { register: { orgId: ctx.user.orgId } } })
+      if (org && isAtRiskLimit(org.plan as 'FREE' | 'PRO' | 'ENTERPRISE', totalRiskCount)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `PLAN_LIMIT:risks:${totalRiskCount}`,
+        })
+      }
+
       // Verify register belongs to user's org
       const register = await db.riskRegister.findFirst({
         where: { id: input.registerId, orgId: ctx.user.orgId },
@@ -414,6 +429,10 @@ export const riskRouter = router({
       maybeNotifyAppetiteBreach(ctx.user.orgId, risk.id, existing.residualScore).catch(() => {})
       if (input.ownerId && input.ownerId !== existing.ownerId) {
         maybeNotifyRiskAssigned(ctx.user.orgId, risk.id, ctx.user.id).catch(() => {})
+        notifyUser(ctx.user.orgId, input.ownerId, 'RISK_ASSIGNED', `Risk assigned to you`, `You have been assigned to: ${risk.title}`, 'RISK', risk.id).catch(() => {})
+      }
+      if (risk.residualScore >= 15 && existing.residualScore < 15) {
+        notifyAdmins(ctx.user.orgId, 'APPETITE_BREACH', `High risk: ${risk.title}`, `${risk.title} residual score reached ${risk.residualScore}.`, 'RISK', risk.id).catch(() => {})
       }
 
       return risk
@@ -907,5 +926,54 @@ If the email doesn't clearly describe a risk, still extract the most relevant ri
           message: 'Failed to process email. Please try again.',
         })
       }
+    }),
+
+  // Export all risks for the org (protectedProcedure — any authenticated user)
+  exportData: protectedProcedure
+    .input(z.object({ registerId: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const risks = await db.risk.findMany({
+        where: {
+          register: { orgId: ctx.user.orgId },
+          ...(input?.registerId ? { registerId: input.registerId } : {}),
+        },
+        select: {
+          refCode: true,
+          title: true,
+          description: true,
+          category: true,
+          status: true,
+          workflowStatus: true,
+          response: true,
+          inherentLikelihood: true,
+          inherentImpact: true,
+          inherentScore: true,
+          residualLikelihood: true,
+          residualImpact: true,
+          residualScore: true,
+          controlEffectiveness: true,
+          controls: true,
+          rootCause: true,
+          financialExposure: true,
+          varValue: true,
+          isOngoing: true,
+          dueDate: true,
+          createdAt: true,
+          updatedAt: true,
+          owner: { select: { name: true, email: true } },
+          register: { select: { name: true } },
+        },
+        orderBy: CANONICAL_SORT,
+      })
+
+      return risks.map((r) => ({
+        ...r,
+        financialExposure: r.financialExposure?.toString() ?? null,
+        varValue: r.varValue?.toString() ?? null,
+        ownerName: r.owner?.name ?? r.owner?.email ?? '',
+        registerName: r.register?.name ?? '',
+        dueDate: r.dueDate?.toISOString().split('T')[0] ?? '',
+        createdAt: r.createdAt.toISOString().split('T')[0],
+      }))
     }),
 })

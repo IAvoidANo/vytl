@@ -162,7 +162,7 @@ export function VytlScoreCard() {
     >
       {/* Header */}
       <div className="px-5 py-2.5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/30">
-        <h3 className="text-sm font-semibold text-white">Vytl Score</h3>
+        <h3 className="text-sm font-semibold text-white">VytlRx Score</h3>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing || saveMutation.isPending}
