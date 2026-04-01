@@ -444,11 +444,11 @@ describe('Vytl Score Calculation', () => {
       const coverage = calculateCoverageScorePure(0, 8, 0, 0)
       const control = calculateControlEffectivenessScorePure(0, 0, 0)
       const maturity = calculateMaturityScorePure(0, 0, 0, 0)
-      const trend = calculateTrendScorePure('insufficient_data')
+      const trend = 0 // Zero-risk org: trend dimension returns 0, not the neutral baseline
 
       const total = calculateTotalScore(coverage, control, maturity, trend)
 
-      expect(total).toBe(12) // Only trend score for insufficient data
+      expect(total).toBe(0) // Zero-risk org scores 0/100 (grade F)
     })
   })
 
@@ -499,7 +499,7 @@ describe('Vytl Score Calculation', () => {
       const coverage = calculateCoverageScorePure(0, 9, 0, 0)
       const ce = calculateControlEffectivenessScorePure(0, 0, 0)
       const maturity = calculateMaturityScorePure(0, 0, 0, 0)
-      const trend = calculateTrendScorePure('insufficient_data')
+      const trend = 0 // Zero-risk org: trend dimension returns 0
       expect(Number.isNaN(coverage)).toBe(false)
       expect(Number.isNaN(ce)).toBe(false)
       expect(Number.isNaN(maturity)).toBe(false)
@@ -507,7 +507,7 @@ describe('Vytl Score Calculation', () => {
       expect(coverage).toBe(0)
       expect(ce).toBe(0)
       expect(maturity).toBe(0)
-      expect(trend).toBe(12)
+      expect(trend).toBe(0)
     })
 
     it('no NaN values when all risks have identical inherent and residual scores (no control reduction)', () => {

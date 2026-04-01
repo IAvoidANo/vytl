@@ -245,7 +245,7 @@ export function generateBoardReport(data: BoardReportData): jsPDF {
   y = MARGIN + 5
   y = addPageHeader(doc, 'Executive Summary', y)
 
-  // Vytl Score box
+  // VytlRx Score box
   doc.setFillColor(241, 245, 249)
   doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 30, 3, 3, 'F')
 

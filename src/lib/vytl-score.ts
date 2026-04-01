@@ -1,5 +1,5 @@
 /**
- * Vytl Score Calculation Service
+ * VytlRx Score Calculation Service
  *
  * Score breakdown (0-100):
  * - Risk Coverage (25 pts): Are all categories covered? Do risks have descriptions?
@@ -257,7 +257,7 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
 
   if (currentRisks.length === 0) {
     return {
-      score: 12, // Neutral score for no data
+      score: 0, // Zero-risk org scores 0 on trend dimension
       maxScore: 25,
       details: {
         improving: 0,
@@ -331,7 +331,7 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
 }
 
 /**
- * Calculate complete Vytl Score for an organisation
+ * Calculate complete VytlRx Score for an organisation
  */
 export async function calculateVytlScore(orgId: string): Promise<VytlScoreResult> {
   const [coverage, controlEffectiveness, maturity, trend] = await Promise.all([

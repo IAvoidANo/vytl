@@ -53,7 +53,7 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
         <p className="text-xs text-slate-400 hidden sm:block">{orgName}</p>
       </div>
 
-      {/* Hero: Vytl Score */}
+      {/* Hero: VytlRx Score */}
       <div className="flex-shrink-0">
         <HeroMetric />
       </div>

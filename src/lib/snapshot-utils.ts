@@ -40,7 +40,7 @@ export async function captureSnapshot(
     throw new Error('Cannot create snapshot: no active risks found')
   }
 
-  // 2. Fetch latest completed Vytl assessment
+  // 2. Fetch latest completed VytlRx assessment
   const assessment = await db.assessment.findFirst({
     where: { orgId, status: 'COMPLETED' },
     orderBy: { createdAt: 'desc' },
@@ -85,7 +85,7 @@ export async function captureSnapshot(
     allActions as { status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' }[]
   )
 
-  // 6. Extract Vytl Score components from scoreBreakdown JSON
+  // 6. Extract VytlRx Score components from scoreBreakdown JSON
   const breakdown = assessment?.scoreBreakdown as ScoreBreakdown | null | undefined
   const vytlCoverage = breakdown?.coverage?.score ?? null
   const vytlControl = breakdown?.controlEffectiveness?.score ?? null

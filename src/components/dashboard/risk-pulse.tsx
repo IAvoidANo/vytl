@@ -18,7 +18,7 @@ export function RiskPulse({ className = '' }: RiskPulseProps) {
 
   const score = scoreData?.score ?? 0
 
-  // Determine status based on Vytl Score
+  // Determine status based on VytlRx Score
   const status = useMemo(() => {
     if (score >= 70) {
       return {

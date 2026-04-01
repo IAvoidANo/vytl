@@ -11,7 +11,7 @@ import {
 
 export const assessmentRouter = router({
   /**
-   * Calculate Vytl Score (without saving) — preview only
+   * Calculate VytlRx Score (without saving) — preview only
    */
   calculate: protectedProcedure.query(async ({ ctx }) => {
     const result = await calculateVytlScore(ctx.user.orgId)

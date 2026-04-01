@@ -10,7 +10,7 @@ export const templateRouter = router({
   /**
    * Apply an industry template to the authenticated organisation.
    * Creates a named register, bulk-inserts 15 pre-scored risks,
-   * calculates the initial Vytl Score, and enables sample mode.
+   * calculates the initial VytlRx Score, and enables sample mode.
    *
    * Guard: organisation must have 0 existing risks.
    */
@@ -106,7 +106,7 @@ export const templateRouter = router({
         },
       })
 
-      // Calculate and persist initial Vytl Score
+      // Calculate and persist initial VytlRx Score
       const scoreResult = await calculateVytlScore(orgId)
       await saveAssessment(orgId, scoreResult, 'INITIAL', userId)
 
@@ -184,7 +184,7 @@ export const templateRouter = router({
     // Delete all registers
     await db.riskRegister.deleteMany({ where: { orgId } })
 
-    // Delete Vytl Score assessments
+    // Delete VytlRx Score assessments
     await db.assessment.deleteMany({ where: { orgId } })
 
     // Exit sample mode

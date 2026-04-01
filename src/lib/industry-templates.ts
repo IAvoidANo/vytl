@@ -38,7 +38,7 @@ export interface IndustryTemplate {
   code: IndustryCode
   name: string
   description: string
-  benchmarkScore: number       // Typical org-level Vytl Score for this industry
+  benchmarkScore: number       // Typical org-level VytlRx Score for this industry
   risks: TemplateRisk[]
 }
 

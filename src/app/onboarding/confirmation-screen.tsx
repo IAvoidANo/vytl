@@ -68,7 +68,7 @@ export default function ConfirmationScreen({
 
       {/* Score card */}
       <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-8 mb-8 max-w-lg w-full">
-        {/* Vytl Score */}
+        {/* VytlRx Score */}
         <div className="text-center mb-6 pb-6 border-b border-slate-200">
           <p className="text-sm font-medium text-slate-600 uppercase tracking-wide mb-2">
             Your VytlRx Score

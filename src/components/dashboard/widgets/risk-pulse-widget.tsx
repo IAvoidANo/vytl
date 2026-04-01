@@ -18,7 +18,7 @@ export function RiskPulseWidget() {
   // Number of bars based on width
   const numBars = useResponsiveValue({ xs: 10, sm: 15, md: 20, lg: 25 }, 20)
 
-  // Determine status based on Vytl Score
+  // Determine status based on VytlRx Score
   const status = useMemo(() => {
     if (score >= 70) {
       return {

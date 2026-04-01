@@ -130,7 +130,7 @@ export const snapshotsRouter = router({
 
       const materialityThreshold = org.snapshotMateriality ?? 2
 
-      // Vytl score trajectory
+      // VytlRx score trajectory
       const scoreDelta =
         latestSnapshot.vytlScore != null && earliestSnapshot.vytlScore != null
           ? latestSnapshot.vytlScore - earliestSnapshot.vytlScore
