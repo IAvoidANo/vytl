@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-none pl-0 space-y-1">
               <li><strong>Name:</strong> Information Officer, VytlRx (Pty) Ltd</li>
-              <li><strong>Email:</strong> privacy@vytlrx.com</li>
+              <li><strong>Email:</strong> privacy@vytlrx.app</li>
               <li><strong>Postal Address:</strong> VytlRx (Pty) Ltd, Western Cape, South Africa</li>
             </ul>
             <p>
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
             <p>
               Where we rely on consent as our lawful basis, you have the right to withdraw your consent
               at any time without affecting the lawfulness of processing carried out before withdrawal.
-              To withdraw consent, please contact us at privacy@vytlrx.com or use the unsubscribe link
+              To withdraw consent, please contact us at privacy@vytlrx.app or use the unsubscribe link
               in any marketing email.
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
               (to receive your personal information in a structured, commonly used format).
             </p>
             <p>
-              To exercise any of these rights, please submit a written request to privacy@vytlrx.com. We
+              To exercise any of these rights, please submit a written request to privacy@vytlrx.app. We
               will acknowledge your request within five (5) business days and respond fully within thirty
               (30) days. If your request is complex or numerous, we may extend this period by a further
               thirty (30) days with prior notice. We may need to verify your identity before processing
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
             </p>
             <p>
               For any questions or concerns about this Privacy Notice or our data practices, please
-              contact our Information Officer at privacy@vytlrx.com.
+              contact our Information Officer at privacy@vytlrx.app.
             </p>
           </div>
         </section>

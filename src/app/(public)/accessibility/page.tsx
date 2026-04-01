@@ -140,7 +140,7 @@ export default function AccessibilityPage() {
               an alternative format, please contact us at:
             </p>
             <ul className="list-none pl-0 space-y-1">
-              <li><strong>Email:</strong> accessibility@vytlrx.com</li>
+              <li><strong>Email:</strong> accessibility@vytlrx.app</li>
               <li><strong>Response time:</strong> We aim to respond within five (5) business days</li>
             </ul>
             <p>

@@ -19,14 +19,14 @@ export default function LegalPage() {
             <p>
               VytlRx (Pty) Ltd is a private company incorporated under the laws of the Republic of South Africa
               (Registration Number: 2024/000000/07). Our registered office is situated in the Western Cape
-              Province, South Africa. VytlRx operates the risk management platform available at vytlrx.com and
+              Province, South Africa. VytlRx operates the risk management platform available at vytlrx.app and
               associated subdomains (the &ldquo;Platform&rdquo;).
             </p>
             <p>
-              Correspondence may be directed to our registered address or by email to legal@vytlrx.com. For
-              general enquiries, product support, or billing matters, please contact support@vytlrx.com.
+              Correspondence may be directed to our registered address or by email to legal@vytlrx.app. For
+              general enquiries, product support, or billing matters, please contact support@vytlrx.app.
               For data privacy matters, including requests under the Protection of Personal Information Act,
-              please contact privacy@vytlrx.com.
+              please contact privacy@vytlrx.app.
             </p>
           </div>
         </section>

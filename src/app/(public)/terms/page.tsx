@@ -61,7 +61,7 @@ export default function TermsPage() {
               To access the Platform, you must create an account by providing accurate, complete, and
               current information including your name, organisation name, and a valid email address. You
               are responsible for maintaining the confidentiality of your account credentials and for all
-              activity that occurs under your account. You must notify VytlRx immediately at support@vytlrx.com
+              activity that occurs under your account. You must notify VytlRx immediately at support@vytlrx.app
               of any unauthorised use of your account or any other security breach.
             </p>
             <p>
@@ -190,7 +190,7 @@ export default function TermsPage() {
               VytlRx targets a monthly uptime of 99.5% for the Platform (excluding scheduled maintenance
               windows and circumstances beyond our reasonable control). Scheduled maintenance will be
               communicated at least 24 hours in advance where possible. We will publish our current
-              service status at status.vytlrx.com.
+              service status at status.vytlrx.app.
             </p>
             <p>
               VytlRx does not warrant that the Platform will be uninterrupted or error-free. In the event
@@ -243,7 +243,7 @@ export default function TermsPage() {
           <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3">
             <p>
               You may terminate your account at any time by cancelling your subscription through the
-              Platform settings or by contacting us at support@vytlrx.com. VytlRx may suspend or terminate
+              Platform settings or by contacting us at support@vytlrx.app. VytlRx may suspend or terminate
               your access to the Platform with immediate effect if: (a) you breach these Terms and fail
               to remedy the breach within fourteen (14) days of written notice; (b) you become insolvent
               or enter into business rescue, liquidation, or sequestration; (c) you use the Platform in

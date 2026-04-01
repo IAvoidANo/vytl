@@ -426,7 +426,7 @@ export function SettingsClient({ isAdmin }: SettingsClientProps) {
               </div>
               {(org as { plan?: string }).plan === 'FREE' && (
                 <a
-                  href="mailto:hello@vytlrx.com?subject=Upgrade%20to%20Professional"
+                  href="mailto:hello@vytlrx.app?subject=Upgrade%20to%20Professional"
                   className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg transition-colors"
                 >
                   Upgrade →

@@ -46,7 +46,7 @@ export function UpgradePrompt({ type, featureName, onClose }: UpgradePromptProps
 
         <div className="space-y-3">
           <a
-            href="mailto:hello@vytlrx.com?subject=Upgrade%20to%20Professional"
+            href="mailto:hello@vytlrx.app?subject=Upgrade%20to%20Professional"
             className="block w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg text-sm text-center transition-colors"
           >
             Upgrade to Professional

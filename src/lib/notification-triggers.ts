@@ -15,7 +15,7 @@ import {
   incidentCreatedEmail,
 } from '@/lib/email-templates'
 
-const APP_URL = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
+const APP_URL = process.env.NEXTAUTH_URL ?? 'https://vytlrx.app'
 
 // Default appetite thresholds (matches appetite-validation.ts defaults)
 const DEFAULT_HIGH_THRESHOLD = 9

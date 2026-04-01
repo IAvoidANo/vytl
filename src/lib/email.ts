@@ -22,7 +22,7 @@ function getResend(): Resend | null {
   return _resend
 }
 
-const FROM = process.env.EMAIL_FROM ?? 'VytlRx <noreply@hbdadvisory.com>'
+const FROM = process.env.EMAIL_FROM ?? 'VytlRx <avin@hbdadvisory.com>'
 
 export async function sendEmail(opts: EmailOptions): Promise<{ success: boolean; error?: string }> {
   const resend = getResend()

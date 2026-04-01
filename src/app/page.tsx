@@ -94,7 +94,7 @@ export default async function HomePage() {
                 <span className="w-3 h-3 rounded-full bg-red-400"></span>
                 <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
                 <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                <span className="ml-3 text-slate-400 text-xs">app.vytlrx.com/dashboard</span>
+                <span className="ml-3 text-slate-400 text-xs">vytlrx.app/dashboard</span>
               </div>
               <div className="p-6 bg-[hsl(210,33%,96%)]">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -422,7 +422,7 @@ export default async function HomePage() {
                     'Custom onboarding',
                   ],
                   cta: 'Get in touch',
-                  href: 'mailto:hello@vytlrx.com',
+                  href: 'mailto:hello@vytlrx.app',
                   highlight: true,
                 },
               ].map((plan) => (

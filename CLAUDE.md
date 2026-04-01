@@ -112,12 +112,32 @@ if (!session?.user) redirect('/login')
 
 ## Environment Variables
 
+### Local development (`.env.local`)
 ```
 DATABASE_URL=        # Supabase pooled connection (port 6543, ?pgbouncer=true)
 DIRECT_URL=          # Supabase session connection (port 5432)
 NEXTAUTH_SECRET=     # JWT signing secret
-NEXTAUTH_URL=        # Base URL (http://localhost:3000)
+NEXTAUTH_URL=http://localhost:3000
 ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
+```
+
+### Production (Vercel environment variables)
+```
+DATABASE_URL=        # Supabase PROD pooled (port 6543, ?pgbouncer=true) — Settings > Database > Transaction mode
+DIRECT_URL=          # Supabase PROD session (port 5432) — Settings > Database > Session mode
+NEXTAUTH_SECRET=     # Strong random secret — generate with: openssl rand -base64 32
+NEXTAUTH_URL=https://vytlrx.app
+ANTHROPIC_API_KEY=   # Claude API key
+RESEND_API_KEY=      # Resend API key — resend.com/api-keys
+EMAIL_FROM=VytlRx <noreply@vytlrx.app>   # Once DNS verified; temp: avin@hbdadvisory.com
+CRON_SECRET=         # Random string to protect cron endpoints — generate with: openssl rand -base64 32
+NEXT_PUBLIC_USE_TOP_NAV=false   # Set true to enable new top nav (Sprint C Day 9-10)
+```
+
+### Supabase project
+```
+Project ID:  akcczpfprzgiivkollcp
+Dashboard:   https://supabase.com/dashboard/project/akcczpfprzgiivkollcp/settings/database
 ```
 
 ## Conventions
@@ -129,6 +149,76 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - Validation pattern: Extract Zod schemas + pure functions into `*-validation.ts` files, test those
 
 ## Sprint Status
+
+### Sprint C — PLANNED (Beta Launch Readiness)
+
+**Registered domains:** `vytlrx.app` (primary app), `vytlrx.ai` (marketing/alias), `vytl.ai` (redirect to vytlrx.ai)
+**Temporary email sender:** `avin@hbdadvisory.com` until VytlRx domain email is configured (`src/lib/email.ts` updated)
+
+#### Track 1 — Ship Blockers (Days 1–6)
+
+**Day 1–2: Domain migration + production infrastructure**
+- Replace all hardcoded `app.vytlrx.com` / `vytlrx.com` fallbacks with `vytlrx.app` across:
+  - `src/server/routers/user.ts` (4 occurrences — invite, password reset, accept-invite, verify-email URLs)
+  - `src/lib/notification-triggers.ts` (APP_URL fallback)
+  - `src/app/api/cron/digest/route.ts` (APP_URL fallback)
+  - `src/app/page.tsx` (display URL + contact email)
+  - `src/components/upgrade-prompt.tsx` + `src/app/settings/settings-client.tsx` (`hello@vytlrx.com` → `hello@vytlrx.app`)
+  - `src/app/(public)/legal/page.tsx`, `terms/page.tsx`, `privacy/page.tsx`, `accessibility/page.tsx` (all `@vytlrx.com` contact emails)
+  - `src/components/workspace/email-forward-modal.tsx` + `src/app/workspace/workspace-client.tsx` (`risks@acme.vytlrx.com` placeholder)
+- Deploy to Vercel production; set all env vars:
+  - `NEXTAUTH_URL=https://vytlrx.app`
+  - `EMAIL_FROM=VytlRx <noreply@vytlrx.app>` (once domain email configured; temp: `avin@hbdadvisory.com`)
+  - `DATABASE_URL`, `DIRECT_URL` (Supabase prod), `NEXTAUTH_SECRET`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`
+- Supabase production instance (separate from dev)
+- Confirm `/api/health` returns 200 in production
+- Set up `vytl.ai` as redirect → `vytlrx.ai`
+
+**Day 3–4: Error monitoring (Sentry)**
+- Sign up at sentry.io — create a Next.js project
+- Install `@sentry/nextjs` and run `npx @sentry/wizard@latest -i nextjs`
+- Configure `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT` env vars in Vercel
+- Wrap tRPC error handler to capture server-side errors
+- Verify Sentry receives a test error before proceeding
+- Sentry captures: unhandled exceptions, tRPC errors, failed cron jobs, client-side React errors
+
+**Day 5–6: Email end-to-end verification**
+- Verify Resend domain DNS records for `vytlrx.app` (SPF, DKIM, DMARC)
+- Smoke-test all five email templates against a real inbox:
+  - Welcome email (trigger via `/register`)
+  - Invite email (trigger via `/users` → invite)
+  - Password reset email (trigger via `/forgot-password`)
+  - Appetite breach notification (trigger via risk create exceeding threshold)
+  - Weekly digest (trigger cron manually via `/api/cron/digest` with `CRON_SECRET`)
+- Verify `/api/cron/snapshot` fires and creates a baseline snapshot
+
+#### Track 2 — Beta UX + Guardrails (Days 7–10)
+
+**Day 7–8: Open self-serve with plan limit guardrails**
+- `/register` is already built — add enforcement from `plan-limits.ts`:
+  - Max risks per org (beta cap)
+  - Max users per org (beta cap)
+  - Clear in-app UI when limit is hit (not a crash — a prompt to contact VytlRx)
+- Upgrade prompt already exists (`src/components/upgrade-prompt.tsx`) — wire it to limit checks
+- Add hard rate limit on `user.register` mutation to prevent spam signups
+- No Stripe in this sprint — upgrades handled manually via `hello@vytlrx.app`
+
+**Day 9–10: Top nav / design refresh + buffer**
+- Enable `USE_TOP_NAV` flag (`NEXT_PUBLIC_USE_TOP_NAV=true` in Vercel)
+- Full QA pass across all 15 routes: active states, mobile breakpoints, keyboard navigation
+- Decide: ship with flag on by default for all users, or keep as opt-in
+- Buffer: fix anything surfaced during Days 1–6 infrastructure and email testing
+
+#### Out of scope
+- Stripe / billing payments (Sprint D)
+- `PEOPLE` category seed data and templates
+- `/risks` bundle size optimisation (325kB — log as tech debt)
+- Full `vytlrx.ai` marketing site content
+
+### Sprint B — Post-Day 15 COMPLETE (Score Fix + Rename Hardening)
+- [x] **Zero-risk score fix** — `src/lib/vytl-score.ts`: `calculateTrendScore` zero-risk early return changed from `score: 12` → `score: 0`; a zero-risk org now scores 0/100 (grade F); orgs with risks but no prior assessment history retain the 12/25 neutral baseline
+- [x] **VytlRx rename hardening** — 11 files in `src/` had bare "Vytl Score" / "Vytl " strings in comments and user-facing UI; all replaced with "VytlRx Score" / "VytlRx "; TypeScript identifiers (`calculateVytlScore`, `VytlScoreCard`, etc.) left unchanged
+- [x] **Tests** — `tests/utils/vytl-score.test.ts` updated (2 tests: zero-risk total 12→0, trend 12→0); 1241 passing across 39 files (all passing)
 
 ### Sprint B — Day 15 COMPLETE (AI JSON Extraction — INC-AI)
 - [x] **New module** — `src/lib/excel-import/json-extraction.ts` (pure, testable, no API dependency)
@@ -147,7 +237,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
   - failures (5 tests: empty, whitespace-only, prose, no-array object, attempt reporting)
   - filterValidItems (4 tests)
   - real-world scenarios (5 tests: intro text, fence+preamble, pretty-print, wrapped object, scan warnings)
-- [x] **Test count** — 1205 passing across 37 files (was 1178/36)
+- [x] **Test count** — 1241 passing across 39 files (was 1205/37)
 
 ### Sprint B — Day 14 COMPLETE (Self-Registration, Email Wiring, appliedTemplate)
 - [x] **Self-service registration** — `user.register` public tRPC mutation (creates Org + OWNER user, rate-limited, duplicate-email check, bcrypt)
@@ -548,6 +638,15 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 | `/forgot-password` | ✅ | Password reset request |
 | `/reset-password` | ✅ | Password reset with token |
 | `/accept-invite` | ✅ | Accept user invitation |
+| `/actions` | ✅ | Cross-risk treatment actions dashboard with status/priority/assignee filters + overdue view |
+| `/verify-email` | ✅ | Email verification landing page |
+| `/kris` | ✅ | KRI monitoring dashboard (table/card view) |
+| `/(public)/accessibility` | ✅ | Static public page |
+| `/(public)/legal` | ✅ | Static public page |
+| `/(public)/privacy` | ✅ | Static public page |
+| `/(public)/terms` | ✅ | Static public page |
+| `/(public)/sitemap` | ✅ | Static public sitemap |
+| `/api/health` | ✅ | Health check endpoint (static, no auth) |
 
 ### Key Components
 - `RiskTable` - Sortable table with filters, sparklines, Controls column, VaR column
@@ -588,6 +687,7 @@ ANTHROPIC_API_KEY=   # Claude API key for AI document extraction
 - `MovementAlertWidget` - Optional dashboard widget: shows material risk movements since last snapshot
 - `DashboardHeatmap` - Dashboard heatmap: solid band colours, count badges, appetite-aware legend
 - `SampleDataBanner` - Self-querying amber banner: "Make This My Data" / "Start Fresh" / dismiss (Sprint A Day 5-6)
+- `ActionsTable` / `ActionsClient` - Cross-risk treatment actions table with filter bar (status, priority, assignee, overdue)
 
 ### Import Template
 Download: `/templates/risk-import-template.xlsx`
@@ -603,7 +703,21 @@ src/
 │   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
 │   │   ├── trpc/[trpc]/route.ts          # tRPC endpoint
 │   │   ├── parse-document/route.ts       # PDF/Word parsing
-│   │   └── cron/snapshot/route.ts        # Vercel Cron — weekly snapshot capture (CRON_SECRET)
+│   │   ├── health/route.ts               # Static health check (no auth)
+│   │   └── cron/
+│   │       ├── snapshot/route.ts         # Vercel Cron — weekly snapshot capture (CRON_SECRET)
+│   │       └── digest/route.ts           # Vercel Cron — Monday 7AM UTC weekly email digest
+│   ├── (public)/                         # Unauthenticated public pages
+│   │   ├── layout.tsx
+│   │   ├── accessibility/page.tsx
+│   │   ├── legal/page.tsx
+│   │   ├── privacy/page.tsx
+│   │   ├── terms/page.tsx
+│   │   └── sitemap/page.tsx
+│   ├── actions/                          # Cross-risk treatment actions dashboard
+│   │   ├── page.tsx
+│   │   └── actions-client.tsx
+│   ├── verify-email/page.tsx
 │   ├── dashboard/page.tsx
 │   ├── login/page.tsx
 │   ├── risks/
@@ -699,6 +813,8 @@ src/
 │   ├── snapshot-validation.ts   # Snapshot pure functions (buildSeverityCounts, detectRiskMovers, etc.)
 │   ├── snapshot-utils.ts        # captureSnapshot, hasBaselineSnapshot, getEarliestSnapshotDate
 │   ├── risk-colour-mapping.ts   # Canonical L×I → colour mapping (getRiskColour, BAND_PRINT_COLOURS)
+│   ├── feature-flags.ts         # Feature flags (USE_TOP_NAV — set NEXT_PUBLIC_USE_TOP_NAV=true)
+│   ├── plan-limits.ts           # Plan-based feature limits
 │   └── industry-templates.ts    # Sprint A: 45 SA risks across 3 industry templates (Manufacturing, FS, Retail)
 ├── app/onboarding/              # Sprint A Day 3-4: FTUE wizard
 │   ├── page.tsx                 # Server: auth + risk-count guard + redirect
@@ -725,7 +841,7 @@ src/
     ├── snapshots.ts     # Snapshot CRUD + compare + checkDataAvailability
     └── template.ts      # template.apply/exitSampleMode/clearSampleData/getSampleModeStatus (Sprint A)
 
-tests/                                   # 1161 tests across 35 files (all passing)
+tests/                                   # 1241 tests across 39 files (all passing)
 ├── setup.ts
 ├── e2e/
 │   └── user-journeys.test.ts
@@ -760,7 +876,10 @@ tests/                                   # 1161 tests across 35 files (all passi
     ├── kri-status.test.ts
     ├── audit-trail.test.ts
     ├── multi-tenancy.test.ts
-    └── permissions.test.ts
+    ├── permissions.test.ts
+    ├── action-tracking.test.ts          # 17 tests — actions dashboard tracking logic
+    ├── risk-colour-mapping.test.ts      # 32 tests — canonical L×I colour mapping
+    └── feature-flags.test.ts            # 5 tests — USE_TOP_NAV flag behaviour
 
 .session-templates/                      # Dev documentation
 ├── api-routes.md

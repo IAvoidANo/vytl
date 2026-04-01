@@ -86,7 +86,7 @@ export function EmailForwardModal({ isOpen, onClose, onSuccess }: EmailForwardMo
             <div>
               <p className="text-sm font-medium text-teal-400">Coming Soon: Direct Email Forwarding</p>
               <p className="text-xs text-slate-400 mt-1">
-                Forward emails directly to <span className="font-mono text-teal-400">risks@acme.vytlrx.com</span> to auto-create risks
+                Forward emails directly to <span className="font-mono text-teal-400">risks@acme.vytlrx.app</span> to auto-create risks
               </p>
             </div>
           </div>

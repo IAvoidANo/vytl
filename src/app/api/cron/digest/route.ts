@@ -5,7 +5,7 @@ import { weeklyDigestEmail } from '@/lib/email-templates'
 
 export const dynamic = 'force-dynamic'
 
-const APP_URL = process.env.NEXTAUTH_URL ?? 'https://app.vytlrx.com'
+const APP_URL = process.env.NEXTAUTH_URL ?? 'https://vytlrx.app'
 
 /**
  * Vercel Cron endpoint for weekly digest emails.
