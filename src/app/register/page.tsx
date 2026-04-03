@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc-client'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', orgName: '' })
+  const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState('')
 
   const register = trpc.user.register.useMutation({
@@ -28,7 +29,7 @@ export default function RegisterPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    register.mutate(form)
+    register.mutate({ ...form, website: honeypot })
   }
 
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -51,6 +52,20 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
+
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              name="website"
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
 
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1.5">
