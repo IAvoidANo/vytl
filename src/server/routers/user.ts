@@ -618,10 +618,17 @@ export const userRouter = router({
       email: z.string().email('Invalid email address'),
       password: z.string().min(8, 'Password must be at least 8 characters').max(128),
       orgName: z.string().min(2, 'Organisation name must be at least 2 characters').max(100),
+      website: z.string().optional(), // honeypot — must be empty
     }))
     .mutation(async ({ input }) => {
       // Rate limit registrations to prevent abuse
       checkRateLimit(`register:${input.email}`, RATE_LIMITS.auth)
+
+      // Honeypot check — bots fill this field, real users never see it
+      if (input.website) {
+        // Silently succeed so bots don't know they were rejected
+        return { success: true, email: input.email }
+      }
 
       // Check for duplicate email
       const existing = await db.user.findUnique({ where: { email: input.email } })
