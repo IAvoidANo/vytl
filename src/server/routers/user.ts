@@ -14,7 +14,7 @@ import { isAtUserLimit } from '@/lib/plan-limits'
 const roleEnum = z.enum(['OWNER', 'ADMIN', 'RISK_MANAGER', 'EDITOR', 'VIEWER'])
 
 export const userRouter = router({
-  // List all users in organisation (ADMIN+)
+  // List all users in organisation (ADMIN+)h
   list: adminProcedure.query(async ({ ctx }) => {
     const users = await db.user.findMany({
       where: { orgId: ctx.user.orgId },
@@ -665,7 +665,7 @@ export const userRouter = router({
             role: 'OWNER',
             status: 'ACTIVE',
             orgId: org.id,
-            emailVerified: null,
+            emailVerified: new Date(), // auto-verified — email infra not yet live
           },
         })
 
@@ -681,22 +681,8 @@ export const userRouter = router({
         newValues: { email: input.email, orgName: input.orgName, method: 'self_register' },
       })
 
-      // Send verification email instead of welcome email
-      const appUrl = process.env.NEXTAUTH_URL ?? 'https://vytlrx.app'
-      const verificationToken = crypto.randomBytes(32).toString('hex')
-      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-
-      await db.user.update({
-        where: { id: result.user.id },
-        data: { verificationToken, verificationTokenExpires },
-      })
-
-      const verifyUrl = `${appUrl}/verify-email?token=${verificationToken}`
-      sendEmail({
-        to: input.email,
-        subject: 'Verify your email — VytlRx',
-        html: verifyEmailTemplate({ recipientName: input.name, verifyUrl, appUrl }),
-      }).catch(() => {})
+      // TODO (Sprint C Day 5-6): send welcome email via Resend once DNS is verified
+      // sendEmail({ to: input.email, subject: 'Welcome to VytlRx', html: welcomeEmail(...) }).catch(() => {})
 
       return { success: true, email: input.email }
     }),
