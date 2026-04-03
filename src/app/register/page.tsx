@@ -1,17 +1,26 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 import { trpc } from '@/lib/trpc-client'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', orgName: '' })
   const [error, setError] = useState('')
-  const [showVerifyPrompt, setShowVerifyPrompt] = useState(false)
 
   const register = trpc.user.register.useMutation({
     onSuccess: async () => {
-      setShowVerifyPrompt(true)
+      const result = await signIn('credentials', {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      })
+      if (result?.ok) {
+        window.location.href = '/onboarding'
+      } else {
+        window.location.href = '/login'
+      }
     },
     onError: (err) => setError(err.message),
   })
@@ -24,45 +33,6 @@ export default function RegisterPage() {
 
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
-
-  if (showVerifyPrompt) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[hsl(210,33%,95%)] px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 w-full max-w-md text-center">
-          <div className="inline-flex items-center gap-2 mb-8">
-            <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">V</span>
-            <span className="text-xl font-bold text-slate-800">VytlRx</span>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Check your email</h1>
-          <p className="text-slate-500 text-sm mb-2">
-            We sent a verification link to <strong className="text-slate-700">{form.email}</strong>
-          </p>
-          <p className="text-slate-400 text-xs mb-8">Click the link to activate your account. It expires in 24 hours.</p>
-          <Link href="/login" className="text-teal-600 hover:text-teal-700 text-sm font-medium">Back to sign in →</Link>
-        </div>
-
-        <nav className="flex items-center gap-5 mt-8">
-          {[
-            { href: '/legal', label: 'Legal' },
-            { href: '/privacy', label: 'Privacy notice' },
-            { href: '/terms', label: 'Terms' },
-            { href: '/accessibility', label: 'Accessibility' },
-          ].map(({ href, label }) => (
-            <Link key={href} href={href}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <p className="text-xs text-slate-400 mt-3">© {new Date().getFullYear()} VytlRx (Pty) Ltd</p>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[hsl(210,33%,95%)] py-12 px-4">
@@ -147,10 +117,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={register.isPending}
+            disabled={register.isPending || register.isSuccess}
             className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 mt-2"
           >
-            {register.isPending ? 'Creating account…' : 'Create Account'}
+            {register.isSuccess ? 'Signing you in…' : register.isPending ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
 
