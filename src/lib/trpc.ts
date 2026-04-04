@@ -1,3 +1,4 @@
+﻿import * as Sentry from '@sentry/nextjs'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { auth } from './auth'
 import type { Role } from '@prisma/client'
@@ -49,7 +50,21 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   }
 }
 
-const t = initTRPC.context<typeof createTRPCContext>().create()
+const t = initTRPC.context<typeof createTRPCContext>().create({
+  errorFormatter({ shape, error }) {
+    if (
+      error.code !== 'UNAUTHORIZED' &&
+      error.code !== 'FORBIDDEN' &&
+      error.code !== 'BAD_REQUEST' &&
+      error.code !== 'NOT_FOUND' &&
+      error.code !== 'CONFLICT' &&
+      error.code !== 'TOO_MANY_REQUESTS'
+    ) {
+      Sentry.captureException(error.cause ?? error)
+    }
+    return shape
+  },
+})
 
 export const router = t.router
 export const publicProcedure = t.procedure
@@ -95,3 +110,4 @@ export const ownerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   requireRole(ctx.user.role, 'OWNER')
   return next({ ctx })
 })
+
