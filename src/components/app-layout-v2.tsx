@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { TopNav } from './top-nav'
 import { CommandPalette } from './command-palette'
+import { SampleDataBanner } from './sample-data-banner'
 
 interface AppLayoutV2Props {
   children: React.ReactNode
@@ -15,6 +16,7 @@ export function AppLayoutV2({ children }: AppLayoutV2Props) {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <SampleDataBanner />
       <TopNav />
       <main className="mx-auto max-w-content px-6 py-5">
         {children}

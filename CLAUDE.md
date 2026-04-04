@@ -150,64 +150,55 @@ Dashboard:   https://supabase.com/dashboard/project/akcczpfprzgiivkollcp/setting
 
 ## Sprint Status
 
-### Sprint C — PLANNED (Beta Launch Readiness)
+### Sprint C — IN PROGRESS (Beta Launch Readiness)
 
 **Registered domains:** `vytlrx.app` (primary app), `vytlrx.ai` (marketing/alias), `vytl.ai` (redirect to vytlrx.ai)
 **Temporary email sender:** `avin@hbdadvisory.com` until VytlRx domain email is configured (`src/lib/email.ts` updated)
 
 #### Track 1 — Ship Blockers (Days 1–6)
 
-**Day 1–2: Domain migration + production infrastructure**
-- Replace all hardcoded `app.vytlrx.com` / `vytlrx.com` fallbacks with `vytlrx.app` across:
-  - `src/server/routers/user.ts` (4 occurrences — invite, password reset, accept-invite, verify-email URLs)
-  - `src/lib/notification-triggers.ts` (APP_URL fallback)
-  - `src/app/api/cron/digest/route.ts` (APP_URL fallback)
-  - `src/app/page.tsx` (display URL + contact email)
-  - `src/components/upgrade-prompt.tsx` + `src/app/settings/settings-client.tsx` (`hello@vytlrx.com` → `hello@vytlrx.app`)
-  - `src/app/(public)/legal/page.tsx`, `terms/page.tsx`, `privacy/page.tsx`, `accessibility/page.tsx` (all `@vytlrx.com` contact emails)
-  - `src/components/workspace/email-forward-modal.tsx` + `src/app/workspace/workspace-client.tsx` (`risks@acme.vytlrx.com` placeholder)
-- Deploy to Vercel production; set all env vars:
-  - `NEXTAUTH_URL=https://vytlrx.app`
-  - `EMAIL_FROM=VytlRx <noreply@vytlrx.app>` (once domain email configured; temp: `avin@hbdadvisory.com`)
-  - `DATABASE_URL`, `DIRECT_URL` (Supabase prod), `NEXTAUTH_SECRET`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`
-- Supabase production instance (separate from dev)
-- Confirm `/api/health` returns 200 in production
-- Set up `vytl.ai` as redirect → `vytlrx.ai`
+**Day 1–2: Domain migration + production infrastructure** ✅ COMPLETE
+- [x] All hardcoded `app.vytlrx.com` / `vytlrx.com` references replaced with `vytlrx.app` (was already done)
+- [x] Vercel env vars set: `NEXTAUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `NEXTAUTH_SECRET`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`
+- [ ] Confirm `/api/health` returns 200 in production
+- [ ] Set up `vytl.ai` as redirect → `vytlrx.ai`
 
-**Day 3–4: Error monitoring (Sentry)**
-- Sign up at sentry.io — create a Next.js project
-- Install `@sentry/nextjs` and run `npx @sentry/wizard@latest -i nextjs`
-- Configure `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT` env vars in Vercel
-- Wrap tRPC error handler to capture server-side errors
-- Verify Sentry receives a test error before proceeding
-- Sentry captures: unhandled exceptions, tRPC errors, failed cron jobs, client-side React errors
+**Day 3–4: Error monitoring (Sentry)** ✅ COMPLETE
+- [x] `@sentry/nextjs` installed, `sentry.client/server/edge.config.ts` + `instrumentation.ts` created
+- [x] tRPC `errorFormatter` captures server-side errors (skips expected codes: UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, NOT_FOUND, CONFLICT, TOO_MANY_REQUESTS)
+- [x] `SENTRY_DSN` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel (all environments)
+- [x] `next.config.mjs` wrapped with `withSentryConfig`
 
-**Day 5–6: Email end-to-end verification**
-- Verify Resend domain DNS records for `vytlrx.app` (SPF, DKIM, DMARC)
-- Smoke-test all five email templates against a real inbox:
+**Day 5–6: Email end-to-end verification** ⏳ REQUIRES AVI
+- [ ] Verify Resend domain DNS records for `vytlrx.app` (SPF, DKIM, DMARC)
+- [ ] Smoke-test all five email templates against a real inbox:
   - Welcome email (trigger via `/register`)
   - Invite email (trigger via `/users` → invite)
   - Password reset email (trigger via `/forgot-password`)
   - Appetite breach notification (trigger via risk create exceeding threshold)
   - Weekly digest (trigger cron manually via `/api/cron/digest` with `CRON_SECRET`)
-- Verify `/api/cron/snapshot` fires and creates a baseline snapshot
+- [ ] Verify `/api/cron/snapshot` fires and creates a baseline snapshot
 
 #### Track 2 — Beta UX + Guardrails (Days 7–10)
 
-**Day 7–8: Open self-serve with plan limit guardrails**
-- `/register` is already built — add enforcement from `plan-limits.ts`:
-  - Max risks per org (beta cap)
-  - Max users per org (beta cap)
-  - Clear in-app UI when limit is hit (not a crash — a prompt to contact VytlRx)
-- Upgrade prompt already exists (`src/components/upgrade-prompt.tsx`) — wire it to limit checks
-- Add hard rate limit on `user.register` mutation to prevent spam signups
-- No Stripe in this sprint — upgrades handled manually via `hello@vytlrx.app`
+**Day 7–8: Open self-serve with plan limit guardrails** ✅ COMPLETE
+- [x] `risk.create` enforces `isAtRiskLimit` — throws `PLAN_LIMIT:risks:N` on breach
+- [x] `user.invite` enforces `isAtUserLimit` — throws `PLAN_LIMIT:users:N` on breach
+- [x] `risk-form.tsx` catches `PLAN_LIMIT:risks` and shows `UpgradePrompt` modal
+- [x] `users-client.tsx` catches `PLAN_LIMIT:users` and shows `UpgradePrompt` modal
+- [x] `user.register` mutation has rate limit (RATE_LIMITS.auth — 10 req/15 min per email)
+- [x] FREE tier caps: 25 risks, 3 users (`src/lib/plan-limits.ts`)
 
-**Day 9–10: Top nav / design refresh + buffer**
-- Enable `USE_TOP_NAV` flag (`NEXT_PUBLIC_USE_TOP_NAV=true` in Vercel)
-- Full QA pass across all 15 routes: active states, mobile breakpoints, keyboard navigation
-- Decide: ship with flag on by default for all users, or keep as opt-in
-- Buffer: fix anything surfaced during Days 1–6 infrastructure and email testing
+**Day 9–10: Top nav / design refresh + buffer** ⏳ QA REQUIRED
+- [x] `TopNav` component complete: desktop nav, mobile drawer, user menu, search, theme toggle
+- [x] `AppLayoutV2` fixed: added missing `SampleDataBanner`
+- [x] Feature flag wired: `USE_TOP_NAV` in `src/lib/feature-flags.ts`
+- [ ] Full QA pass across all 15 routes: active states, mobile breakpoints, keyboard navigation
+- [ ] Flip `NEXT_PUBLIC_USE_TOP_NAV=true` in Vercel after QA sign-off
+
+**Also completed (not in original Sprint C plan):**
+- [x] Registration auto sign-in (no email verification required until Resend is live)
+- [x] Honeypot spam protection on `/register`
 
 #### Out of scope
 - Stripe / billing payments (Sprint D)

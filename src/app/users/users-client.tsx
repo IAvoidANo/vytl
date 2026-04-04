@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc-client'
+import { UpgradePrompt } from '@/components/upgrade-prompt'
 
 const ROLE_LABELS: Record<string, string> = {
   OWNER: 'Owner',
@@ -37,6 +38,7 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
   const [inviteRole, setInviteRole] = useState<'ADMIN' | 'RISK_MANAGER' | 'EDITOR' | 'VIEWER'>('VIEWER')
   const [inviteError, setInviteError] = useState('')
   const [inviteUrl, setInviteUrl] = useState('')
+  const [showUpgrade, setShowUpgrade] = useState<'users' | null>(null)
 
   const utils = trpc.useUtils()
   const { data: users, isLoading } = trpc.user.list.useQuery()
@@ -47,7 +49,11 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
       utils.user.list.invalidate()
     },
     onError: (err) => {
-      setInviteError(err.message)
+      if (err.message.startsWith('PLAN_LIMIT:users')) {
+        setShowUpgrade('users')
+      } else {
+        setInviteError(err.message)
+      }
     },
   })
 
@@ -96,6 +102,7 @@ export function UsersClient({ currentUserRole }: UsersClientProps) {
 
   return (
     <div className="p-6">
+      {showUpgrade && <UpgradePrompt type={showUpgrade} onClose={() => setShowUpgrade(null)} />}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Team Members</h1>
