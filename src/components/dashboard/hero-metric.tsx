@@ -5,6 +5,15 @@ import { trpc } from '@/lib/trpc-client'
 import { RefreshCw, TrendingUp, TrendingDown, Minus, Shield, Target, Users, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+function getScoreInterpretation(score: number): string {
+  if (score === 0) return "No risk data yet. Add risks to calculate your score."
+  if (score < 20) return "Critical gaps in risk governance. Immediate attention required."
+  if (score < 40) return "Significant risk exposure. Key controls need strengthening."
+  if (score < 60) return "Moderate risk management. Some gaps remain."
+  if (score < 80) return "Good risk governance. Continue improving."
+  return "Strong risk governance. Maintain and monitor."
+}
+
 function PulseDot({ score }: { score: number }) {
   const color =
     score >= 70 ? 'bg-green-400' :
@@ -22,12 +31,25 @@ function PulseDot({ score }: { score: number }) {
 export function HeroMetric() {
   const [animatedScore, setAnimatedScore] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [scoreStale, setScoreStale] = useState(false)
 
   const { data: scoreData, isLoading, refetch } = trpc.assessment.current.useQuery()
   const saveMutation = trpc.assessment.create.useMutation({
-    onSuccess: () => { refetch(); setIsRefreshing(false) },
+    onSuccess: () => {
+      localStorage.removeItem('vytlrx_score_stale')
+      setScoreStale(false)
+      refetch()
+      setIsRefreshing(false)
+    },
     onError: () => setIsRefreshing(false),
   })
+
+  useEffect(() => {
+    const check = () => setScoreStale(localStorage.getItem('vytlrx_score_stale') === 'true')
+    check()
+    document.addEventListener('visibilitychange', check)
+    return () => document.removeEventListener('visibilitychange', check)
+  }, [])
 
   useEffect(() => {
     if (!scoreData?.score) return
@@ -93,6 +115,19 @@ export function HeroMetric() {
   ]
 
   return (
+    <>
+    {scoreStale && (
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 mb-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm">
+        <span className="text-amber-300">Risk data has changed. Recalculate your VytlRx Score to update.</span>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing || saveMutation.isPending}
+          className="flex-shrink-0 px-3 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium transition-colors disabled:opacity-50"
+        >
+          Recalculate
+        </button>
+      </div>
+    )}
     <div className="rounded-panel overflow-hidden shadow-panel bg-gradient-to-br from-teal-600 via-teal-600 to-teal-700">
       <div className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-12">
@@ -113,6 +148,7 @@ export function HeroMetric() {
             </div>
 
             <p className="text-white/50 text-xs mt-1.5 font-medium tracking-wide uppercase">VytlRx Score · out of 100</p>
+            <p className="text-white/70 text-sm mt-2 max-w-[18rem]">{getScoreInterpretation(score)}</p>
 
             {/* Trend row */}
             <div className="flex items-center gap-2.5 mt-5">
@@ -178,5 +214,6 @@ export function HeroMetric() {
         </div>
       </div>
     </div>
+    </>
   )
 }

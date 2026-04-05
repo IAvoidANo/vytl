@@ -17,7 +17,7 @@ export const templateRouter = router({
   applyTemplate: protectedProcedure
     .input(
       z.object({
-        industryCode: z.enum(['MANUFACTURING', 'FINANCIAL_SERVICES', 'RETAIL']),
+        industryCode: z.enum(['MANUFACTURING', 'FINANCIAL_SERVICES', 'RETAIL', 'MINING_RESOURCES', 'HEALTHCARE', 'PROFESSIONAL_SERVICES']),
         force: z.boolean().optional(), // ADMIN+ only: bypass the empty-org guard
       })
     )

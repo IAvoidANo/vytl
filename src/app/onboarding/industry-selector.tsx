@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Factory, Landmark, ShoppingCart, Loader2, Check } from 'lucide-react'
+import { ArrowLeft, Factory, Landmark, ShoppingCart, Loader2, Check, HardHat, Stethoscope, Briefcase } from 'lucide-react'
 import { type IndustryCode } from '@/lib/industry-templates'
 import { cn } from '@/lib/utils'
 
@@ -51,6 +51,45 @@ const INDUSTRIES = [
       'Load shedding — trading hours loss',
     ],
   },
+  {
+    code: 'MINING_RESOURCES' as IndustryCode,
+    name: 'Mining & Resources',
+    description: 'Mining, quarrying, and natural resource extraction companies',
+    icon: HardHat,
+    riskCount: 15,
+    benchmarkScore: 42,
+    sampleRisks: [
+      'Seismic event or rockfall fatality (MHSA S54)',
+      'Tailings storage facility structural failure',
+      'Commodity price collapse — project viability',
+    ],
+  },
+  {
+    code: 'HEALTHCARE' as IndustryCode,
+    name: 'Healthcare',
+    description: 'Private hospitals, clinics, medical practices, and healthcare providers',
+    icon: Stethoscope,
+    riskCount: 15,
+    benchmarkScore: 38,
+    sampleRisks: [
+      'Clinical negligence claim — adverse patient outcome',
+      'NHI implementation disrupting private practice revenue',
+      'Ransomware attack on electronic medical records',
+    ],
+  },
+  {
+    code: 'PROFESSIONAL_SERVICES' as IndustryCode,
+    name: 'Professional Services',
+    description: 'Accounting, legal, consulting, and advisory firms',
+    icon: Briefcase,
+    riskCount: 15,
+    benchmarkScore: 44,
+    sampleRisks: [
+      'Key partner departure triggering client attrition',
+      'IRBA or SAICA regulatory sanction',
+      'FICA and AML non-compliance exposure',
+    ],
+  },
 ]
 
 export default function IndustrySelector({
@@ -84,7 +123,7 @@ export default function IndustrySelector({
       </div>
 
       {/* Industry cards */}
-      <div className="grid md:grid-cols-3 gap-6 w-full max-w-5xl mb-8">
+      <div className="grid md:grid-cols-3 gap-6 w-full max-w-5xl mb-8 md:max-w-6xl">
         {INDUSTRIES.map((industry) => {
           const Icon = industry.icon
           const isSelected = selectedCode === industry.code

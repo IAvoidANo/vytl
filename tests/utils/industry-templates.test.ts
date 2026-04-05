@@ -16,15 +16,18 @@ import { RISK_CATEGORIES } from '@/lib/appetite-validation'
 // ---------------------------------------------------------------------------
 
 describe('INDUSTRY_TEMPLATES registry', () => {
-  it('exports exactly 3 templates', () => {
-    expect(INDUSTRY_TEMPLATES).toHaveLength(3)
+  it('exports exactly 6 templates', () => {
+    expect(INDUSTRY_TEMPLATES).toHaveLength(6)
   })
 
-  it('contains MANUFACTURING, FINANCIAL_SERVICES and RETAIL codes', () => {
+  it('contains all six industry codes', () => {
     const codes = INDUSTRY_TEMPLATES.map((t) => t.code)
     expect(codes).toContain('MANUFACTURING')
     expect(codes).toContain('FINANCIAL_SERVICES')
     expect(codes).toContain('RETAIL')
+    expect(codes).toContain('MINING_RESOURCES')
+    expect(codes).toContain('HEALTHCARE')
+    expect(codes).toContain('PROFESSIONAL_SERVICES')
   })
 })
 

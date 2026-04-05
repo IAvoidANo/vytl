@@ -17,6 +17,18 @@ const INDUSTRY_NAMES: Record<IndustryCode, string> = {
   MANUFACTURING: 'Manufacturing & Production',
   FINANCIAL_SERVICES: 'Financial Services',
   RETAIL: 'Retail & Consumer',
+  MINING_RESOURCES: 'Mining & Resources',
+  HEALTHCARE: 'Healthcare',
+  PROFESSIONAL_SERVICES: 'Professional Services',
+}
+
+const INDUSTRY_BENCHMARKS: Record<string, number> = {
+  MANUFACTURING: 58,
+  FINANCIAL_SERVICES: 62,
+  RETAIL: 54,
+  MINING_RESOURCES: 42,
+  HEALTHCARE: 38,
+  PROFESSIONAL_SERVICES: 44,
 }
 
 function scoreColor(score: number) {
@@ -43,6 +55,7 @@ export default function ConfirmationScreen({
   onEditRisks,
 }: ConfirmationScreenProps) {
   const industryName = INDUSTRY_NAMES[industryCode]
+  const industryBenchmark = INDUSTRY_BENCHMARKS[industryCode] ?? 50
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
@@ -80,7 +93,7 @@ export default function ConfirmationScreen({
             </span>
           </div>
           <p className="text-sm text-slate-500">
-            Industry benchmark: {industryCode === 'MANUFACTURING' ? 58 : industryCode === 'FINANCIAL_SERVICES' ? 62 : 54}
+            Industry benchmark: {industryBenchmark}
           </p>
         </div>
 
@@ -186,9 +199,4 @@ export default function ConfirmationScreen({
 
       {/* Tip */}
       <p className="mt-8 text-center text-sm text-slate-500 max-w-xl">
-        <strong>Tip:</strong> All risks are editable. Customise them to match your specific
-        business context.
-      </p>
-    </div>
-  )
-}
+        <strong>Tip:</strong>

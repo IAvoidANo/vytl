@@ -16,14 +16,14 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/workspace', label: 'Workspace', icon: Columns3 },
-  { href: '/risks', label: 'Risks', icon: AlertTriangle },
-  { href: '/actions', label: 'Actions', icon: CheckSquare },
-  { href: '/kris', label: 'KRIs', icon: Activity },
-  { href: '/reports', label: 'Reports', icon: FileBarChart },
-  { href: '/users', label: 'Team', icon: Users, adminOnly: true },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: undefined },
+  { href: '/workspace', label: 'Workspace', icon: Columns3, tooltip: undefined },
+  { href: '/risks', label: 'Risks', icon: AlertTriangle, tooltip: undefined },
+  { href: '/actions', label: 'Actions', icon: CheckSquare, tooltip: undefined },
+  { href: '/kris', label: 'KRIs', icon: Activity, tooltip: 'Monitor early warning signals for your key risks' },
+  { href: '/reports', label: 'Reports', icon: FileBarChart, tooltip: undefined },
+  { href: '/users', label: 'Team', icon: Users, adminOnly: true, tooltip: undefined },
+  { href: '/settings', label: 'Settings', icon: Settings, tooltip: undefined },
 ]
 
 interface SidebarProps {
@@ -72,6 +72,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
+                title={item.tooltip}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                   isActive
                     ? 'bg-teal-500/15 text-teal-400 shadow-sm'

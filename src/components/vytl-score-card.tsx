@@ -105,6 +105,15 @@ export function VytlScoreCard() {
 
   const colors = gradeConfig[gradeColor as keyof typeof gradeConfig] || gradeConfig.red
 
+  const getScoreInterpretation = (s: number): string => {
+    if (s === 0) return 'No risk data yet. Add risks to calculate your score.'
+    if (s < 20) return 'Critical gaps in risk governance. Immediate attention required.'
+    if (s < 40) return 'Significant risk exposure. Key controls need strengthening.'
+    if (s < 60) return 'Moderate risk management in place. Some gaps remain.'
+    if (s < 80) return 'Good risk governance. Continue monitoring and improving.'
+    return 'Strong risk governance. Maintain and monitor.'
+  }
+
   const getTrendIcon = (direction: string) => {
     switch (direction) {
       case 'improving':
@@ -214,6 +223,9 @@ export function VytlScoreCard() {
               {animatedScore}
             </span>
             <span className={`text-3xl font-bold ${colors.text} -mt-2`}>{grade}</span>
+            <p className="text-xs text-slate-400 text-center mt-1 px-6 leading-tight">
+              {getScoreInterpretation(score)}
+            </p>
           </div>
         </div>
 

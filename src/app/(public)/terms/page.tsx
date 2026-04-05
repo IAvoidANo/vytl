@@ -43,7 +43,7 @@ export default function TermsPage() {
               and managing risks. The Platform includes features such as risk registers, risk scoring and
               heatmaps, KRI monitoring, treatment plan management, incident tracking, regulatory mapping,
               AI-powered risk analysis, board reporting, and compliance tools aligned with frameworks
-              including the King IV Report on Corporate Governance, ISO 31000:2018, and POPIA.
+              including the King V Report on Corporate Governance, ISO 31000:2018, and POPIA.
             </p>
             <p>
               VytlRx reserves the right to modify, suspend, or discontinue any feature or functionality of

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Sparkles, Check } from 'lucide-react'
+import { X, Sparkles, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc-client'
 import { RiskScoreBadge } from './risk-score-badge'
 import { useDebounce } from '@/lib/use-debounce'
@@ -98,6 +99,9 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
 
   const [error, setError] = useState('')
   const [showUpgrade, setShowUpgrade] = useState<'risks' | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(
+    !!risk && !!(risk.controls || risk.rootCause || risk.ownerId || risk.dueDate || risk.isOngoing || risk.financialExposure != null)
+  )
 
   // AI Suggestions state
   const [aiSuggestion, setAiSuggestion] = useState<{
@@ -120,6 +124,8 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
   const createMutation = trpc.risk.create.useMutation({
     onSuccess: () => {
       utils.risk.list.invalidate()
+      localStorage.setItem('vytlrx_score_stale', 'true')
+      toast.success("Risk added. Recalculate your VytlRx Score to see the impact.")
       onSuccess()
     },
     onError: (err) => {
@@ -135,6 +141,8 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
     onSuccess: () => {
       utils.risk.list.invalidate()
       utils.risk.listForWorkspace.invalidate()
+      localStorage.setItem('vytlrx_score_stale', 'true')
+      toast.success("Risk updated. Recalculate your VytlRx Score to see the impact.")
       onSuccess()
     },
     onError: (err) => setError(err.message),
@@ -387,7 +395,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
           </div>
 
           {/* Risk Scoring */}
-          <div className="grid grid-cols-2 gap-6 p-4 bg-slate-900 rounded-lg">
+          <div className={`grid gap-6 p-4 bg-slate-900 rounded-lg ${showAdvanced ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <div>
               <h3 className="font-medium text-white mb-3 flex items-center justify-between">
                 Inherent Risk
@@ -429,6 +437,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
               </div>
             </div>
 
+            {showAdvanced && (
             <div>
               <h3 className="font-medium text-white mb-3 flex items-center justify-between">
                 Residual Risk
@@ -463,10 +472,11 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* Financial Exposure */}
-          <div>
+          {showAdvanced && <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Estimated Financial Exposure (ZAR)
             </label>
@@ -485,7 +495,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
             <p className="text-xs text-slate-500 mt-1">
               Optional. Used to calculate Value at Risk (VaR).
             </p>
-          </div>
+          </div>}
 
           {/* Response & Controls */}
           <div>
@@ -517,6 +527,19 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
             </div>
           </div>
 
+          {/* Advanced details toggle */}
+          <div className="flex items-center border-t border-slate-700 pt-3">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {showAdvanced ? 'Hide advanced details' : 'Advanced details'}
+            </button>
+          </div>
+
+          {showAdvanced && <>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Control Description</label>
             <textarea
@@ -605,6 +628,7 @@ export function RiskForm({ risk, onClose, onSuccess }: RiskFormProps) {
               </label>
             </div>
           </div>
+          </>}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">

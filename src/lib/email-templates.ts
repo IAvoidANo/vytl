@@ -311,7 +311,7 @@ export function weeklyDigestEmail(data: {
     <table width="100%" cellpadding="16" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px;">
       <tr>
         <td style="background:${BG};border:1px solid ${BORDER};border-radius:6px;text-align:center;padding:20px;">
-          <p style="margin:0 0 4px;font-size:12px;color:${MUTED_TEXT};">VYTL SCORE</p>
+          <p style="margin:0 0 4px;font-size:12px;color:${MUTED_TEXT};">VytlRx Score</p>
           <p style="margin:0;font-size:32px;font-weight:700;color:${scoreColor};">
             ${data.vytlScore ?? '—'}${data.vytlGrade ? `<span style="font-size:16px;margin-left:6px;">(${data.vytlGrade})</span>` : ''}
           </p>

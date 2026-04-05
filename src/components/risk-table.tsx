@@ -93,6 +93,7 @@ export function RiskTable({ filters }: RiskTableProps) {
   const deleteMutation = trpc.risk.delete.useMutation({
     onSuccess: () => {
       utils.risk.list.invalidate()
+      localStorage.setItem('vytlrx_score_stale', 'true')
       setDeletingId(null)
     },
   })

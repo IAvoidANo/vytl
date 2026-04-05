@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'VytlRx — Intelligent Risk Management for South African Business',
   description:
-    'VytlRx is the risk management platform built for South African enterprises. King IV, POPIA and ISO 31000 compliant. Start free in minutes.',
+    'VytlRx is the risk management platform built for South African enterprises. King V, POPIA and ISO 31000 compliant. Start free in minutes.',
 }
 
 export default async function HomePage() {
@@ -52,7 +52,7 @@ export default async function HomePage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-              Built for South African enterprises · King IV · POPIA · ISO 31000
+              Built for South African enterprises · King V · POPIA · ISO 31000
             </div>
 
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
@@ -63,7 +63,7 @@ export default async function HomePage() {
 
             <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
               VYTL gives risk and compliance teams one place to identify, score, monitor and
-              report on risk — with built-in King IV, POPIA and ISO 31000 alignment. Ready in
+              report on risk — with built-in King V, POPIA and ISO 31000 alignment. Ready in
               minutes, not months.
             </p>
 
@@ -180,7 +180,7 @@ export default async function HomePage() {
                 {
                   icon: '📋',
                   title: 'Regulatory Compliance',
-                  desc: 'Built-in mapping to King IV (35 principles), ISO 31000:2018 (16 requirements), POPIA, FICA and B-BBEE. Track your coverage percentage per framework.',
+                  desc: 'Built-in mapping to King V (16 principles), ISO 31000:2018 (16 requirements), POPIA, FICA and B-BBEE. Track your coverage percentage per framework.',
                 },
                 {
                   icon: '📊',
@@ -296,9 +296,9 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-2 gap-6">
               {[
                 {
-                  badge: 'King IV',
-                  title: 'King IV Report on Corporate Governance',
-                  desc: 'Map every risk to King IV\'s 35 governance principles across all 17 sectors. Track coverage percentage and report to your audit and risk committee with confidence.',
+                  badge: 'King V',
+                  title: 'King V Report on Corporate Governance',
+                  desc: 'Map every risk to King V\'s 16 principles across all 17 sectors. Track coverage percentage and report to your audit and risk committee with confidence.',
                   color: 'bg-blue-50 border-blue-200 text-blue-700',
                 },
                 {
@@ -346,7 +346,7 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
-                  quote: 'We went from a spreadsheet-based risk register to a fully mapped King IV framework in one afternoon. The board report alone saves us two days every quarter.',
+                  quote: 'We went from a spreadsheet-based risk register to a fully mapped King V framework in one afternoon. The board report alone saves us two days every quarter.',
                   name: 'Chief Risk Officer',
                   org: 'JSE-listed Financial Services Group',
                 },
@@ -399,7 +399,7 @@ export default async function HomePage() {
                     '3 users',
                     'Industry templates',
                     'Basic reporting',
-                    'King IV & ISO 31000 mapping',
+                    'King V & ISO 31000 mapping',
                     'Email support',
                   ],
                   cta: 'Start free',
@@ -483,7 +483,7 @@ export default async function HomePage() {
               Ready to simplify your risk management?
             </h2>
             <p className="text-slate-400 text-lg mb-10">
-              Join SA risk teams already using VytlRx to meet their King IV, POPIA and ISO 31000
+              Join SA risk teams already using VytlRx to meet their King V, POPIA and ISO 31000
               obligations — without the spreadsheet chaos.
             </p>
             <Link

@@ -70,7 +70,7 @@ export default function LegalPage() {
             </p>
             <p>
               VytlRx makes no warranty, express or implied, that use of the Platform will ensure compliance
-              with the King IV Report on Corporate Governance, the Protection of Personal Information Act 4
+              with the King V Report on Corporate Governance, the Protection of Personal Information Act 4
               of 2013 (POPIA), ISO 31000:2018, or any other applicable standard, law, or regulation. You
               remain solely responsible for your organisation&rsquo;s compliance obligations and the professional
               judgment applied to any risk decisions made using the Platform.

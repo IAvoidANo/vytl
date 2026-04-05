@@ -76,6 +76,9 @@ describe('Industry label mapping used by SampleDataBanner', () => {
     MANUFACTURING: 'Manufacturing & Production',
     FINANCIAL_SERVICES: 'Financial Services',
     RETAIL: 'Retail & Consumer',
+    MINING_RESOURCES: 'Mining & Resources',
+    HEALTHCARE: 'Healthcare',
+    PROFESSIONAL_SERVICES: 'Professional Services',
   }
 
   it('maps MANUFACTURING correctly', () => {

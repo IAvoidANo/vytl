@@ -275,9 +275,9 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
   })
 
   if (!lastAssessment || !lastAssessment.scoreBreakdown) {
-    // Insufficient history — return neutral baseline (12/25)
+    // Insufficient history — return zero until a baseline assessment exists
     return {
-      score: 12,
+      score: 0,
       maxScore: 25,
       details: {
         improving: 0,

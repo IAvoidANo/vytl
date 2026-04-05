@@ -20,6 +20,9 @@ export type IndustryCode =
   | 'MANUFACTURING'
   | 'FINANCIAL_SERVICES'
   | 'RETAIL'
+  | 'MINING_RESOURCES'
+  | 'HEALTHCARE'
+  | 'PROFESSIONAL_SERVICES'
 
 export interface TemplateRisk {
   title: string
@@ -721,6 +724,684 @@ export const RETAIL_TEMPLATE: IndustryTemplate = {
 }
 
 // ============================================
+// MINING AND RESOURCES TEMPLATE  (benchmarkScore 42)
+// ============================================
+
+const MINING_RESOURCES_RISKS: TemplateRisk[] = [
+  {
+    title: 'Seismic event or rockfall causing injury or fatality',
+    description:
+      'Underground operations expose workers to seismic risk and rockfall events. A serious incident would trigger MHSA Section 54 stoppage, halting production and triggering an Inspector investigation.',
+    category: 'HEALTH_SAFETY',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Daily workplace inspections by responsible persons\n• Support design reviewed by rock mechanics engineer\n• Seismic monitoring system installed on Level 3+',
+    rootCause: 'Geological variability and aging underground infrastructure',
+    isOngoing: true,
+  },
+  {
+    title: 'Mine Health and Safety Act (MHSA) non-compliance',
+    description:
+      'MHSA compliance obligations are extensive and inspected regularly by the DMRE. Non-compliance can result in Section 54 stoppages, fines, and personal liability for the Mine Manager.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Designated Safety Officer conducts monthly compliance audits\n• Legal register maintained and reviewed quarterly\n• Mine Manager holds valid Certificate of Competency',
+    rootCause: 'Regulatory complexity and high staff turnover in safety roles',
+    isOngoing: true,
+  },
+  {
+    title: 'Water use licence breach or DWS enforcement action',
+    description:
+      'Operations require a valid Water Use Licence (WUL) under the National Water Act. Licence conditions are frequently breached due to seasonal variation and process water management gaps.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Monthly water balance reports submitted to DWS\n• Environmental Control Officer monitors licence conditions\n• Slimes dam inspected quarterly by appointed engineer',
+    rootCause: 'Ageing water management infrastructure and seasonal rainfall variability',
+    isOngoing: true,
+  },
+  {
+    title: 'Loss of social licence to operate due to community conflict',
+    description:
+      'Host communities have escalating expectations around employment, procurement, and environmental impact. Unresolved grievances have previously resulted in road blockades and operational disruption.',
+    category: 'REPUTATIONAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Community Liaison Forum meets bi-monthly\n• Local procurement target: 40% of consumables\n• Community relations officer based in host community',
+    rootCause: 'Historical under-investment in community development commitments',
+    isOngoing: true,
+  },
+  {
+    title: 'Commodity price collapse reducing project viability',
+    description:
+      'Revenue is directly exposed to global commodity prices (gold, platinum, iron ore). A sustained 20% price decline materially impacts the project\'s net present value and debt serviceability.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 3,
+    residualImpact: 4,
+    controls:
+      '• Hedging programme covers 30% of production for 12 months\n• Quarterly sensitivity analysis reviewed by CFO\n• Variable cost structure maintained where possible',
+    rootCause: 'Dependence on single commodity with no beneficiation',
+    isOngoing: true,
+  },
+  {
+    title: 'Load shedding causing hoisting and ventilation failures',
+    description:
+      'Stage 4-6 load shedding disrupts underground hoisting, ventilation, and dewatering systems. Power interruptions below surface create immediate safety risks and extend shift cycles.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 5,
+    inherentImpact: 4,
+    residualLikelihood: 4,
+    residualImpact: 3,
+    controls:
+      '• Diesel generators provide backup for critical services (ventilation, refuge bays)\n• Load shedding schedule integrated into shift planning\n• Surface operations scheduled around available power windows',
+    rootCause: 'National energy infrastructure crisis; no viable short-term alternative',
+    isOngoing: true,
+  },
+  {
+    title: 'Tailings storage facility (TSF) structural failure',
+    description:
+      'A TSF failure would be catastrophic, causing loss of life, environmental damage, and permanent reputational damage. DMRE requires mandatory annual engineer certification under the MHSA.',
+    category: 'ENVIRONMENTAL',
+    inherentLikelihood: 2,
+    inherentImpact: 5,
+    residualLikelihood: 1,
+    residualImpact: 5,
+    controls:
+      '• Annual Engineer of Record inspection and certification\n• Piezometer readings monitored monthly\n• Raise construction reviewed by independent geotechnical engineer',
+    rootCause: 'Ageing infrastructure and high capital cost of decommissioning',
+    isOngoing: true,
+  },
+  {
+    title: 'Illegal mining (zama-zamas) causing operational and safety disruption',
+    description:
+      'Illegal miners operating in old workings create security incidents, steal ore and equipment, and create fatal accident liability exposure when they breach into active areas.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 4,
+    inherentImpact: 3,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• SAPS partnership and regular joint operations\n• All old access shafts sealed and monitored\n• Private security patrols perimeter fencing',
+    rootCause: 'High local unemployment and porous perimeter fencing',
+    isOngoing: true,
+  },
+  {
+    title: 'MPRDA ownership and BEE compliance failure',
+    description:
+      'The Mineral and Petroleum Resources Development Act requires ongoing BEE ownership compliance. A compliance failure risks mining right suspension or non-renewal.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 2,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• BEE ownership structure reviewed annually by attorneys\n• BEE partner shareholder register maintained current\n• Social and Labour Plan (SLP) progress reported annually to DMRE',
+    rootCause: 'Complexity of BEE trust structures and ownership verification requirements',
+    isOngoing: true,
+  },
+  {
+    title: 'Loss of key technical personnel (rock engineers, metallurgists)',
+    description:
+      'Registered rock mechanics engineers and metallurgists are in short supply nationally. A single resignation can trigger regulatory non-compliance and halt production until a replacement is appointed.',
+    category: 'PEOPLE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Retention bonuses in place for critical technical roles\n• Succession candidate identified for Mine Manager role\n• Graduate bursary programme in place (2 recipients)',
+    rootCause: 'National shortage of registered mine technical professionals',
+    isOngoing: true,
+  },
+  {
+    title: 'Environmental liability from acid mine drainage (AMD)',
+    description:
+      'Decant from old workings is creating AMD affecting downstream water quality. NEMA enforcement action is possible. Remediation costs are significant and liability is long-tail.',
+    category: 'ENVIRONMENTAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Water treatment plant operational on eastern boundary\n• Monthly water quality samples submitted to DWS\n• AMD extent assessed in annual environmental report',
+    rootCause: 'Legacy of historical mining without rehabilitation obligation enforcement',
+    isOngoing: true,
+  },
+  {
+    title: 'Cybersecurity attack on SCADA and operational technology systems',
+    description:
+      'Underground control systems and surface plant automation (SCADA/OT) are increasingly networked. A ransomware attack on OT systems could halt hoisting and create immediate safety risks.',
+    category: 'TECHNOLOGY',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• IT/OT network segmentation partially implemented\n• SCADA systems on isolated network (no internet access)\n• Incident response plan exists but not tested in 18 months',
+    rootCause: 'Legacy OT systems not designed with cybersecurity in mind',
+    isOngoing: true,
+  },
+  {
+    title: 'Foreign exchange exposure on USD-denominated commodity sales',
+    description:
+      'Revenue is USD-denominated while costs are ZAR. A ZAR appreciation of 10% directly compresses operating margins. Current hedge cover is insufficient for a sustained move.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 3,
+    inherentImpact: 3,
+    residualLikelihood: 3,
+    residualImpact: 2,
+    controls:
+      '• CFO monitors ZAR/USD daily and activates forward cover at pre-agreed levels\n• 3-month rolling hedge in place\n• Board FX policy reviewed annually',
+    rootCause: 'Revenue and cost base in different currencies',
+    isOngoing: true,
+  },
+  {
+    title: 'Regulatory change from DMR/DMRE increasing compliance costs',
+    description:
+      'Proposed amendments to the MHSA and MPRDA, and new DWS water licensing requirements, are in draft. Compliance with new requirements may require capital expenditure and increased headcount.',
+    category: 'STRATEGIC',
+    inherentLikelihood: 4,
+    inherentImpact: 3,
+    residualLikelihood: 3,
+    residualImpact: 2,
+    controls:
+      '• Mining industry association membership provides early warning of regulatory change\n• Legal register updated bi-annually\n• Legal counsel retained for regulatory tracking',
+    rootCause: 'Evolving SA regulatory environment for extractives',
+    isOngoing: true,
+  },
+  {
+    title: 'Rehabilitation fund shortfall creating closure liability',
+    description:
+      'The Environmental Rehabilitation Guarantee (ERG) lodged with DMRE may not cover actual rehabilitation costs due to escalating costs and increased scope. Shortfall creates personal liability for directors.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• ERG reviewed and increased annually\n• Rehabilitation cost estimate updated every 3 years by specialist consultant\n• Board approves closure liability disclosure in AFS',
+    rootCause: 'Rehabilitation cost escalation outpacing annual ERG contributions',
+    isOngoing: true,
+  },
+]
+
+export const MINING_RESOURCES_TEMPLATE: IndustryTemplate = {
+  code: 'MINING_RESOURCES',
+  name: 'Mining & Resources',
+  description:
+    'Risk template for South African mining and resource extraction companies covering MHSA, MPRDA, DWS, BEE, community relations, commodity price, and environmental rehabilitation risks.',
+  benchmarkScore: 42,
+  risks: MINING_RESOURCES_RISKS,
+}
+
+// ============================================
+// HEALTHCARE TEMPLATE  (benchmarkScore 38)
+// ============================================
+
+const HEALTHCARE_RISKS: TemplateRisk[] = [
+  {
+    title: 'Clinical negligence claim from adverse patient outcome',
+    description:
+      'A patient death or serious adverse event triggers a Medical Protection Society claim and potential HPCSA hearing. Award amounts are escalating; a single uninsured claim can exceed R10 million.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Professional indemnity insurance in place (review sum insured annually)\n• Incident reporting protocol and root cause analysis for all adverse events\n• Clinical protocols reviewed quarterly by Medical Advisory Committee',
+    rootCause: 'High patient volumes and staff fatigue increasing clinical error risk',
+    isOngoing: true,
+  },
+  {
+    title: 'HPCSA regulatory investigation or sanction',
+    description:
+      'A complaint to the Health Professions Council of South Africa can result in a formal hearing, suspension, or removal from the register. Even an unsubstantiated complaint disrupts practice.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• All practitioners maintain current HPCSA registration\n• Complaints log reviewed monthly by Practice Manager\n• Patient communication protocols reduce complaint escalation',
+    rootCause: 'Increasing patient awareness of HPCSA complaint mechanisms',
+    isOngoing: true,
+  },
+  {
+    title: 'POPIA breach exposing patient health records',
+    description:
+      'Patient health records are Special Personal Information under POPIA. A breach — whether through cyberattack, staff error, or inadequate access controls — triggers mandatory notification to the Information Regulator and affected patients.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• EMR system access controlled by role (view/edit/admin)\n• Staff POPIA awareness training completed annually\n• Information Officer appointed and registered with Information Regulator',
+    rootCause: 'Legacy paper records not yet fully digitised; staff sharing login credentials',
+    isOngoing: true,
+  },
+  {
+    title: 'Medication error causing patient harm',
+    description:
+      'Dispensing or prescribing errors create patient harm risk and professional liability. High-risk medications (anticoagulants, insulin, chemotherapy agents) require dual verification protocols not consistently applied.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Dual check protocol for high-risk medications\n• Electronic dispensing system with dose range alerts\n• Pharmacist review of all hospital inpatient prescriptions',
+    rootCause: 'Staff fatigue during extended shifts and high patient-to-nurse ratios',
+    isOngoing: true,
+  },
+  {
+    title: 'Needlestick or sharps injury exposing staff to bloodborne pathogens',
+    description:
+      'Needlestick injuries are a persistent occupational risk. Potential exposure to HIV, Hepatitis B, and Hepatitis C carries significant post-exposure prophylaxis costs and staff welfare obligations.',
+    category: 'HEALTH_SAFETY',
+    inherentLikelihood: 4,
+    inherentImpact: 3,
+    residualLikelihood: 3,
+    residualImpact: 2,
+    controls:
+      '• Safety-engineered devices (retractable needles) in use across all wards\n• Incident reporting mandatory; post-exposure protocol posted in all wards\n• Annual OHS Act compliance audit',
+    rootCause: 'High patient throughput and time pressure during procedures',
+    isOngoing: true,
+  },
+  {
+    title: 'Load shedding disrupting clinical operations and life support systems',
+    description:
+      'Stage 4+ load shedding creates risk for ICU patients on life support, operating theatre continuity, and cold chain integrity for medications and blood products.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 4,
+    inherentImpact: 5,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Generator provides backup to ICU, theatres, and emergency department\n• UPS covers ventilators and monitoring equipment for 30 minutes\n• Cold chain monitoring with temperature alarms',
+    rootCause: 'National energy crisis; generator capacity not rated for full facility load',
+    isOngoing: true,
+  },
+  {
+    title: 'Nursing shortage causing unsafe patient-to-nurse ratios',
+    description:
+      'South Africa faces a critical nursing shortage driven by emigration (UK, Australia, Canada) and insufficient training capacity. Unsafe ratios increase adverse event rates and drive staff burnout.',
+    category: 'PEOPLE',
+    inherentLikelihood: 4,
+    inherentImpact: 4,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Agency nursing pool contracted for emergency cover\n• Daily staffing dashboard reviewed by Nursing Manager\n• Retention programme includes housing allowance and study funding',
+    rootCause: 'National healthcare workforce shortage accelerated by international migration',
+    isOngoing: true,
+  },
+  {
+    title: 'Medical waste management non-compliance (NEMWA/NDoH)',
+    description:
+      'Inadequate segregation, storage, or disposal of medical waste (sharps, anatomical waste, cytotoxic waste) creates regulatory risk under NEMWA and the National Health Act.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 2,
+    inherentImpact: 3,
+    residualLikelihood: 1,
+    residualImpact: 2,
+    controls:
+      '• Licensed waste contractor collects weekly\n• Waste manifests retained for 3 years\n• Annual waste management training for clinical staff',
+    rootCause: 'Staff turnover creating gaps in waste segregation compliance',
+    isOngoing: false,
+  },
+  {
+    title: 'Medical aid fraud and upcoding exposure',
+    description:
+      'Fraudulent claims or upcoding (billing for higher procedure codes than performed) by staff or providers exposes the practice to SAFPS registration, criminal prosecution, and scheme recovery claims.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 2,
+    inherentImpact: 4,
+    residualLikelihood: 1,
+    residualImpact: 3,
+    controls:
+      '• Billing reviewed by Practice Manager before submission\n• Scheme audit requests responded to within SLA\n• Internal whistleblower channel available to staff',
+    rootCause: 'Complex tariff codes creating unintentional upcoding risk',
+    isOngoing: true,
+  },
+  {
+    title: 'Critical drug or consumable supply chain disruption',
+    description:
+      'South Africa has experienced recurring drug shortages (antiretrovirals, anaesthetic agents, contrast media). A shortage of critical consumables can force theatre cancellations and patient harm.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• 30-day buffer stock maintained for top 20 critical items\n• Secondary supplier identified for all Schedule 5+ drugs\n• Weekly pharmacy stock review with escalation protocol',
+    rootCause: 'Reliance on single distributors and global supply chain fragility',
+    isOngoing: true,
+  },
+  {
+    title: 'Ransomware attack on electronic medical records system',
+    description:
+      'Healthcare organisations are a primary target for ransomware. An attack on the EMR system would halt clinical operations, destroy audit trails, and trigger POPIA notification obligations.',
+    category: 'TECHNOLOGY',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Daily offline backup of EMR database\n• Staff phishing simulation training quarterly\n• Firewall and endpoint protection on all clinical devices',
+    rootCause: 'Underfunded IT security relative to the value of data held',
+    isOngoing: true,
+  },
+  {
+    title: 'Patient complaint escalating to CMS or media',
+    description:
+      'An unresolved patient complaint can be escalated to the Council for Medical Schemes (CMS), the HPCSA, or directly to social and mainstream media. Reputational damage can affect referral patterns significantly.',
+    category: 'REPUTATIONAL',
+    inherentLikelihood: 3,
+    inherentImpact: 3,
+    residualLikelihood: 2,
+    residualImpact: 2,
+    controls:
+      '• Patient relations officer responds to all complaints within 48 hours\n• Complaint log reviewed monthly by Medical Director\n• Google Reviews monitored weekly',
+    rootCause: 'Elevated patient expectations and increased awareness of complaint channels',
+    isOngoing: true,
+  },
+  {
+    title: 'Medical malpractice insurance premium increase or withdrawal',
+    description:
+      'Rising claim frequency and severity in SA has caused several underwriters to exit the medical malpractice market. A significant premium increase or inability to renew cover would be a practice-threatening event.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Insurance broker reviews market annually at renewal\n• Claims history maintained to support underwriter negotiations\n• Risk management programme documented for insurer submission',
+    rootCause: 'Hardening global medical malpractice insurance market',
+    isOngoing: true,
+  },
+  {
+    title: 'National Health Insurance (NHI) implementation disrupting private practice revenue',
+    description:
+      'The NHI Act (2023) creates structural uncertainty for private healthcare funding. If fully implemented, it may redirect patients to public facilities and reduce medical scheme membership, directly impacting private practice revenue.',
+    category: 'STRATEGIC',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 3,
+    residualImpact: 4,
+    controls:
+      '• Practice modelling includes NHI scenario (30% revenue reduction)\n• Revenue diversification into wellness and occupational health services\n• Industry body membership for NHI policy engagement',
+    rootCause: 'Fundamental structural reform of South African healthcare funding',
+    isOngoing: true,
+  },
+  {
+    title: 'Infection control failure causing healthcare-associated infection (HAI) outbreak',
+    description:
+      'An HAI outbreak (MRSA, C. difficile, Acinetobacter) in a ward causes patient harm, extended length of stay, reputational damage, and potential DOH investigation.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Infection Control Practitioner conducts weekly ward rounds\n• Hand hygiene compliance audited monthly (target >80%)\n• Environmental cleaning protocols reviewed against ICPSA guidelines',
+    rootCause: 'High patient throughput and inadequate environmental cleaning resources',
+    isOngoing: true,
+  },
+]
+
+export const HEALTHCARE_TEMPLATE: IndustryTemplate = {
+  code: 'HEALTHCARE',
+  name: 'Healthcare',
+  description:
+    'Risk template for South African private hospitals, clinics, and healthcare providers covering HPCSA, POPIA, NHI, clinical negligence, medical waste, nursing shortages, and malpractice insurance risks.',
+  benchmarkScore: 38,
+  risks: HEALTHCARE_RISKS,
+}
+
+// ============================================
+// PROFESSIONAL SERVICES TEMPLATE  (benchmarkScore 44)
+// ============================================
+
+const PROFESSIONAL_SERVICES_RISKS: TemplateRisk[] = [
+  {
+    title: 'POPIA breach exposing confidential client data',
+    description:
+      'Professional service firms hold highly sensitive client financial, legal, and personal data. A breach triggers mandatory notification to the Information Regulator, reputational damage, and potential civil claims from affected clients.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Information Officer appointed and registered with Information Regulator\n• Client data access restricted by role in practice management system\n• Annual POPIA compliance review by external advisor',
+    rootCause: 'Inadequate access controls on shared drives and email attachments',
+    isOngoing: true,
+  },
+  {
+    title: 'Professional indemnity claim from client engagement error',
+    description:
+      'An error or omission in professional advice (audit, tax, legal) can result in a significant PI claim. A single uninsured or under-insured claim can threaten firm viability.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Professional indemnity insurance reviewed at renewal (adequate sum insured)\n• Engagement quality control review for all high-risk engagements\n• Second partner review required for opinions above R1m in consequence',
+    rootCause: 'Time pressure, staff turnover, and increasing technical complexity of work',
+    isOngoing: true,
+  },
+  {
+    title: 'Key partner departure triggering client attrition',
+    description:
+      'Client relationships in professional services are often personal. A key partner\'s resignation and move to a competitor can result in loss of the associated client book, which may represent 20-40% of revenue.',
+    category: 'STRATEGIC',
+    inherentLikelihood: 3,
+    inherentImpact: 5,
+    residualLikelihood: 2,
+    residualImpact: 4,
+    controls:
+      '• Dual-partner relationship model on all clients above R200k annual fee\n• Employment contracts include 6-month restraint of trade\n• Annual partner retention review at compensation committee',
+    rootCause: 'Concentration of client relationships in individual partners',
+    isOngoing: true,
+  },
+  {
+    title: 'IRBA or SAICA regulatory sanction affecting audit registration',
+    description:
+      'An IRBA inspection finding or SAICA disciplinary matter can result in practice restriction, public censure, or deregistration. The reputational and commercial consequences are severe and difficult to reverse.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 2,
+    inherentImpact: 5,
+    residualLikelihood: 1,
+    residualImpact: 5,
+    controls:
+      '• Internal quality control system (ISQM 1) implemented and documented\n• Pre-issuance engagement quality review for all listed company audits\n• Annual IRBA readiness self-assessment against inspection focus areas',
+    rootCause: 'Increasing IRBA inspection intensity and expanding scope of review',
+    isOngoing: true,
+  },
+  {
+    title: 'Ransomware or cyberattack on practice management system',
+    description:
+      'Accounting and legal firms are targeted for client financial data. A successful ransomware attack would halt billable work, destroy records, and trigger POPIA notification obligations.',
+    category: 'TECHNOLOGY',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Daily cloud backup of all practice management data\n• Multi-factor authentication on all remote access\n• Annual phishing simulation and staff cybersecurity training',
+    rootCause: 'High-value client data and typically under-resourced IT security',
+    isOngoing: true,
+  },
+  {
+    title: 'Fee collection failure and bad debt write-off',
+    description:
+      'Professional service fees are often billed in arrears. Client insolvency, fee disputes, and poor collections discipline can result in significant bad debt write-offs eroding profitability.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 3,
+    inherentImpact: 3,
+    residualLikelihood: 2,
+    residualImpact: 2,
+    controls:
+      '• 30-day payment terms enforced; work in progress reviewed monthly\n• Retainer agreements required for all clients above R50k pa\n• Debtors days reviewed at monthly management meeting',
+    rootCause: 'Reluctance to enforce collections with long-standing clients',
+    isOngoing: true,
+  },
+  {
+    title: 'Conflict of interest not identified before engagement acceptance',
+    description:
+      'Accepting an engagement with a conflicted party (competitor, adverse party in litigation, related audit client) creates professional and legal risk. Failure to identify a conflict at intake can require disengagement mid-engagement.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Conflict check mandatory in engagement acceptance procedure\n• Firm-wide client register accessible to all partners\n• Independence confirmation signed annually by all professional staff',
+    rootCause: 'Growing client network increasing frequency of undiscovered conflicts',
+    isOngoing: true,
+  },
+  {
+    title: 'Talent retention failure in a competitive professional services market',
+    description:
+      'Experienced CA(SA)s and attorneys are in high demand. A competitor firm offering a 20% salary premium can strip an entire team. Loss of qualified staff directly impacts billable capacity and client service quality.',
+    category: 'PEOPLE',
+    inherentLikelihood: 4,
+    inherentImpact: 4,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Annual salary benchmarking against competitor firms\n• Accelerated partnership track for high performers\n• Flexible working arrangements implemented post-COVID',
+    rootCause: 'Structural shortage of qualified professionals in South Africa',
+    isOngoing: true,
+  },
+  {
+    title: 'Reputational damage from social media or media coverage',
+    description:
+      'A disgruntled client or former employee posting publicly can cause rapid reputational damage. Professional services firms are particularly vulnerable as reputation is the primary commercial asset.',
+    category: 'REPUTATIONAL',
+    inherentLikelihood: 2,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Social media monitoring tool in place\n• Response protocol for negative reviews defined and tested\n• Separation agreements include non-disparagement clauses',
+    rootCause: 'Unavoidable client and staff dissatisfaction in high-pressure engagements',
+    isOngoing: true,
+  },
+  {
+    title: 'B-BBEE compliance failure affecting client tender eligibility',
+    description:
+      'Many public sector and large corporate clients require a minimum B-BBEE level from their professional service providers. A downgrade to Level 4 or below may disqualify the firm from tender processes.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 3,
+    residualLikelihood: 2,
+    residualImpact: 2,
+    controls:
+      '• Annual B-BBEE verification with accredited agency\n• B-BBEE improvement plan targets reviewed quarterly\n• ESD spend tracked monthly against target',
+    rootCause: 'Difficulty meeting ownership and management control elements',
+    isOngoing: true,
+  },
+  {
+    title: 'Scope creep eroding engagement profitability',
+    description:
+      'Engagements regularly expand beyond the agreed scope without corresponding fee increases. Cumulative scope creep on a portfolio of engagements can erode firm profitability by 10-15% annually.',
+    category: 'FINANCIAL',
+    inherentLikelihood: 4,
+    inherentImpact: 3,
+    residualLikelihood: 3,
+    residualImpact: 2,
+    controls:
+      '• Engagement letters include explicit scope definition and variation clause\n• Work in progress reviewed by partner at 80% budget consumption\n• Variation orders required for scope changes above 10% of budget',
+    rootCause: 'Partner reluctance to have scope conversations with established clients',
+    isOngoing: true,
+  },
+  {
+    title: 'Third-party vendor failure affecting client delivery',
+    description:
+      'Reliance on subcontractors, specialist consultants, or technology vendors creates delivery risk. A vendor failure mid-engagement creates reputational risk and potential PI exposure.',
+    category: 'OPERATIONAL',
+    inherentLikelihood: 2,
+    inherentImpact: 3,
+    residualLikelihood: 1,
+    residualImpact: 2,
+    controls:
+      '• Key vendor list maintained with alternative suppliers identified\n• Subcontractor agreements include liability and confidentiality clauses\n• Vendor performance reviewed annually',
+    rootCause: 'Over-reliance on specialist vendors without documented alternatives',
+    isOngoing: false,
+  },
+  {
+    title: 'Succession planning failure creating practice continuity risk',
+    description:
+      'Founding partners approaching retirement without succession plans create a valuation cliff and client continuity risk. A firm with no next-generation partners is difficult to sell or transition.',
+    category: 'STRATEGIC',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Succession plan documented for each founding partner\n• Next-generation partners introduced to key clients over 3-year horizon\n• Partnership buy-in model creates financial incentive for junior partners',
+    rootCause: 'Founding generation approaching retirement without formalised transition',
+    isOngoing: true,
+  },
+  {
+    title: 'FICA and AML non-compliance for accountable institutions',
+    description:
+      'Accounting and legal firms are Accountable Institutions under FICA. Failure to conduct adequate Client Due Diligence (CDD), maintain records, or file Suspicious Transaction Reports (STRs) exposes partners to criminal liability.',
+    category: 'COMPLIANCE',
+    inherentLikelihood: 3,
+    inherentImpact: 4,
+    residualLikelihood: 2,
+    residualImpact: 3,
+    controls:
+      '• Risk-based CDD conducted on all new clients before engagement acceptance\n• FICA Compliance Officer appointed; annual FICA training for all staff\n• STR filing procedure documented and tested',
+    rootCause: 'Complexity of FICA requirements and frequent regulatory updates',
+    isOngoing: true,
+  },
+  {
+    title: 'AI disrupting core service lines (tax, audit, legal drafting)',
+    description:
+      'Generative AI tools are automating tasks that previously required qualified professionals. Failure to adapt service delivery models and pricing risks margin compression and client loss to lower-cost AI-enabled competitors.',
+    category: 'STRATEGIC',
+    inherentLikelihood: 4,
+    inherentImpact: 4,
+    residualLikelihood: 3,
+    residualImpact: 3,
+    controls:
+      '• Technology adoption strategy reviewed annually at partners\' meeting\n• AI tools piloted on lower-risk engagements before rollout\n• Service pricing model reviewed to reflect AI-driven efficiency',
+    rootCause: 'Rapid advancement of AI capability relative to firm technology adoption speed',
+    isOngoing: true,
+  },
+]
+
+export const PROFESSIONAL_SERVICES_TEMPLATE: IndustryTemplate = {
+  code: 'PROFESSIONAL_SERVICES',
+  name: 'Professional Services',
+  description:
+    'Risk template for South African accounting, legal, consulting, and advisory firms covering POPIA, FICA, IRBA, SAICA, PI claims, B-BBEE, talent retention, and AI disruption risks.',
+  benchmarkScore: 44,
+  risks: PROFESSIONAL_SERVICES_RISKS,
+}
+
+// ============================================
 // REGISTRY
 // ============================================
 
@@ -728,6 +1409,9 @@ export const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
   MANUFACTURING_TEMPLATE,
   FINANCIAL_SERVICES_TEMPLATE,
   RETAIL_TEMPLATE,
+  MINING_RESOURCES_TEMPLATE,
+  HEALTHCARE_TEMPLATE,
+  PROFESSIONAL_SERVICES_TEMPLATE,
 ]
 
 // ============================================

@@ -9,6 +9,9 @@ const INDUSTRY_LABELS: Record<string, string> = {
   MANUFACTURING: 'Manufacturing & Production',
   FINANCIAL_SERVICES: 'Financial Services',
   RETAIL: 'Retail & Consumer',
+  MINING_RESOURCES: 'Mining & Resources',
+  HEALTHCARE: 'Healthcare',
+  PROFESSIONAL_SERVICES: 'Professional Services',
 }
 
 export function SampleDataBanner() {

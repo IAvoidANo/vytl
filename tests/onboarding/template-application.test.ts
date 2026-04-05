@@ -20,8 +20,8 @@ describe('Template availability', () => {
     })
   })
 
-  it('getAllTemplates returns 3 templates', () => {
-    expect(getAllTemplates()).toHaveLength(3)
+  it('getAllTemplates returns 6 templates', () => {
+    expect(getAllTemplates()).toHaveLength(6)
   })
 
   it('unknown code returns undefined', () => {

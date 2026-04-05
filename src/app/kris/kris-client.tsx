@@ -85,7 +85,7 @@ export function KrisClient() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-semibold">Key Risk Indicators</h2>
-          <p className="text-slate-400">Monitor and track key metrics for risk management</p>
+          <p className="text-slate-400">Key Risk Indicators (KRIs) are measurable signals that warn you when a risk is moving in the wrong direction.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
