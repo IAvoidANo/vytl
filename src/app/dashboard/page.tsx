@@ -16,16 +16,26 @@ export default async function DashboardPage() {
     include: { organisation: true },
   })
 
-  const riskCount = await db.risk.count({
-    where: {
-      register: {
-        orgId: user?.orgId,
+  const [riskCount, organisation] = await Promise.all([
+    db.risk.count({
+      where: {
+        register: {
+          orgId: user?.orgId,
+        },
       },
-    },
-  })
+    }),
+    db.organisation.findUnique({
+      where: { id: user?.orgId },
+      select: { appliedTemplate: true },
+    }),
+  ])
 
-  // New organisations with no risks go through the onboarding wizard
-  if (riskCount === 0) {
+  // Only redirect to onboarding if the org has genuinely never completed setup.
+  // An org with risks OR an applied template has completed onboarding.
+  const hasCompletedOnboarding =
+    riskCount > 0 || organisation?.appliedTemplate != null
+
+  if (!hasCompletedOnboarding) {
     redirect('/onboarding')
   }
 

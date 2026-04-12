@@ -134,8 +134,16 @@ export default function WelcomeScreen({
         </button>
       </div>
 
+      {/* Escape hatch for returning users who landed here by mistake */}
+      <p className="text-sm text-slate-500 text-center mt-6">
+        Already set up?{' '}
+        <a href="/dashboard" className="text-emerald-600 hover:underline">
+          Go to your dashboard
+        </a>
+      </p>
+
       {/* Footer */}
-      <div className="mt-12 text-center text-sm text-slate-500">
+      <div className="mt-8 text-center text-sm text-slate-500">
         <p>Your data is encrypted and stored securely in South Africa</p>
         <p className="mt-1">POPIA compliant &bull; ISO 31000 aligned &bull; King V ready</p>
       </div>
