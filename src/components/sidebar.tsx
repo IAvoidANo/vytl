@@ -11,7 +11,8 @@ import {
   Activity,
   FileBarChart,
   Users,
-  Settings,
+  User,
+  Building2,
   Shield,
 } from 'lucide-react'
 
@@ -23,7 +24,8 @@ const navItems = [
   { href: '/kris', label: 'KRIs', icon: Activity, tooltip: 'Monitor early warning signals for your key risks' },
   { href: '/reports', label: 'Reports', icon: FileBarChart, tooltip: undefined },
   { href: '/users', label: 'Team', icon: Users, adminOnly: true, tooltip: undefined },
-  { href: '/settings', label: 'Settings', icon: Settings, tooltip: undefined },
+  { href: '/account', label: 'My account', icon: User, tooltip: undefined },
+  { href: '/admin', label: 'Organisation admin', icon: Building2, adminOnly: true, tooltip: undefined },
 ]
 
 interface SidebarProps {

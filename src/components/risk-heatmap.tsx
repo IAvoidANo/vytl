@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc-client'
 import { useAppetite } from '@/lib/use-appetite'
@@ -67,7 +67,7 @@ export function RiskHeatmap() {
 
             {/* Rows (likelihood 5 down to 1) */}
             {[5, 4, 3, 2, 1].map((likelihood) => (
-              <>
+              <Fragment key={likelihood}>
                 {/* Likelihood label */}
                 <div key={`label-${likelihood}`} className="flex items-center justify-end pr-2">
                   <div className="text-right">
@@ -131,7 +131,7 @@ export function RiskHeatmap() {
                     </div>
                   )
                 })}
-              </>
+              </Fragment>
             ))}
           </div>
 

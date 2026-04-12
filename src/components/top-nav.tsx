@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import {
   LayoutDashboard, Columns3, AlertTriangle, Activity,
-  FileBarChart, Search, Settings, LogOut, Menu, X, Shield, Users,
+  FileBarChart, CheckSquare, Search, User, Building2, LogOut, Menu, X, Shield, Users,
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/risks',     label: 'Risks',     icon: AlertTriangle },
   { href: '/kris',      label: 'Monitor',   icon: Activity },
   { href: '/workspace', label: 'Workspace', icon: Columns3 },
+  { href: '/actions',   label: 'Actions',   icon: CheckSquare },
   { href: '/reports',   label: 'Reports',   icon: FileBarChart },
 ]
 
@@ -37,15 +38,25 @@ export function TopNav() {
     .toUpperCase()
     .slice(0, 2) || '?'
 
-  // Close user dropdown on outside click
+  // Close user dropdown on outside click or Escape key
   useEffect(() => {
     function onOutside(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false)
       }
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false)
+        setMobileOpen(false)
+      }
+    }
     document.addEventListener('mousedown', onOutside)
-    return () => document.removeEventListener('mousedown', onOutside)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onOutside)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [])
 
   // Close mobile menu on route change
@@ -108,6 +119,8 @@ export function TopNav() {
           <div className="relative ml-1" ref={userMenuRef}>
             <button
               onClick={() => setUserMenuOpen(v => !v)}
+              aria-expanded={userMenuOpen}
+              aria-haspopup="menu"
               className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xs font-semibold flex-shrink-0">
@@ -126,13 +139,24 @@ export function TopNav() {
                 </div>
 
                 <Link
-                  href="/settings"
+                  href="/account"
                   onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  Settings
+                  <User className="w-4 h-4" />
+                  My account
                 </Link>
+
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Organisation admin
+                  </Link>
+                )}
 
                 {isAdmin && (
                   <Link

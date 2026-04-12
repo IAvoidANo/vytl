@@ -199,4 +199,10 @@ export default function ConfirmationScreen({
 
       {/* Tip */}
       <p className="mt-8 text-center text-sm text-slate-500 max-w-xl">
-        <strong>Tip:</strong>
+        <strong>Tip:</strong>{' '}
+        You can edit any of these risks to match your actual situation. When you&rsquo;re ready,
+        click &ldquo;Make This My Data&rdquo; in the banner to convert them to live risks.
+      </p>
+    </div>
+  )
+}
