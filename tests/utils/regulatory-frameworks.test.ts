@@ -33,7 +33,7 @@ describe('Regulatory Frameworks', () => {
     it('should return King V framework', () => {
       const fw = getFramework('KING_V')
       expect(fw).not.toBeNull()
-      expect(fw!.name).toBe('King V Code')
+      expect(fw!.name).toBe('King V Code on Corporate Governance')
       expect(fw!.requirements.length).toBeGreaterThan(0)
     })
 

@@ -143,7 +143,7 @@ describe('Industry Profiles', () => {
     it('should return King V for mining', () => {
       const factors = getRegulatorFactors('mining_resources')
       const names = factors.map((f: { name: string }) => f.name)
-      expect(names).toContain('King V Code')
+      expect(names).toContain('King V Code on Corporate Governance')
     })
 
     it('should return empty for unknown industry', () => {

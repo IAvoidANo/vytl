@@ -7,6 +7,7 @@ import { HeroMetric } from '@/components/dashboard/hero-metric'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { TopRisksPanel } from '@/components/dashboard/top-risks-panel'
 import { DashboardHeatmap } from '@/components/dashboard/dashboard-heatmap'
+import { EmergingRisksWidget } from '@/components/emerging-risks-widget'
 
 interface DashboardClientProps {
   userName: string | null | undefined
@@ -56,6 +57,11 @@ export function DashboardClient({ userName, orgName, initialRiskCount }: Dashboa
       {/* Hero: VytlRx Score */}
       <div className="flex-shrink-0">
         <HeroMetric />
+      </div>
+
+      {/* Emerging Risks — slim banner, hidden when pipeline is empty */}
+      <div className="flex-shrink-0">
+        <EmergingRisksWidget />
       </div>
 
       {/* Stat Cards — 4 in a row */}

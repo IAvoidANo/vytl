@@ -26,8 +26,8 @@ export interface IndustryProfile {
  */
 export const SA_REGULATORY_FRAMEWORKS = {
   KING_V: {
-    name: 'King V Code',
-    description: 'King V Report on Corporate Governance for South Africa',
+    name: 'King V Code on Corporate Governance',
+    description: 'King V Code on Corporate Governance for South Africa (effective 1 January 2026)',
     riskCategories: ['STRATEGIC', 'COMPLIANCE', 'OPERATIONAL'],
     weight: 1.15,
   },

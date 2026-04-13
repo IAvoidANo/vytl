@@ -97,6 +97,7 @@ export const riskRouter = router({
           register: {
             orgId: ctx.user.orgId,
           },
+          workflowStatus: 'APPROVED',
           ...(input?.registerId && { registerId: input.registerId }),
           ...(input?.status && { status: input.status }),
           ...(input?.category && { category: input.category }),
@@ -168,7 +169,10 @@ export const riskRouter = router({
   // Get risk statistics for dashboard
   stats: protectedProcedure.query(async ({ ctx }) => {
     const risks = await db.risk.findMany({
-      where: { register: { orgId: ctx.user.orgId } },
+      where: {
+        register: { orgId: ctx.user.orgId },
+        workflowStatus: 'APPROVED',
+      },
       select: {
         status: true,
         category: true,
@@ -216,7 +220,10 @@ export const riskRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const risks = await db.risk.findMany({
-        where: { register: { orgId: ctx.user.orgId } },
+        where: {
+          register: { orgId: ctx.user.orgId },
+          workflowStatus: 'APPROVED',
+        },
         select: {
           id: true,
           refCode: true,
@@ -976,4 +983,15 @@ If the email doesn't clearly describe a risk, still extract the most relevant ri
         createdAt: r.createdAt.toISOString().split('T')[0],
       }))
     }),
+
+  // Count risks currently in the emerging pipeline (INBOX, TRIAGE, ASSIGNED)
+  emergingRisksCount: protectedProcedure.query(async ({ ctx }) => {
+    const count = await db.risk.count({
+      where: {
+        register: { orgId: ctx.user.orgId },
+        workflowStatus: { in: ['INBOX', 'TRIAGE', 'ASSIGNED'] },
+      },
+    })
+    return { count }
+  }),
 })

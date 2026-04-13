@@ -135,8 +135,8 @@ const ISO_31000_REQUIREMENTS: RegulatoryRequirement[] = [
 const FRAMEWORKS: RegulatoryFramework[] = [
   {
     id: 'KING_V',
-    name: 'King V Code',
-    description: 'King V Report on Corporate Governance for South Africa (2025)',
+    name: 'King V Code on Corporate Governance',
+    description: 'King V Code on Corporate Governance for South Africa (effective 1 January 2026)',
     version: '2025',
     requirements: KING_V_REQUIREMENTS,
   },

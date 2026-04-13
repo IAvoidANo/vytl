@@ -91,7 +91,7 @@ export function getGrade(score: number): { grade: string; color: string } {
  */
 async function calculateCoverageScore(orgId: string): Promise<ScoreBreakdown['coverage']> {
   const risks = await db.risk.findMany({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
     select: { category: true, description: true },
   })
 
@@ -138,7 +138,7 @@ async function calculateControlEffectivenessScore(
   orgId: string
 ): Promise<ScoreBreakdown['controlEffectiveness']> {
   const risks = await db.risk.findMany({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
     select: {
       inherentScore: true,
       residualScore: true,
@@ -200,7 +200,7 @@ async function calculateControlEffectivenessScore(
  */
 async function calculateMaturityScore(orgId: string): Promise<ScoreBreakdown['maturity']> {
   const risks = await db.risk.findMany({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
     select: {
       ownerId: true,
       dueDate: true,
@@ -251,7 +251,7 @@ async function calculateMaturityScore(orgId: string): Promise<ScoreBreakdown['ma
 async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend']> {
   // Get current average residual score
   const currentRisks = await db.risk.findMany({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
     select: { residualScore: true, updatedAt: true },
   })
 
@@ -295,7 +295,7 @@ async function calculateTrendScore(orgId: string): Promise<ScoreBreakdown['trend
   // Determine trend direction
   // For simplicity, compare control effectiveness as a proxy for improvement
   const currentReduction = await db.risk.findMany({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
     select: { inherentScore: true, residualScore: true },
   })
 
@@ -345,7 +345,7 @@ export async function calculateVytlScore(orgId: string): Promise<VytlScoreResult
   const { grade, color } = getGrade(totalScore)
 
   const riskCount = await db.risk.count({
-    where: { register: { orgId } },
+    where: { register: { orgId }, workflowStatus: 'APPROVED' },
   })
 
   return {
